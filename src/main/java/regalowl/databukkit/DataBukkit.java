@@ -26,7 +26,7 @@ public class DataBukkit {
 	private int port;
 
 
-	DataBukkit(Plugin plugin) {
+	public DataBukkit(Plugin plugin) {
 		this.plugin = plugin;
 		log = Logger.getLogger("Minecraft");
 		yh = new YamlHandler(plugin);
