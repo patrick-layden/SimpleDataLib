@@ -22,11 +22,7 @@ public class SQLRead {
     
 	public SQLRead(DataBukkit dabu) {
 		this.dab = dabu;
-		if (dab.useMySQL()) {
-			threadlimit = 3;
-		} else {
-			threadlimit = 1;
-		}
+		threadlimit = 1;
 		for (int i = 0; i < threadlimit; i++) {
 			dab.getPlugin().getServer().getScheduler().runTaskLaterAsynchronously(dab.getPlugin(), new Runnable() {
 	    		public void run() {
