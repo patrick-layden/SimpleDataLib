@@ -128,12 +128,13 @@ public class DataBukkit {
 			Connection connect = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + database, username, password);
 			Statement state = connect.createStatement();
 			state.execute("DROP TABLE IF EXISTS dbtest");
-			state.execute("CREATE TABLE IF NOT EXISTS dbtest (TEST VARCHAR)");
+			state.execute("CREATE TABLE IF NOT EXISTS dbtest (TEST VARCHAR(255))");
 			state.execute("DROP TABLE IF EXISTS dbtest");
 			state.close();
 			connect.close();
 			return true;
 		} catch (Exception e) {
+			e.printStackTrace();
 			return false;
 		}
 	}
