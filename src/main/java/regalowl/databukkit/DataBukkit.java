@@ -7,7 +7,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
 import java.util.logging.Logger;
-
 import org.bukkit.plugin.Plugin;
 
 public class DataBukkit {
@@ -19,6 +18,8 @@ public class DataBukkit {
 	private Logger log;
 	private YamlHandler yh;
 	
+	
+	private boolean dataBaseExists;
 	private String host;
 	private String database;
 	private String username;
@@ -31,6 +32,7 @@ public class DataBukkit {
 		log = Logger.getLogger("Minecraft");
 		yh = new YamlHandler(plugin);
 		useMySql = false;
+		dataBaseExists = false;
 	}
 	
 	public void enableMySQL(String host, String database, String username, String password, int port) {
@@ -58,6 +60,7 @@ public class DataBukkit {
 		if (databaseOk) {
 			sw = new SQLWrite(this);
 			sr = new SQLRead(this);
+			dataBaseExists = true;
 		} else {
 			log.severe("-----------------------------------------------------");
 			log.severe("[DataBukkit["+plugin.getName()+"]]Database connection failed. Disabling "+plugin.getName()+".");
@@ -158,6 +161,7 @@ public class DataBukkit {
 	public void writeError(Exception e, String info) {
 		new ErrorWriter(e, info, getErrorFilePath(), plugin);
 	}
+
 	
 	public void shutDown() {
 		if (sw != null) {sw.shutDown();}
@@ -167,6 +171,10 @@ public class DataBukkit {
 		}
 	}
 	
+	
+	public boolean dataBaseExists() {
+		return dataBaseExists;
+	}
 	public Plugin getPlugin() {
 		return plugin;
 	}

@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>regalowl.databukkit</groupId>
   <artifactId>databukkit</artifactId>
-  <version>0.0.3-SNAPSHOT</version>
+  <version>0.0.4-SNAPSHOT</version>
   <build>
     <sourceDirectory>src</sourceDirectory>
     <plugins>

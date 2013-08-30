@@ -2,6 +2,8 @@ package regalowl.databukkit;
 
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -136,6 +138,54 @@ public class SQLWrite {
 			buffer.clear();
 			writeStatements.clear();
 		}
+	}
+	
+	
+	
+	
+	public void createSqlTable(String name, ArrayList<String> fields) {
+		String statement = "CREATE TABLE IF NOT EXISTS " + name + " (";
+		for (int i=0; i < fields.size(); i++) {
+			String field = convertSQL(fields.get(i));
+			if (i < (fields.size() - 1)) {
+				statement += field + ", ";
+			} else {
+				statement += field + ")";
+			}
+		}
+		executeSQL(statement);
+	}
+	
+	public void performInsert(String table, HashMap<String, String> values) {
+		String statement = "INSERT INTO " + table + " (";
+		for (String field:values.keySet()) {
+			statement += field + ", ";
+		}
+		statement = statement.substring(0, statement.length() - 1);
+		statement += ") VALUES (";
+		for (String value:values.values()) {
+			statement += value + ", ";
+		}
+		statement = statement.substring(0, statement.length() - 1);
+		statement += ")";		
+				//logintools_logins (PLAYER, LOGIN_TIME, IP) VALUES ('" + player + "', NOW(), '" + ip + "')";
+	}
+	
+	public void quoteValue(String value) {
+		//if (value)
+	}
+	
+	public String convertSQL(String statement) {
+		if (dab.useMySQL()) {
+			statement = statement.replace("datetime('NOW', 'localtime')", "NOW()");
+			statement = statement.replace("AUTOINCREMENT", "AUTO_INCREMENT");
+			statement = statement.replace("autoincrement", "auto_increment");
+		} else {
+			statement = statement.replace("NOW()", "datetime('NOW', 'localtime')");
+			statement = statement.replace("AUTO_INCREMENT", "AUTOINCREMENT");
+			statement = statement.replace("auto_increment", "autoincrement");
+		}
+		return statement;
 	}
 
 }
