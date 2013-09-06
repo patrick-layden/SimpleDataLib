@@ -166,7 +166,7 @@ public class YamlHandler {
 		File configFile = new File(plugin.getDataFolder(), name + ".yml");
 	    if(!configFile.exists()){
 	    	configFile.getParentFile().mkdirs();
-	        copy(this.getClass().getResourceAsStream("/"+name+".yml"), configFile);
+	        copy(plugin.getClass().getResourceAsStream("/"+name+".yml"), configFile);
 	    }
 	}
 
