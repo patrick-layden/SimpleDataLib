@@ -211,9 +211,9 @@ public class SQLWrite {
 	public String quoteValue(String value) {
 		String valueTest = value.replaceAll("[^()]", "");
 		if (valueTest.equalsIgnoreCase("()")) {
-			return value;
+			return convertSQL(value);
 		} else {
-			return "'" + value + "'";
+			return "'" + convertSQL(value) + "'";
 		}
 	}
 	
