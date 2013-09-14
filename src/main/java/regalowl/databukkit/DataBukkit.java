@@ -17,6 +17,7 @@ public class DataBukkit {
 	private SQLRead sr;
 	private Logger log;
 	private YamlHandler yh;
+	private CommonFunctions cf;
 	
 	
 	private boolean dataBaseExists;
@@ -31,6 +32,7 @@ public class DataBukkit {
 		this.plugin = plugin;
 		log = Logger.getLogger("Minecraft");
 		yh = new YamlHandler(plugin);
+		cf = new CommonFunctions();
 		useMySql = false;
 		dataBaseExists = false;
 	}
@@ -153,6 +155,10 @@ public class DataBukkit {
 	public YamlHandler getYamlHandler() {
 		return yh;
 	}
+	
+	public CommonFunctions getCommonFunctions() {
+		return cf;
+	}
 
 	public boolean useMySQL() {
 		return useMySql;
@@ -166,9 +172,7 @@ public class DataBukkit {
 	public void shutDown() {
 		if (sw != null) {sw.shutDown();}
 		if (sr != null) {sr.shutDown();}
-		if (yh != null) {
-			yh.shutDown();
-		}
+		if (yh != null) {yh.shutDown();}
 	}
 	
 	
