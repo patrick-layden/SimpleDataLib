@@ -39,26 +39,16 @@ public class YamlHandler {
     	yml.put(file, fileConfiguration);
     }
     
-	private void checkFile(File file) {
+	public void saveYaml(String fileConfiguration){
 		try {
-			if (!file.exists()) {
-				file.getParentFile().mkdirs();
-				file.createNewFile();
+			if (yml.containsKey(fileConfiguration)) {
+				FileConfiguration saveFile = yml.get(fileConfiguration);
+				saveFile.save(files.get(fileConfiguration));
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
-
-
-    private void loadFile(File file, FileConfiguration fileConfiguration) {
-        try {
-        	fileConfiguration.load(file);
-        } catch (Exception e) {
-            e.printStackTrace();
-	    	log.severe("[DataBukkit["+plugin.getName()+"]]Bad "+file.getName()+" file.");
-        }
-    }
     
 	public void saveYamls() {
 		Collection<String> keys = yml.keySet();
@@ -145,6 +135,14 @@ public class YamlHandler {
 		return gFC(currentFC).getBoolean(path);
 	}
 	
+	
+	public void copyFromJar(String name) {
+		File configFile = new File(plugin.getDataFolder(), name + ".yml");
+	    if(!configFile.exists()){
+	    	configFile.getParentFile().mkdirs();
+	        copy(plugin.getClass().getResourceAsStream("/"+name+".yml"), configFile);
+	    }
+	}
 
 
     private void copy(InputStream in, File file) {
@@ -162,12 +160,25 @@ public class YamlHandler {
         }
     }
 
-	public void copyFromJar(String name) {
-		File configFile = new File(plugin.getDataFolder(), name + ".yml");
-	    if(!configFile.exists()){
-	    	configFile.getParentFile().mkdirs();
-	        copy(plugin.getClass().getResourceAsStream("/"+name+".yml"), configFile);
-	    }
+	private void checkFile(File file) {
+		try {
+			if (!file.exists()) {
+				file.getParentFile().mkdirs();
+				file.createNewFile();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
+
+
+    private void loadFile(File file, FileConfiguration fileConfiguration) {
+        try {
+        	fileConfiguration.load(file);
+        } catch (Exception e) {
+            e.printStackTrace();
+	    	log.severe("[DataBukkit["+plugin.getName()+"]]Bad "+file.getName()+" file.");
+        }
+    }
 
 }
