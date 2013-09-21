@@ -22,11 +22,13 @@ public class YamlHandler {
     private BukkitTask saveTask;
     private Long saveInterval;
     private String currentFC;
+    private boolean brokenFile;
     private HashMap<String, FileConfiguration> yml = new HashMap<String, FileConfiguration>();
     private HashMap<String, File> files = new HashMap<String, File>();
     
     YamlHandler(Plugin plugin) {
     	this.plugin = plugin;
+    	brokenFile = false;
     	log = Logger.getLogger("Minecraft");
     }
 
@@ -176,9 +178,14 @@ public class YamlHandler {
         try {
         	fileConfiguration.load(file);
         } catch (Exception e) {
+        	brokenFile = true;
             e.printStackTrace();
 	    	log.severe("[DataBukkit["+plugin.getName()+"]]Bad "+file.getName()+" file.");
         }
+    }
+    
+    public boolean brokenFile() {
+    	return brokenFile;
     }
 
 }
