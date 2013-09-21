@@ -93,21 +93,24 @@ public class SQLRead {
 	 * @param method The name of the method you want to call.
 	 * @param query The SQL select query to perform.
 	 */
-	public void syncRead(Object object, String method, String query) {
-		new SyncRead(object, method, query);
+	public void syncRead(Object object, String method, String query, Object args) {
+		new SyncRead(object, method, query, args);
 	}
 	private class SyncRead {
 		private String m;
 		private String q;
 		private Object o;
 		private QueryResult qr;
-		SyncRead(Object object, String method, String query) {
+		private Object args;
+		SyncRead(Object object, String method, String query, Object arguments) {
 			this.o = object;
 			this.m = method;
 			this.q = query;
+			this.args = arguments;
 			dab.getPlugin().getServer().getScheduler().runTaskAsynchronously(dab.getPlugin(), new Runnable() {
 				public void run() {
 					qr = getDatabaseConnection().read(q);
+					qr.setAdditionalData(args);
 					dab.getPlugin().getServer().getScheduler().runTask(dab.getPlugin(), new Runnable() {
 						public void run() {
 							try {

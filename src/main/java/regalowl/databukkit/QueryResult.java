@@ -11,6 +11,7 @@ public class QueryResult {
 	
 	private ArrayList<String> colNames = new ArrayList<String>();
 	private ArrayList<ArrayList<String>> data = new ArrayList<ArrayList<String>>();
+	private Object additionalData;
 	private int currentRow;
 	
 	QueryResult() {
@@ -156,6 +157,13 @@ public class QueryResult {
 		} else {
 			return Boolean.parseBoolean(dat);
 		}
+	}
+	
+	public void setAdditionalData(Object o) {
+		additionalData = o;
+	}
+	public Object getAdditionalData() {
+		return additionalData;
 	}
 	
 	
