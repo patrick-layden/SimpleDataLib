@@ -20,7 +20,6 @@ public class MySQLConnection extends DatabaseConnection {
 		host = dab.getHost();
 		database = dab.getDatabase();
 		openConnection();
-		inUse = false;
 	}
 
 	protected void openConnection() {

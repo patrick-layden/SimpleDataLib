@@ -167,7 +167,12 @@ public class DataBukkit {
 	public void writeError(Exception e, String info) {
 		new ErrorWriter(e, info, getErrorFilePath(), plugin);
 	}
-
+	public void writeError(Exception e) {
+		new ErrorWriter(e, null, getErrorFilePath(), plugin);
+	}
+	public void writeError(String info) {
+		new ErrorWriter(null, info, getErrorFilePath(), plugin);
+	}
 	
 	public void shutDown() {
 		if (sw != null) {sw.shutDown();}
@@ -175,6 +180,9 @@ public class DataBukkit {
 		if (yh != null) {yh.shutDown();}
 	}
 	
+	public Logger getLogger() {
+		return log;
+	}
 	
 	public boolean dataBaseExists() {
 		return dataBaseExists;

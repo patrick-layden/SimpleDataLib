@@ -10,7 +10,6 @@ public class SQLiteConnection extends DatabaseConnection {
 		super(dab);
 		sqlitePath = dab.getSQLitePath();
 		openConnection();
-		inUse = false;
 	}
 
 	

@@ -9,6 +9,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.bukkit.scheduler.BukkitTask;
 
@@ -18,23 +19,34 @@ import org.bukkit.scheduler.BukkitTask;
 public abstract class DatabaseConnection {
 
 	protected DataBukkit dab;
+	protected DatabaseConnection dc;
 	protected Connection connection;
 	protected CopyOnWriteArrayList<String> statements = new CopyOnWriteArrayList<String>();
 	protected BukkitTask writeTask;
 	protected String currentStatement;
 	protected PreparedStatement preparedStatement;
-	protected boolean inUse;
+	protected AtomicBoolean cancelWrite = new AtomicBoolean();
+	protected AtomicBoolean buildingStatement = new AtomicBoolean();
+	protected AtomicBoolean logWriteErrors = new AtomicBoolean();
+	protected AtomicBoolean logReadErrors = new AtomicBoolean();
 	
 	DatabaseConnection(DataBukkit dab) {
+		dc = this;
 		this.dab = dab;
+		this.buildingStatement.set(false);
+		this.cancelWrite.set(false);
 	}
 	
-	public void aSyncWrite(List<String> sql) {
+	public void aSyncWrite(List<String> sql, boolean logErrors) {
+		logWriteErrors.set(logErrors);
 		try {
-			inUse = true;
 			statements.clear();
 			for (String csql : sql) {
 				statements.add(csql);
+			}
+			if (statements.size() == 0) {
+				dab.getSQLWrite().returnConnection(dc);
+				return;
 			}
 		} catch (Exception e) {
 			dab.writeError(e, null);
@@ -46,34 +58,46 @@ public abstract class DatabaseConnection {
 						openConnection();
 					}
 					connection.setAutoCommit(false);
+					buildingStatement.set(true);
 					for (String statement:statements) {
 						currentStatement = statement;
 						preparedStatement = connection.prepareStatement(currentStatement);
 						preparedStatement.executeUpdate();
+						if (cancelWrite.get()) {
+							connection.rollback();
+							return;
+						}
+					}
+					if (cancelWrite.get()) {
+						connection.rollback();
+						return;
 					}
 					connection.commit();
+					buildingStatement.set(false);
 					statements.clear();
-					inUse = false;
 				} catch (SQLException e) {
 					try {
 						connection.rollback();
-						dab.writeError(e, "SQL write failed.  The failing SQL statement is in the following brackets: [" + currentStatement + "]");
+						if (logWriteErrors.get()) {
+							dab.writeError(e, "SQL write failed.  The failing SQL statement is in the following brackets: [" + currentStatement + "]");
+						}
+						statements.remove(currentStatement);
+						dab.getSQLWrite().executeSQL(statements);
+						statements.clear();	
 					} catch (SQLException e1) {
-						dab.writeError(e, "Rollback failed.  Cannot recover.");
-						return;
+						dab.writeError(e, "Rollback failed.  Cannot recover. Data loss may have occurred.");
+						statements.clear();	
 					}
-					statements.remove(currentStatement);
-					dab.getSQLWrite().executeSQL(statements);
-					statements.clear();
-					inUse = false;
+				} finally {
+					dab.getSQLWrite().returnConnection(dc);
 				}
 			}
 		});
 	}
 	
-	public void syncWrite(List<String> sql) {
+	public void syncWrite(List<String> sql, boolean logErrors) {
+		logWriteErrors.set(logErrors);
 		try {
-			inUse = true;
 			if (connection == null || connection.isClosed()) {
 				openConnection();
 			}
@@ -82,26 +106,39 @@ public abstract class DatabaseConnection {
 			for (String csql:sql) {
 				statements.add(csql);
 			}
+			if (statements.size() == 0) {return;}
+			buildingStatement.set(true);
 			for (String statement:statements) {
 				currentStatement = statement;
 				preparedStatement = connection.prepareStatement(currentStatement);
 				preparedStatement.executeUpdate();
+				if (cancelWrite.get()) {
+					connection.rollback();
+					return;
+				}
+			}
+			if (cancelWrite.get()) {
+				connection.rollback();
+				return;
 			}
 			connection.commit();
+			buildingStatement.set(false);
 			statements.clear();
-			inUse = false;
 		} catch (SQLException e) {
 			try {
 				connection.rollback();
-				dab.writeError(e, "SQL write failed.  The failing SQL statement is in the following brackets: [" + currentStatement + "]");
+				if (logWriteErrors.get()) {
+					dab.writeError(e, "SQL write failed.  The failing SQL statement is in the following brackets: [" + currentStatement + "]");
+				}
+				statements.remove(currentStatement);
+				dab.getSQLWrite().executeSQL(statements);
+				statements.clear();	
 			} catch (SQLException e1) {
-				dab.writeError(e, "Rollback failed.  Cannot recover.");
-				return;
+				dab.writeError(e, "Rollback failed.  Cannot recover. Data loss may have occurred.");
+				statements.clear();	
 			}
-			statements.remove(currentStatement);
-			dab.getSQLWrite().executeSQL(statements);
-			statements.clear();
-			inUse = false;
+		} finally {
+			dab.getSQLWrite().returnConnection(dc);
 		}
 	}
 	
@@ -111,7 +148,8 @@ public abstract class DatabaseConnection {
 	 * @param statement
 	 * @return QueryResult
 	 */
-	public QueryResult read(String statement) {
+	public QueryResult read(String statement, boolean logErrors) {
+		logReadErrors.set(logErrors);
 		QueryResult qr = new QueryResult();
 		try {
 			if (connection == null || connection.isClosed()) {
@@ -137,38 +175,30 @@ public abstract class DatabaseConnection {
 			}
 			return qr;
 		} catch (SQLException e) {
-			dab.writeError(e, "The failed SQL statement is in the following brackets: [" + statement + "]");
-			if (dab.getSQLRead() != null) {
-				dab.getSQLRead().returnConnection(this);
+			if (logReadErrors.get()) {
+				dab.writeError(e, "The failed SQL statement is in the following brackets: [" + statement + "]");
 			}
+			dab.getSQLRead().returnConnection(dc);
 			return qr;
 		}
 	}
 	
+	
+	
 	protected abstract void openConnection();
 	
-	public List<String> closeConnection() {
+	public CopyOnWriteArrayList<String> closeConnection() {
+		if (buildingStatement.get()) {
+			cancelWrite.set(true);
+		}
 		if (writeTask != null) {
 			writeTask.cancel();
-			if (inUse) {
-				try {
-					connection.rollback();
-				} catch (SQLException e) {
-					dab.writeError(e, null);
-				}
-			}
 		}
 		try {
 			connection.close();
 		} catch (SQLException e) {}
-		if (!inUse) {
-			statements.clear();
-		}
 		return statements;
 	}
-	
-	public boolean inUse() {
-		return inUse;
-	}
+
 	
 }

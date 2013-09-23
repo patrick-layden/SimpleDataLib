@@ -5,6 +5,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -14,7 +15,7 @@ public class SQLRead {
 
 	private DataBukkit dab;
 	private int threadlimit;
-
+	private AtomicBoolean logReadErrors = new AtomicBoolean();
     private Queue<DatabaseConnection> connections = new LinkedList<DatabaseConnection>();
     private Lock lock = new ReentrantLock();
     private Condition notFull = lock.newCondition();
@@ -23,6 +24,7 @@ public class SQLRead {
     
 	public SQLRead(DataBukkit dabu) {
 		this.dab = dabu;
+		logReadErrors.set(true);
 		threadlimit = 1;
 		for (int i = 0; i < threadlimit; i++) {
 			dab.getPlugin().getServer().getScheduler().runTaskLaterAsynchronously(dab.getPlugin(), new Runnable() {
@@ -80,7 +82,7 @@ public class SQLRead {
 	 * @return QueryResult
 	 */
 	public QueryResult aSyncSelect(String select) {
-		return getDatabaseConnection().read(select);
+		return getDatabaseConnection().read(select, logReadErrors.get());
 	}
 
 	
@@ -109,7 +111,7 @@ public class SQLRead {
 			this.args = arguments;
 			dab.getPlugin().getServer().getScheduler().runTaskAsynchronously(dab.getPlugin(), new Runnable() {
 				public void run() {
-					qr = getDatabaseConnection().read(q);
+					qr = getDatabaseConnection().read(q, logReadErrors.get());
 					qr.setAdditionalData(args);
 					dab.getPlugin().getServer().getScheduler().runTask(dab.getPlugin(), new Runnable() {
 						public void run() {
@@ -133,7 +135,7 @@ public class SQLRead {
 	 */
 	public ArrayList<String> getStringList(String statement) {
 		ArrayList<String> data = new ArrayList<String>();
-		QueryResult result = getDatabaseConnection().read(statement);
+		QueryResult result = getDatabaseConnection().read(statement, logReadErrors.get());
 		while (result.next()) {
 			data.add(result.getString(1));
 		}
@@ -146,7 +148,7 @@ public class SQLRead {
 	 */
 	public ArrayList<Double> getDoubleList(String statement) {
 		ArrayList<Double> data = new ArrayList<Double>();
-		QueryResult result = getDatabaseConnection().read(statement);
+		QueryResult result = getDatabaseConnection().read(statement, logReadErrors.get());
 		while (result.next()) {
 			data.add(result.getDouble(1));
 		}
@@ -160,7 +162,7 @@ public class SQLRead {
 	 */
 	public ArrayList<Integer> getIntList(String statement) {
 		ArrayList<Integer> data = new ArrayList<Integer>();
-		QueryResult result = getDatabaseConnection().read(statement);
+		QueryResult result = getDatabaseConnection().read(statement, logReadErrors.get());
 		while (result.next()) {
 			data.add(result.getInt(1));
 		}
@@ -174,7 +176,7 @@ public class SQLRead {
 	 */
 	public ArrayList<Long> getLongList(String statement) {
 		ArrayList<Long> data = new ArrayList<Long>();
-		QueryResult result = getDatabaseConnection().read(statement);
+		QueryResult result = getDatabaseConnection().read(statement, logReadErrors.get());
 		while (result.next()) {
 			data.add(result.getLong(1));
 		}
@@ -188,7 +190,7 @@ public class SQLRead {
 	 */
 	public ArrayList<Float> getFloatList(String statement) {
 		ArrayList<Float> data = new ArrayList<Float>();
-		QueryResult result = getDatabaseConnection().read(statement);
+		QueryResult result = getDatabaseConnection().read(statement, logReadErrors.get());
 		while (result.next()) {
 			data.add(result.getFloat(1));
 		}
@@ -202,7 +204,7 @@ public class SQLRead {
 	 */
 	public ArrayList<Boolean> getBooleanList(String statement) {
 		ArrayList<Boolean> data = new ArrayList<Boolean>();
-		QueryResult result = getDatabaseConnection().read(statement);
+		QueryResult result = getDatabaseConnection().read(statement, logReadErrors.get());
 		while (result.next()) {
 			data.add(result.getBoolean(1));
 		}
@@ -216,7 +218,7 @@ public class SQLRead {
 	 * @return Integer
 	 */
 	public Integer getInt(String statement) {
-		QueryResult result = getDatabaseConnection().read(statement);
+		QueryResult result = getDatabaseConnection().read(statement, logReadErrors.get());
 		Integer data = null;
 		if (result.next()) {
 			data = result.getInt(1);
@@ -230,7 +232,7 @@ public class SQLRead {
 	 * @return Boolean
 	 */
 	public Boolean getBoolean(String statement) {
-		QueryResult result = getDatabaseConnection().read(statement);
+		QueryResult result = getDatabaseConnection().read(statement, logReadErrors.get());
 		Boolean data = null;
 		if (result.next()) {
 			data = result.getBoolean(1);
@@ -244,7 +246,7 @@ public class SQLRead {
 	 * @return String
 	 */
 	public String getString(String statement) {
-		QueryResult result = getDatabaseConnection().read(statement);
+		QueryResult result = getDatabaseConnection().read(statement, logReadErrors.get());
 		String data = null;
 		if (result.next()) {
 			data = result.getString(1);
@@ -258,7 +260,7 @@ public class SQLRead {
 	 * @return Double
 	 */
 	public Double getDouble(String statement) {
-		QueryResult result = getDatabaseConnection().read(statement);
+		QueryResult result = getDatabaseConnection().read(statement, logReadErrors.get());
 		Double data = null;
 		if (result.next()) {
 			data = result.getDouble(1);
@@ -272,7 +274,7 @@ public class SQLRead {
 	 * @return Long
 	 */
 	public Long getLong(String statement) {
-		QueryResult result = getDatabaseConnection().read(statement);
+		QueryResult result = getDatabaseConnection().read(statement, logReadErrors.get());
 		Long data = null;
 		if (result.next()) {
 			data = result.getLong(1);
@@ -286,7 +288,7 @@ public class SQLRead {
 	 * @return Float
 	 */
 	public Float getFloat(String statement) {
-		QueryResult result = getDatabaseConnection().read(statement);
+		QueryResult result = getDatabaseConnection().read(statement, logReadErrors.get());
 		Float data = null;
 		if (result.next()) {
 			data = result.getFloat(1);
@@ -301,7 +303,7 @@ public class SQLRead {
 	 * @return Integer
 	 */
 	public int countTableEntries(String table) {
-		QueryResult result = getDatabaseConnection().read("SELECT COUNT(*) FROM " + table);
+		QueryResult result = getDatabaseConnection().read("SELECT COUNT(*) FROM " + table, logReadErrors.get());
 		result.next();
 		int rowcount = result.getInt(1);
 		result.close();
@@ -320,6 +322,10 @@ public class SQLRead {
 		for (DatabaseConnection dc:connections) {
 			dc.closeConnection();
 		}
+	}
+	
+	public void setErrorLogging(boolean state) {
+		logReadErrors.set(state);
 	}
 
 }
