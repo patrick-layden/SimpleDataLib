@@ -11,8 +11,6 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.bukkit.scheduler.BukkitTask;
-
 
 
 
@@ -22,7 +20,6 @@ public abstract class DatabaseConnection {
 	protected DatabaseConnection dc;
 	protected Connection connection;
 	protected CopyOnWriteArrayList<String> statements = new CopyOnWriteArrayList<String>();
-	protected BukkitTask writeTask;
 	protected String currentStatement;
 	protected PreparedStatement preparedStatement;
 	protected AtomicBoolean cancelWrite = new AtomicBoolean();
@@ -37,9 +34,12 @@ public abstract class DatabaseConnection {
 		this.cancelWrite.set(false);
 	}
 	
-	public void aSyncWrite(List<String> sql, boolean logErrors) {
-		logWriteErrors.set(logErrors);
+	public void write(List<String> sql, boolean logErrors) {
 		try {
+			logWriteErrors.set(logErrors);
+			if (connection == null || connection.isClosed()) {
+				openConnection();
+			}
 			statements.clear();
 			for (String csql : sql) {
 				statements.add(csql);
@@ -48,67 +48,9 @@ public abstract class DatabaseConnection {
 				dab.getSQLWrite().returnConnection(dc);
 				return;
 			}
-		} catch (Exception e) {
-			dab.writeError(e, null);
-		}
-		writeTask = dab.getPlugin().getServer().getScheduler().runTaskAsynchronously(dab.getPlugin(), new Runnable() {
-			public void run() {
-				try {
-					if (connection == null || connection.isClosed()) {
-						openConnection();
-					}
-					connection.setAutoCommit(false);
-					buildingStatement.set(true);
-					for (String statement:statements) {
-						currentStatement = statement;
-						preparedStatement = connection.prepareStatement(currentStatement);
-						preparedStatement.executeUpdate();
-						if (cancelWrite.get()) {
-							connection.rollback();
-							return;
-						}
-					}
-					if (cancelWrite.get()) {
-						connection.rollback();
-						return;
-					}
-					connection.commit();
-					buildingStatement.set(false);
-					statements.clear();
-				} catch (SQLException e) {
-					try {
-						connection.rollback();
-						if (logWriteErrors.get()) {
-							dab.writeError(e, "SQL write failed.  The failing SQL statement is in the following brackets: [" + currentStatement + "]");
-						}
-						statements.remove(currentStatement);
-						dab.getSQLWrite().executeSQL(statements);
-						statements.clear();	
-					} catch (SQLException e1) {
-						dab.writeError(e, "Rollback failed.  Cannot recover. Data loss may have occurred.");
-						statements.clear();	
-					}
-				} finally {
-					dab.getSQLWrite().returnConnection(dc);
-				}
-			}
-		});
-	}
-	
-	public void syncWrite(List<String> sql, boolean logErrors) {
-		logWriteErrors.set(logErrors);
-		try {
-			if (connection == null || connection.isClosed()) {
-				openConnection();
-			}
 			connection.setAutoCommit(false);
-			statements.clear();
-			for (String csql:sql) {
-				statements.add(csql);
-			}
-			if (statements.size() == 0) {return;}
 			buildingStatement.set(true);
-			for (String statement:statements) {
+			for (String statement : statements) {
 				currentStatement = statement;
 				preparedStatement = connection.prepareStatement(currentStatement);
 				preparedStatement.executeUpdate();
@@ -132,14 +74,15 @@ public abstract class DatabaseConnection {
 				}
 				statements.remove(currentStatement);
 				dab.getSQLWrite().executeSQL(statements);
-				statements.clear();	
+				statements.clear();
 			} catch (SQLException e1) {
 				dab.writeError(e, "Rollback failed.  Cannot recover. Data loss may have occurred.");
-				statements.clear();	
+				statements.clear();
 			}
 		} finally {
 			dab.getSQLWrite().returnConnection(dc);
 		}
+
 	}
 	
 	
@@ -190,9 +133,6 @@ public abstract class DatabaseConnection {
 	public CopyOnWriteArrayList<String> closeConnection() {
 		if (buildingStatement.get()) {
 			cancelWrite.set(true);
-		}
-		if (writeTask != null) {
-			writeTask.cancel();
 		}
 		try {
 			connection.close();

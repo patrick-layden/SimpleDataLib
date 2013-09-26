@@ -114,7 +114,7 @@ public class SQLWrite {
 					writeStatements.add(buffer.get(processNext.get()));
 					buffer.remove(processNext.getAndIncrement());
 				}
-				database.aSyncWrite(getWriteStatements(), logWriteErrors.get());
+				database.write(getWriteStatements(), logWriteErrors.get());
 				writeStatements.clear();
 				if (buffer.size() == 0) {
 					writeTask.cancel();
@@ -186,7 +186,7 @@ public class SQLWrite {
 			for (String s:buffer.values()) {
 				writeStatements.add(s);
 			}
-			database.syncWrite(getWriteStatements(), logWriteErrors.get());
+			database.write(getWriteStatements(), logWriteErrors.get());
 			buffer.clear();
 			writeStatements.clear();
 		}
