@@ -22,16 +22,12 @@ public abstract class DatabaseConnection {
 	protected CopyOnWriteArrayList<String> statements = new CopyOnWriteArrayList<String>();
 	protected String currentStatement;
 	protected PreparedStatement preparedStatement;
-	protected AtomicBoolean cancelWrite = new AtomicBoolean();
-	protected AtomicBoolean buildingStatement = new AtomicBoolean();
 	protected AtomicBoolean logWriteErrors = new AtomicBoolean();
 	protected AtomicBoolean logReadErrors = new AtomicBoolean();
 	
 	DatabaseConnection(DataBukkit dab) {
 		dc = this;
 		this.dab = dab;
-		this.buildingStatement.set(false);
-		this.cancelWrite.set(false);
 	}
 	
 	public void write(List<String> sql, boolean logErrors) {
@@ -49,22 +45,12 @@ public abstract class DatabaseConnection {
 				return;
 			}
 			connection.setAutoCommit(false);
-			buildingStatement.set(true);
 			for (String statement : statements) {
 				currentStatement = statement;
 				preparedStatement = connection.prepareStatement(currentStatement);
 				preparedStatement.executeUpdate();
-				if (cancelWrite.get()) {
-					connection.rollback();
-					return;
-				}
-			}
-			if (cancelWrite.get()) {
-				connection.rollback();
-				return;
 			}
 			connection.commit();
-			buildingStatement.set(false);
 			statements.clear();
 		} catch (SQLException e) {
 			try {
@@ -113,16 +99,14 @@ public abstract class DatabaseConnection {
 			resultSet.close();
 			state.close();
 			statement = null;
-			if (dab.getSQLRead() != null) {
-				dab.getSQLRead().returnConnection(this);
-			}
 			return qr;
 		} catch (SQLException e) {
 			if (logReadErrors.get()) {
 				dab.writeError(e, "The failed SQL statement is in the following brackets: [" + statement + "]");
 			}
-			dab.getSQLRead().returnConnection(dc);
 			return qr;
+		} finally {
+			dab.getSQLRead().returnConnection(dc);
 		}
 	}
 	
@@ -130,14 +114,10 @@ public abstract class DatabaseConnection {
 	
 	protected abstract void openConnection();
 	
-	public CopyOnWriteArrayList<String> closeConnection() {
-		if (buildingStatement.get()) {
-			cancelWrite.set(true);
-		}
+	public void closeConnection() {
 		try {
 			connection.close();
-		} catch (SQLException e) {}
-		return statements;
+		} catch (Exception e) {}
 	}
 
 	

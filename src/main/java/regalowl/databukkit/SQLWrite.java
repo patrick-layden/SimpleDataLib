@@ -10,28 +10,33 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+
 import org.bukkit.scheduler.BukkitTask;
 
 public class SQLWrite {
 
 	private DataBukkit dab;
-	private ConcurrentHashMap<Integer, String> buffer = new ConcurrentHashMap<Integer, String>();
-	CopyOnWriteArrayList<String> writeStatements = new CopyOnWriteArrayList<String>();
+	private ConcurrentHashMap<Long, String> buffer = new ConcurrentHashMap<Long, String>();
+	private CopyOnWriteArrayList<String> writeStatements = new CopyOnWriteArrayList<String>();
 	private BukkitTask writeTask;
-	private BukkitTask endWriteTask;
 	private AtomicBoolean writeActive = new AtomicBoolean();
-	private AtomicInteger bufferCounter = new AtomicInteger();
-	private AtomicInteger processNext = new AtomicInteger();
+	private AtomicLong bufferCounter = new AtomicLong();
+	private AtomicLong processNext = new AtomicLong();
 	private AtomicBoolean logWriteErrors = new AtomicBoolean();;
     private Queue<DatabaseConnection> connections = new LinkedList<DatabaseConnection>();
     private Queue<DatabaseConnection> activeConnections = new LinkedList<DatabaseConnection>();
     private Lock connectionLock = new ReentrantLock();
     private Condition connectionAvailable = connectionLock.newCondition();
+	private AtomicBoolean shutDown = new AtomicBoolean();
+    private CountDownLatch shutDownLatch = new CountDownLatch(1);
+    private long writeInterval;
+
 
 
 	public SQLWrite(DataBukkit dabu) {
@@ -49,6 +54,9 @@ public class SQLWrite {
 		bufferCounter.set(0);
 		processNext.set(0);
 		writeActive.set(false);
+		shutDown.set(false);
+		writeInterval = 100L;
+		startWrite();
 	}
 	
 	
@@ -60,7 +68,6 @@ public class SQLWrite {
 			activeConnections.remove(connection);
 			connections.add(connection);
 			connectionAvailable.signal();
-			writeActive.set(false);
 		} finally {
 			connectionLock.unlock();
 		}
@@ -90,24 +97,21 @@ public class SQLWrite {
 			if (statement == null) {continue;}
 			buffer.put(bufferCounter.getAndIncrement(), statement);
 		}
-		startWrite();
 	}
 	public void executeSQL(String statement) {
 		if (statement == null) {return;}
 		buffer.put(bufferCounter.getAndIncrement(), statement);
-		startWrite();
 	}
 	public void convertExecuteSQL(String statement) {
 		if (statement == null) {return;}
 		buffer.put(bufferCounter.getAndIncrement(), convertSQL(statement));
-		startWrite();
 	}
 
 	private void startWrite() {
-		if (writeActive.get()) {return;}
-		writeActive.set(true);
 		writeTask = dab.getPlugin().getServer().getScheduler().runTaskTimerAsynchronously(dab.getPlugin(), new Runnable() {
 			public void run() {
+				if (writeActive.get() || buffer.size() == 0) {return;}
+				writeActive.set(true);
 				DatabaseConnection database = getDatabaseConnection();
 				writeStatements.clear();
 				while (buffer.size() > 0) {
@@ -116,12 +120,12 @@ public class SQLWrite {
 				}
 				database.write(getWriteStatements(), logWriteErrors.get());
 				writeStatements.clear();
-				if (buffer.size() == 0) {
-					writeTask.cancel();
-					return;
+				writeActive.set(false);
+				if (shutDown.get()) {
+					shutDownLatch.countDown();
 				}
 			}
-		}, 1L, 1L);
+		}, writeInterval, writeInterval);
 	}
 
 	private CopyOnWriteArrayList<String> getWriteStatements() {
@@ -131,7 +135,6 @@ public class SQLWrite {
 		}
 		return write;
 	}
-
 
 	public int getBufferSize() {
 		return buffer.size();
@@ -150,32 +153,25 @@ public class SQLWrite {
 	}
 
 	public void shutDown() {
+		shutDown.set(true);
+		if (writeActive.get()) {
+			try {
+				//dab.getLogger().info("[DataBukkit["+dab.getPlugin().getName()+"]]Finishing the SQL save task... Please wait.");
+				shutDownLatch.await();
+			} catch (InterruptedException e) {
+				dab.writeError(e);
+			}
+		}
 		if (writeTask != null) {writeTask.cancel();}
-		if (endWriteTask != null) {endWriteTask.cancel();}
 		writeActive.set(true);
-		
-		CopyOnWriteArrayList<String> statements = new CopyOnWriteArrayList<String>();
 		if (!connections.isEmpty()){
-			statements = connections.remove().closeConnection();
-		}
-		if (!activeConnections.isEmpty()) {
-			statements = activeConnections.remove().closeConnection();
-		} 
-		
-		for (String statement : statements) {
-			if (statement == null) {continue;}
-			buffer.put(bufferCounter.getAndIncrement(), statement);
-		}
-		for (String statement : writeStatements) {
-			if (statement == null) {continue;}
-			buffer.put(bufferCounter.getAndIncrement(), statement);
+			connections.remove().closeConnection();
 		}
 		saveBuffer();
 	}
-
-
 	private void saveBuffer() {
 		if (buffer.size() > 0) {
+			//dab.getLogger().info("[DataBukkit["+dab.getPlugin().getName()+"]]Saving the SQL buffer... Please wait.");
 			DatabaseConnection database = null;
 			if (dab.useMySQL()) {
 				database = new MySQLConnection(dab);
@@ -308,7 +304,7 @@ public class SQLWrite {
 			this.m = method;
 			afterWriteTask = dab.getPlugin().getServer().getScheduler().runTaskTimer(dab.getPlugin(), new Runnable() {
 				public void run() {
-					if (!writeActive()) {
+					if (!writeActive() && buffer.size() == 0) {
 						try {
 							Method meth = o.getClass().getMethod(m);
 							meth.invoke(o.getClass().newInstance());

@@ -319,9 +319,12 @@ public class SQLRead {
 	
 	
 	public void shutDown() {
-		for (DatabaseConnection dc:connections) {
-			dc.closeConnection();
-		}
+		try {
+			for (DatabaseConnection dc:connections) {
+				dc.closeConnection();
+			}
+		} catch (Exception e) {}
+		connections.clear();
 	}
 	
 	public void setErrorLogging(boolean state) {
