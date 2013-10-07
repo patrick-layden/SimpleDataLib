@@ -26,15 +26,22 @@ public class DataBukkit {
 	private String username;
 	private String password;
 	private int port;
+	
+	private boolean shutdown;
 
 
 	public DataBukkit(Plugin plugin) {
+		initialize(plugin);
+	}
+	
+	public void initialize(Plugin plugin) {
 		this.plugin = plugin;
 		log = Logger.getLogger("Minecraft");
 		yh = new YamlHandler(plugin);
 		cf = new CommonFunctions();
 		useMySql = false;
 		dataBaseExists = false;
+		shutdown = false;
 	}
 	
 	public void enableMySQL(String host, String database, String username, String password, int port) {
@@ -48,6 +55,7 @@ public class DataBukkit {
 	
 	
 	public void createDatabase() {
+		if (shutdown) {return;}
 		boolean databaseOk = false;
 		if (useMySql) {
 			databaseOk = checkMySQL();
@@ -175,9 +183,12 @@ public class DataBukkit {
 	}
 	
 	public void shutDown() {
-		if (sw != null) {sw.shutDown();}
-		if (sr != null) {sr.shutDown();}
-		if (yh != null) {yh.shutDown();}
+		if (!shutdown) {
+			if (sw != null) {sw.shutDown();}
+			if (sr != null) {sr.shutDown();}
+			if (yh != null) {yh.shutDown();}
+			shutdown = true;
+		}
 	}
 	
 	public Logger getLogger() {
