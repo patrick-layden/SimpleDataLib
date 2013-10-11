@@ -55,7 +55,7 @@ public class SQLWrite {
 		processNext.set(0);
 		writeActive.set(false);
 		shutDown.set(false);
-		writeInterval = 100L;
+		writeInterval = 20L;
 		startWrite();
 	}
 	
