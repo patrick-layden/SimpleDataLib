@@ -94,17 +94,15 @@ public class SQLWrite {
 
 	public void executeSQL(List<String> statements) {
 		for (String statement : statements) {
-			if (statement == null) {continue;}
-			buffer.put(bufferCounter.getAndIncrement(), statement);
+			executeSQL(statement);
 		}
+	}
+	public void convertExecuteSQL(String statement) {
+		executeSQL(convertSQL(statement));
 	}
 	public void executeSQL(String statement) {
 		if (statement == null) {return;}
 		buffer.put(bufferCounter.getAndIncrement(), statement);
-	}
-	public void convertExecuteSQL(String statement) {
-		if (statement == null) {return;}
-		buffer.put(bufferCounter.getAndIncrement(), convertSQL(statement));
 	}
 
 	private void startWrite() {
@@ -266,6 +264,7 @@ public class SQLWrite {
 	}
 	
 	public String convertSQL(String statement) {
+		if (statement == null) {return statement;}
 		if (dab.useMySQL()) {
 			statement = statement.replace("datetime('NOW', 'localtime')", "NOW()");
 			statement = statement.replace("AUTOINCREMENT", "AUTO_INCREMENT");

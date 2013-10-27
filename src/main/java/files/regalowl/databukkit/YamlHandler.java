@@ -8,9 +8,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
+
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
@@ -22,13 +22,12 @@ public class YamlHandler {
     private BukkitTask saveTask;
     private Long saveInterval;
     private String currentFC;
-    private boolean brokenFile;
-    private HashMap<String, FileConfiguration> yml = new HashMap<String, FileConfiguration>();
-    private HashMap<String, File> files = new HashMap<String, File>();
+    private ArrayList<String> brokenFiles = new ArrayList<String>();
+    private ConcurrentHashMap<String, FileConfiguration> configs = new ConcurrentHashMap<String, FileConfiguration>();
+    private ConcurrentHashMap<String, File> files = new ConcurrentHashMap<String, File>();
     
     YamlHandler(Plugin plugin) {
     	this.plugin = plugin;
-    	brokenFile = false;
     	log = Logger.getLogger("Minecraft");
     }
 
@@ -38,13 +37,13 @@ public class YamlHandler {
     	checkFile(configFile);
     	FileConfiguration fileConfiguration = new YamlConfiguration();
     	loadFile(configFile, fileConfiguration);
-    	yml.put(file, fileConfiguration);
+    	configs.put(file, fileConfiguration);
     }
     
 	public void saveYaml(String fileConfiguration){
 		try {
-			if (yml.containsKey(fileConfiguration)) {
-				FileConfiguration saveFile = yml.get(fileConfiguration);
+			if (configs.containsKey(fileConfiguration) && !brokenFiles.contains(configs.get(fileConfiguration).getName())) {
+				FileConfiguration saveFile = configs.get(fileConfiguration);
 				saveFile.save(files.get(fileConfiguration));
 			}
 		} catch (Exception e) {
@@ -53,37 +52,28 @@ public class YamlHandler {
 	}
     
 	public void saveYamls() {
-		Collection<String> keys = yml.keySet();
-		ArrayList<String> newKeys = new ArrayList<String>();
-		for (String key : keys) {
-			newKeys.add(key);
-		}
-		for (String key : newKeys) {
-			try {
-				yml.get(key).save(files.get(key));
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+		for (String key:configs.keySet()) {
+			saveYaml(key);
 		}
     }
 
 	public FileConfiguration getFileConfiguration(String fileConfiguration){
-		if (yml.containsKey(fileConfiguration)) {
-			return yml.get(fileConfiguration);
+		if (configs.containsKey(fileConfiguration)) {
+			return configs.get(fileConfiguration);
 		} else {
 			return null;
 		}
 	}
 	public FileConfiguration gFC(String fileConfiguration){
-		if (yml.containsKey(fileConfiguration)) {
-			return yml.get(fileConfiguration);
+		if (configs.containsKey(fileConfiguration)) {
+			return configs.get(fileConfiguration);
 		} else {
 			return null;
 		}
 	}
 	
 	
-	public void setSaveInterval(long interval) {
+	public void startSaveTask(long interval) {
 		this.saveInterval = interval;
 		if (saveTask != null) {saveTask.cancel();}
 		saveTask = plugin.getServer().getScheduler().runTaskTimer(plugin, new Runnable() {
@@ -93,13 +83,19 @@ public class YamlHandler {
 		}, saveInterval, saveInterval);
 	}
 	
-	public void shutDown() {
+	public void stopSaveTask() {
 		if (saveTask != null) {saveTask.cancel();}
+	}
+	
+	public long getSaveInterval() {
+		return saveInterval;
+	}
+	
+	public void shutDown() {
+		stopSaveTask();
 		saveYamls();
 	}
 
-	
-	
 	public void registerDefault(String path, Object def) {
 		if (!gFC(currentFC).isSet(path)) {
 			gFC(currentFC).set(path, def);
@@ -135,6 +131,35 @@ public class YamlHandler {
 	public boolean gB(String path) {
 		if (currentFC == null) {return false;}
 		return gFC(currentFC).getBoolean(path);
+	}
+	
+	public void sS(String path, String value) {
+		if (currentFC == null) {return;}
+		gFC(currentFC).set(path, value);
+	}
+	public void sI(String path, int value) {
+		if (currentFC == null) {return;}
+		gFC(currentFC).set(path, value);
+	}
+	public void sD(String path, double value) {
+		if (currentFC == null) {return;}
+		gFC(currentFC).set(path, value);
+	}
+	public void sB(String path, boolean value) {
+		if (currentFC == null) {return;}
+		gFC(currentFC).set(path, value);
+	}
+	
+	public QuickFileConfiguration getQuickFileConfiguration(String name) {
+		FileConfiguration fc = gFC(name);
+		if (fc != null) {
+			return new QuickFileConfiguration(fc);
+		} else {
+			return null;
+		}
+	}
+	public QuickFileConfiguration gQFC(String name) {
+		return getQuickFileConfiguration(name);
 	}
 	
 	
@@ -178,14 +203,17 @@ public class YamlHandler {
         try {
         	fileConfiguration.load(file);
         } catch (Exception e) {
-        	brokenFile = true;
+        	brokenFiles.add(fileConfiguration.getName());
             e.printStackTrace();
 	    	log.severe("[DataBukkit["+plugin.getName()+"]]Bad "+file.getName()+" file.");
         }
     }
     
     public boolean brokenFile() {
-    	return brokenFile;
+    	if (brokenFiles.size() > 0) {
+    		return true;
+    	}
+    	return false;
     }
 
 }

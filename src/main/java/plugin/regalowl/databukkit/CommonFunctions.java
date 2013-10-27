@@ -2,6 +2,7 @@ package regalowl.databukkit;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.bukkit.ChatColor;
@@ -35,6 +36,9 @@ public class CommonFunctions {
 		return message;
 	}
 	
+	public double twoDecimals(double input) {
+		return round(input, 2);
+	}
 	public double round(double input, int decimals) {
 		double factor = Math.pow(10, decimals);
 		int changedecimals = (int) Math.ceil((input * factor) - .5);
@@ -52,28 +56,7 @@ public class CommonFunctions {
 	
 	
 	
-	public ArrayList<String> stringToArray(String commalist) {
-		try {
-			ArrayList<String> array = new ArrayList<String>();
-			if (commalist.indexOf(",") == 0) {
-				commalist = commalist.substring(1, commalist.length());
-			}
-			if (!commalist.substring(commalist.length() - 1, commalist.length()).equalsIgnoreCase(",")) {
-				commalist = commalist + ",";
-			}
-			while (commalist.contains(",")) {
-				array.add(commalist.substring(0, commalist.indexOf(",")));
-				if (commalist.indexOf(",") == commalist.lastIndexOf(",")) {
-					break;
-				}
-				commalist = commalist.substring(commalist.indexOf(",") + 1, commalist.length());
-			}
-			return array;
-		} catch (Exception e) {
-			ArrayList<String> array = new ArrayList<String>();
-			return array;
-		}
-	}
+
 	public ArrayList<Double> doubleToArray(String commalist) {
 		try {
 			ArrayList<Double> array = new ArrayList<Double>();
@@ -118,18 +101,6 @@ public class CommonFunctions {
 			return array;
 		}
 	}
-	
-	
-	
-	public String stringArrayToString(ArrayList<String> array) {
-		String string = "";
-		int c = 0;
-		while (c < array.size()) {
-			string = string + array.get(c) + ",";
-			c++;
-		}
-		return string;
-	}
 	public String doubleArrayToString(ArrayList<Double> array) {
 		String string = "";
 		int c = 0;
@@ -164,8 +135,7 @@ public class CommonFunctions {
 		}
 		return array;
 	}
-	
-	public String implode(ArrayList<String> array, String delimiter) {
+	public String implode(List<String> array, String delimiter) {
 		if (array == null || delimiter == null) {return "";}
 		String string = "";
 		for (String cs:array) {
@@ -173,6 +143,10 @@ public class CommonFunctions {
 		}
 		return string;
 	}
+	
+	
+	
+
 	
 	
 	

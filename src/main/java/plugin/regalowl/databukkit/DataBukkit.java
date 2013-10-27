@@ -18,6 +18,7 @@ public class DataBukkit {
 	private Logger log;
 	private YamlHandler yh;
 	private CommonFunctions cf;
+	private FileTools ft;
 	
 	
 	private boolean dataBaseExists;
@@ -39,6 +40,7 @@ public class DataBukkit {
 		log = Logger.getLogger("Minecraft");
 		yh = new YamlHandler(plugin);
 		cf = new CommonFunctions();
+		ft = new FileTools(plugin);
 		useMySql = false;
 		dataBaseExists = false;
 		shutdown = false;
@@ -166,6 +168,10 @@ public class DataBukkit {
 	
 	public CommonFunctions getCommonFunctions() {
 		return cf;
+	}
+	
+	public FileTools getFileTools() {
+		return ft;
 	}
 
 	public boolean useMySQL() {
