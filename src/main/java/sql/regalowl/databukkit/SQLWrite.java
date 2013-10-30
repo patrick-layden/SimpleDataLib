@@ -154,7 +154,7 @@ public class SQLWrite {
 		shutDown.set(true);
 		if (writeActive.get()) {
 			try {
-				//dab.getLogger().info("[DataBukkit["+dab.getPlugin().getName()+"]]Finishing the SQL save task... Please wait.");
+				dab.getLogger().info("[DataBukkit["+dab.getPlugin().getName()+"]]Finishing the current SQL write task... Please wait.");
 				shutDownLatch.await();
 			} catch (InterruptedException e) {
 				dab.writeError(e);
@@ -169,7 +169,7 @@ public class SQLWrite {
 	}
 	private void saveBuffer() {
 		if (buffer.size() > 0) {
-			//dab.getLogger().info("[DataBukkit["+dab.getPlugin().getName()+"]]Saving the SQL buffer... Please wait.");
+			dab.getLogger().info("[DataBukkit["+dab.getPlugin().getName()+"]]Saving the remaining SQL queue... Please wait.");
 			DatabaseConnection database = null;
 			if (dab.useMySQL()) {
 				database = new MySQLConnection(dab);
