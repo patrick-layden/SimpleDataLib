@@ -59,7 +59,7 @@ public abstract class DatabaseConnection {
 					dab.writeError(e, "SQL write failed.  The failing SQL statement is in the following brackets: [" + currentStatement + "]");
 				}
 				statements.remove(currentStatement);
-				dab.getSQLWrite().executeSQL(statements);
+				dab.getSQLWrite().addToQueue(statements);
 				statements.clear();
 			} catch (SQLException e1) {
 				dab.writeError(e, "Rollback failed.  Cannot recover. Data loss may have occurred.");

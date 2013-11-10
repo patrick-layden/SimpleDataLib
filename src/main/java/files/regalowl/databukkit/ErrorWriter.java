@@ -20,16 +20,20 @@ public class ErrorWriter {
 
 	
 	ErrorWriter(Exception e, String text, String path, Plugin pl) {
-		this.error = getErrorString(e);
-		this.text = text;
-		this.path = path;
-		this.plugin = pl;
-		if (path == null) {return;}
-		plugin.getServer().getScheduler().runTaskLaterAsynchronously(plugin, new Runnable() {
-			public void run() {
-				write();
-			}
-		}, 0L);
+		try {
+			this.error = getErrorString(e);
+			this.text = text;
+			this.path = path;
+			this.plugin = pl;
+			if (path == null) {return;}
+			plugin.getServer().getScheduler().runTaskLaterAsynchronously(plugin, new Runnable() {
+				public void run() {
+					write();
+				}
+			}, 0L);
+		} catch (Exception e2) {
+			plugin.getLogger().info("Tried to log error to file but was unable.  The stacktrace for the logged error is as follows: " + getErrorString(e));
+		}
 	}
 	
 	

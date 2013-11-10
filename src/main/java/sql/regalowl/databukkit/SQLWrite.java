@@ -90,17 +90,25 @@ public class SQLWrite {
 		}
 	}
 	
+	public void executeSynchronously(String statement) {
+		DatabaseConnection database = getDatabaseConnection();
+		ArrayList<String> statements = new ArrayList<String>();
+		statements.add(statement);
+		database.write(statements, logWriteErrors.get());
+	}
+	public void convertExecuteSynchronously(String statement) {
+		executeSynchronously(convertSQL(statement));
+	}
 
-
-	public void executeSQL(List<String> statements) {
+	public void addToQueue(List<String> statements) {
 		for (String statement : statements) {
-			executeSQL(statement);
+			addToQueue(statement);
 		}
 	}
-	public void convertExecuteSQL(String statement) {
-		executeSQL(convertSQL(statement));
+	public void convertAddToQueue(String statement) {
+		addToQueue(convertSQL(statement));
 	}
-	public void executeSQL(String statement) {
+	public void addToQueue(String statement) {
 		if (statement == null) {return;}
 		buffer.put(bufferCounter.getAndIncrement(), statement);
 	}
@@ -199,7 +207,7 @@ public class SQLWrite {
 				statement += field + ")";
 			}
 		}
-		executeSQL(statement);
+		addToQueue(statement);
 	}
 	
 	public void performInsert(String table, HashMap<String, String> values) {
@@ -214,7 +222,7 @@ public class SQLWrite {
 		}
 		statement = statement.substring(0, statement.length() - 2);
 		statement += ")";		
-		executeSQL(statement);
+		addToQueue(statement);
 	}
 	/**
 	 * 
@@ -239,7 +247,7 @@ public class SQLWrite {
 			statement += field + " = " + quoteValue(condition) + " AND ";
 		}
 		statement = statement.substring(0, statement.length() - 5);
-		executeSQL(statement);
+		addToQueue(statement);
 	}
 	
 	public void performDelete(String table, HashMap<String, String> conditions) {
@@ -251,7 +259,7 @@ public class SQLWrite {
 			statement += field + " = " + quoteValue(condition) + " AND ";
 		}
 		statement = statement.substring(0, statement.length() - 5);
-		executeSQL(statement);
+		addToQueue(statement);
 	}
 	
 	public String quoteValue(String value) {
