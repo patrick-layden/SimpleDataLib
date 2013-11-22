@@ -31,9 +31,9 @@ public class SQLRead {
 	    		public void run() {
 	    			DatabaseConnection dc = null;
 	    			if (dab.useMySQL()) {
-	    				dc = new MySQLConnection(dab);
+	    				dc = new MySQLConnection(dab, false);
 	    			} else {
-		    			dc = new SQLiteConnection(dab);
+		    			dc = new SQLiteConnection(dab, false);
 	    			}
 	    			returnConnection(dc);
 	    		}

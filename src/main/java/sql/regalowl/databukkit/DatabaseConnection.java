@@ -25,9 +25,12 @@ public abstract class DatabaseConnection {
 	protected AtomicBoolean logWriteErrors = new AtomicBoolean();
 	protected AtomicBoolean logReadErrors = new AtomicBoolean();
 	
-	DatabaseConnection(DataBukkit dab) {
+    protected AtomicBoolean shutDownOverride = new AtomicBoolean();
+	
+	DatabaseConnection(DataBukkit dab, boolean override) {
 		dc = this;
 		this.dab = dab;
+		this.shutDownOverride.set(override);
 	}
 	
 	public void write(List<String> sql, boolean logErrors) {
@@ -42,7 +45,11 @@ public abstract class DatabaseConnection {
 				preparedStatement = connection.prepareStatement(currentStatement);
 				preparedStatement.executeUpdate();
 			}
-			connection.commit();
+			if (dab.getSQLWrite().shutdownStatus().get() && !shutDownOverride.get()) {
+				connection.rollback();
+			} else {
+				connection.commit();
+			}
 		} catch (SQLException e) {
 			try {
 				connection.rollback();
@@ -56,7 +63,9 @@ public abstract class DatabaseConnection {
 			}
 		} finally {
 			statements.clear();
-			dab.getSQLWrite().returnConnection(dc);
+			if (!shutDownOverride.get()) {
+				dab.getSQLWrite().returnConnection(dc);
+			}
 		}
 	}
 	
@@ -106,6 +115,7 @@ public abstract class DatabaseConnection {
 			connection.close();
 		} catch (Exception e) {}
 	}
+
 
 	
 }

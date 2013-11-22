@@ -6,8 +6,8 @@ public class SQLiteConnection extends DatabaseConnection {
 
 	private String sqlitePath;
 	
-	SQLiteConnection(DataBukkit dab) {
-		super(dab);
+	SQLiteConnection(DataBukkit dab, boolean override) {
+		super(dab, override);
 		sqlitePath = dab.getSQLitePath();
 		openConnection();
 	}

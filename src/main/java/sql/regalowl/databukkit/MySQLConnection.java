@@ -12,8 +12,8 @@ public class MySQLConnection extends DatabaseConnection {
 	private String host;
 	private String database;
 	
-	MySQLConnection(DataBukkit dab) {
-		super(dab);
+	MySQLConnection(DataBukkit dab, boolean override) {
+		super(dab, override);
 		username = dab.getUsername();
 		password = dab.getPassword();
 		port = dab.getPort();
