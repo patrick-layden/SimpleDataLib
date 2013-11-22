@@ -33,17 +33,9 @@ public abstract class DatabaseConnection {
 	public void write(List<String> sql, boolean logErrors) {
 		try {
 			logWriteErrors.set(logErrors);
-			if (connection == null || connection.isClosed()) {
-				openConnection();
-			}
-			statements.clear();
-			for (String csql : sql) {
-				statements.add(csql);
-			}
-			if (statements.size() == 0) {
-				dab.getSQLWrite().returnConnection(dc);
-				return;
-			}
+			if (connection == null || connection.isClosed()) {openConnection();}
+			for (String csql : sql) {statements.add(csql);}
+			if (statements.size() == 0) {return;}
 			connection.setAutoCommit(false);
 			for (String statement : statements) {
 				currentStatement = statement;
@@ -51,7 +43,6 @@ public abstract class DatabaseConnection {
 				preparedStatement.executeUpdate();
 			}
 			connection.commit();
-			statements.clear();
 		} catch (SQLException e) {
 			try {
 				connection.rollback();
@@ -60,15 +51,13 @@ public abstract class DatabaseConnection {
 				}
 				statements.remove(currentStatement);
 				dab.getSQLWrite().addToQueue(statements);
-				statements.clear();
 			} catch (SQLException e1) {
 				dab.writeError(e, "Rollback failed.  Cannot recover. Data loss may have occurred.");
-				statements.clear();
 			}
 		} finally {
+			statements.clear();
 			dab.getSQLWrite().returnConnection(dc);
 		}
-
 	}
 	
 	
@@ -81,9 +70,7 @@ public abstract class DatabaseConnection {
 		logReadErrors.set(logErrors);
 		QueryResult qr = new QueryResult();
 		try {
-			if (connection == null || connection.isClosed()) {
-				openConnection();
-			}
+			if (connection == null || connection.isClosed()) {openConnection();}
 			Statement state = connection.createStatement();
 			ResultSet resultSet = state.executeQuery(statement);
 			ResultSetMetaData rsmd = resultSet.getMetaData();
