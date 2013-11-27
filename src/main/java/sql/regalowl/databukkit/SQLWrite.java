@@ -33,7 +33,8 @@ public class SQLWrite {
     private Lock connectionLock = new ReentrantLock();
     private Condition connectionAvailable = connectionLock.newCondition();
 	private AtomicBoolean shutDown = new AtomicBoolean();
-    private final long writeThreadFrequency = 200L;
+    private final long writeDelay = 20L;
+    private AtomicBoolean logSQL = new AtomicBoolean();
 
 	public SQLWrite(DataBukkit dabu) {
 		logWriteErrors.set(true);
@@ -46,7 +47,7 @@ public class SQLWrite {
 			dc = new SQLiteConnection(dab, false);
 		}
 		returnConnection(dc);
-
+		logSQL.set(false);
 		bufferCounter.set(0);
 		processNext.set(0);
 		writeActive.set(false);
@@ -112,9 +113,9 @@ public class SQLWrite {
 	}
 
 	private synchronized void startWriteTask() {
-		if (writeActive.get() || buffer.isEmpty()) {return;}
+		if (writeActive.get() || buffer.isEmpty() || shutDown.get()) {return;}
 		writeActive.set(true);
-		writeTask = dab.getPlugin().getServer().getScheduler().runTaskTimerAsynchronously(dab.getPlugin(), new Runnable() {
+		writeTask = dab.getPlugin().getServer().getScheduler().runTaskLaterAsynchronously(dab.getPlugin(), new Runnable() {
 			public void run() {
 				DatabaseConnection database = getDatabaseConnection();
 				writeStatements.clear();
@@ -125,16 +126,12 @@ public class SQLWrite {
 				database.write(getWriteStatements(), logWriteErrors.get());
 				if (shutDown.get()) {return;}
 				writeStatements.clear();
-				stopWriteTask();
+				writeActive.set(false);
+				if (!buffer.isEmpty()) {startWriteTask();}
 			}
-		}, writeThreadFrequency, writeThreadFrequency);
+		}, writeDelay);
 	}
-	private synchronized void stopWriteTask() {
-		if (buffer.isEmpty()) {
-			writeTask.cancel();
-			writeActive.set(false);
-		}
-	}
+
 	
 
 
@@ -296,6 +293,17 @@ public class SQLWrite {
 		return writeActive.get();
 	}
 	
+	public void setLogSQL(boolean state) {
+		logSQL.set(state);
+	}
+	
+	public boolean logSQL() {
+		return logSQL.get();
+	}
+	
+	public void logSQL(String statement) {
+		new ErrorWriter(null, statement, dab.getPluginFolderPath() + "SQL.log", dab.getPlugin());
+	}
 	/**
 	 * This method will call the method of your choice in the class of your choice (the class of the object) after the current write operation is complete.
 	 * 

@@ -35,6 +35,7 @@ public abstract class DatabaseConnection {
 	
 	public void write(List<String> sql, boolean logErrors) {
 		try {
+			boolean logSQL = dab.getSQLWrite().logSQL();
 			logWriteErrors.set(logErrors);
 			if (connection == null || connection.isClosed()) {openConnection();}
 			for (String csql : sql) {statements.add(csql);}
@@ -42,6 +43,7 @@ public abstract class DatabaseConnection {
 			connection.setAutoCommit(false);
 			for (String statement : statements) {
 				currentStatement = statement;
+				if (logSQL) {dab.getSQLWrite().logSQL(currentStatement);}
 				preparedStatement = connection.prepareStatement(currentStatement);
 				preparedStatement.executeUpdate();
 			}

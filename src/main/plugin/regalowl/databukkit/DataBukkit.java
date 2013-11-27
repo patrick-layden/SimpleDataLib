@@ -133,7 +133,7 @@ public class DataBukkit {
 			connect.close();
 			return true;
 		} catch (Exception e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 			return false;
 		}
 	}
@@ -149,7 +149,7 @@ public class DataBukkit {
 			connect.close();
 			return true;
 		} catch (Exception e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 			return false;
 		}
 	}
