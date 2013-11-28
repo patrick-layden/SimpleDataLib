@@ -37,7 +37,7 @@ public abstract class DatabaseConnection {
 		try {
 			boolean logSQL = dab.getSQLWrite().logSQL();
 			logWriteErrors.set(logErrors);
-			if (connection == null || connection.isClosed()) {openConnection();}
+			if (connection == null || !connection.isValid(0)) {openConnection();}
 			for (String csql : sql) {statements.add(csql);}
 			if (statements.size() == 0) {return;}
 			connection.setAutoCommit(false);
@@ -81,7 +81,7 @@ public abstract class DatabaseConnection {
 		logReadErrors.set(logErrors);
 		QueryResult qr = new QueryResult();
 		try {
-			if (connection == null || connection.isClosed()) {openConnection();}
+			if (connection == null || !connection.isValid(0)) {openConnection();}
 			Statement state = connection.createStatement();
 			ResultSet resultSet = state.executeQuery(statement);
 			ResultSetMetaData rsmd = resultSet.getMetaData();
