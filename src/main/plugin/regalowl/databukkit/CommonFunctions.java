@@ -1,5 +1,8 @@
 package regalowl.databukkit;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -40,14 +43,26 @@ public class CommonFunctions {
 		return round(input, 2);
 	}
 	public double round(double input, int decimals) {
-		double factor = Math.pow(10, decimals);
-		int changedecimals = (int) Math.ceil((input * factor) - .5);
+		BigDecimal result = round(new BigDecimal(String.valueOf(input)), decimals);
+		return result.doubleValue();
+	}
+	public BigDecimal round(BigDecimal input, int decimals) {
+		BigDecimal factor = new BigDecimal(String.valueOf(Math.pow(10, decimals)));
+		return new BigDecimal(input.multiply(factor).toBigInteger()).divide(factor);
+	}
+	public String roundString(BigDecimal input, int decimals) {
+		return round(input, decimals).toPlainString();
+	}
+	public String roundString(double input, int decimals) {
+		return round(new BigDecimal(String.valueOf(input)), decimals).toPlainString();
+	}
+	/*
+	public double round(double input, int decimals) {
+		Double factor = Math.pow(10, decimals);
+		long changedecimals = (long) Math.ceil((input * factor) - .5);
 		return (double) changedecimals / factor;
 	}
-	
-	
-	
-	
+	*/
 	
 	
 	
