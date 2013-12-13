@@ -40,6 +40,14 @@ public class YamlHandler {
     	configs.put(file, fileConfiguration);
     }
     
+    public void unRegisterFileConfiguration(String file) {
+    	if (configs.containsKey(file)) {
+    		saveYaml(file);
+    		configs.remove(file);
+    		files.remove(file);
+    	}
+    }
+    
 	public void saveYaml(String fileConfiguration){
 		try {
 			if (configs.containsKey(fileConfiguration) && !brokenFiles.contains(configs.get(fileConfiguration).getName())) {
@@ -169,6 +177,15 @@ public class YamlHandler {
 	    	configFile.getParentFile().mkdirs();
 	        copy(plugin.getClass().getResourceAsStream("/"+name+".yml"), configFile);
 	    }
+	}
+	
+	public void deleteConfigFile(String name) {
+		try {
+			File configFile = new File(plugin.getDataFolder(), name + ".yml");
+			configFile.delete();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 
