@@ -179,13 +179,13 @@ public class DataBukkit {
 	}
 	
 	public void writeError(Exception e, String info) {
-		new ErrorWriter(e, info, getErrorFilePath(), plugin);
+		new ErrorWriter(e, info, getErrorFilePath(), plugin, false);
 	}
 	public void writeError(Exception e) {
-		new ErrorWriter(e, null, getErrorFilePath(), plugin);
+		new ErrorWriter(e, null, getErrorFilePath(), plugin, false);
 	}
 	public void writeError(String info) {
-		new ErrorWriter(null, info, getErrorFilePath(), plugin);
+		new ErrorWriter(null, info, getErrorFilePath(), plugin, false);
 	}
 	
 	public void shutDown() {

@@ -7,8 +7,8 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 
@@ -19,7 +19,7 @@ public abstract class DatabaseConnection {
 	protected DataBukkit dab;
 	protected DatabaseConnection dc;
 	protected Connection connection;
-	protected CopyOnWriteArrayList<String> statements = new CopyOnWriteArrayList<String>();
+	protected ArrayList<String> statements = new ArrayList<String>();
 	protected String currentStatement;
 	protected PreparedStatement preparedStatement;
 	protected AtomicBoolean logWriteErrors = new AtomicBoolean();
@@ -33,7 +33,8 @@ public abstract class DatabaseConnection {
 		this.shutDownOverride.set(override);
 	}
 	
-	public void write(List<String> sql, boolean logErrors) {
+	
+	public synchronized void write(List<String> sql, boolean logErrors) {
 		try {
 			boolean logSQL = dab.getSQLWrite().logSQL();
 			logWriteErrors.set(logErrors);
@@ -49,6 +50,7 @@ public abstract class DatabaseConnection {
 			}
 			if (dab.getSQLWrite().shutdownStatus().get() && !shutDownOverride.get()) {
 				connection.rollback();
+				dab.getSQLWrite().addToQueue(statements);
 			} else {
 				connection.commit();
 			}
@@ -64,10 +66,10 @@ public abstract class DatabaseConnection {
 				dab.writeError(e, "Rollback failed.  Cannot recover. Data loss may have occurred.");
 			}
 		} finally {
-			statements.clear();
-			if (!shutDownOverride.get()) {
-				dab.getSQLWrite().returnConnection(dc);
+			if (!dab.getSQLWrite().shutdownStatus().get()) {
+				statements.clear();
 			}
+			dab.getSQLWrite().returnConnection(dc);
 		}
 	}
 	
@@ -77,7 +79,7 @@ public abstract class DatabaseConnection {
 	 * @param statement
 	 * @return QueryResult
 	 */
-	public QueryResult read(String statement, boolean logErrors) {
+	public synchronized QueryResult read(String statement, boolean logErrors) {
 		logReadErrors.set(logErrors);
 		QueryResult qr = new QueryResult();
 		try {
@@ -112,7 +114,7 @@ public abstract class DatabaseConnection {
 	
 	protected abstract void openConnection();
 	
-	public void closeConnection() {
+	public synchronized void closeConnection() {
 		try {
 			connection.close();
 		} catch (Exception e) {}
