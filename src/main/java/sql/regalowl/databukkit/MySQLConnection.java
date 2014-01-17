@@ -12,8 +12,15 @@ public class MySQLConnection extends DatabaseConnection {
 	private String host;
 	private String database;
 	
-	MySQLConnection(DataBukkit dab, boolean override) {
-		super(dab, override);
+	/**
+	 * Creates and opens a new MySQL connection.
+	 * @param dab The DataBukkit object.
+	 * @param readOnly Whether or not this connection should be read only.
+	 * @param override Whether or not to enable the shutdown override for this connection.  
+	 * If enabled this connection can be used to write while a plugin is being shut down.
+	 */
+	MySQLConnection(DataBukkit dab, boolean readOnly, boolean override) {
+		super(dab, readOnly, override);
 		username = dab.getUsername();
 		password = dab.getPassword();
 		port = dab.getPort();
@@ -25,13 +32,12 @@ public class MySQLConnection extends DatabaseConnection {
 	protected void openConnection() {
 		try {
 			connection = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + database, username, password);
-		} catch (Exception e) {
-			try {
-				connection = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + database, username, password);
-			} catch (Exception e2) {
-				dab.writeError(e2, "Fatal database connection error.");
-				return;
+			connection.setReadOnly(readOnly.get());
+			if (!isValid()) {
+				//TODO
 			}
+		} catch (Exception e) {
+			dab.writeError(e, "Database connection error.");
 		}
 	}
 

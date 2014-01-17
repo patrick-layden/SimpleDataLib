@@ -4,44 +4,38 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 
 import org.bukkit.plugin.Plugin;
 
 public class ErrorWriter {
 
-
-	
+	private DataBukkit dab;
 	private String path;
 	private String text;
 	private String error;
 	private Plugin plugin;
 
+	ErrorWriter(String path, DataBukkit dab) {
+		this.dab = dab;
+		this.path = path;
+		this.plugin = dab.getPlugin();
+	}
 	
-	ErrorWriter(Exception e, String text, String path, Plugin pl, boolean sync) {
-		try {
-			this.error = getErrorString(e);
-			this.text = text;
-			this.path = path;
-			this.plugin = pl;
-			if (path == null) {return;}
-			if (!sync) {
-				plugin.getServer().getScheduler().runTaskLaterAsynchronously(plugin, new Runnable() {
-					public void run() {
-						write();
-					}
-				}, 0L);
-			} else {
-				write();
-			}
-		} catch (Exception e2) {
-			plugin.getLogger().info("Tried to log error to file but was unable.  The stacktrace for the logged error is as follows: " + getErrorString(e));
+	public void writeError(Exception e, String text, boolean sync) {
+		this.error = dab.getCommonFunctions().getErrorString(e);
+		this.text = text;
+		if (!sync) {
+			plugin.getServer().getScheduler().runTaskLaterAsynchronously(plugin, new Runnable() {
+				public void run() {
+					write();
+				}
+			}, 0L);
+		} else {
+			write();
 		}
 	}
 	
-	
-	public void write() {
+	private void write() {
 		try {
 			File file = new File(path);
 			if (!file.exists()) {
@@ -61,13 +55,6 @@ public class ErrorWriter {
 			e.printStackTrace();
 		}
 	}
-	
-	public String getErrorString(Exception e) {
-		if (e == null) {return null;}
-		StringWriter error = new StringWriter();
-		e.printStackTrace(new PrintWriter(error));
-		return error.toString();
-	}
-	
 
+	
 }

@@ -1,8 +1,8 @@
 package regalowl.databukkit;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -67,7 +67,12 @@ public class CommonFunctions {
 	
 	
 	
-	
+	public String getErrorString(Exception e) {
+		if (e == null) {return null;}
+		StringWriter error = new StringWriter();
+		e.printStackTrace(new PrintWriter(error));
+		return error.toString();
+	}
 	
 	
 	

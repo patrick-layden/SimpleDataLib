@@ -26,11 +26,13 @@ public abstract class DatabaseConnection {
 	protected AtomicBoolean logReadErrors = new AtomicBoolean();
 	
     protected AtomicBoolean shutDownOverride = new AtomicBoolean();
-	
-	DatabaseConnection(DataBukkit dab, boolean override) {
+    protected AtomicBoolean readOnly = new AtomicBoolean();
+    
+	DatabaseConnection(DataBukkit dab, boolean readOnly, boolean override) {
 		dc = this;
 		this.dab = dab;
 		this.shutDownOverride.set(override);
+		this.readOnly.set(readOnly);
 	}
 	
 	
@@ -38,7 +40,7 @@ public abstract class DatabaseConnection {
 		try {
 			boolean logSQL = dab.getSQLWrite().logSQL();
 			logWriteErrors.set(logErrors);
-			if (connection == null || connection.isClosed() || connection.isReadOnly()) {openConnection();}
+			if (!isValid()) {fixConnection();}
 			for (String csql : sql) {statements.add(csql);}
 			if (statements.size() == 0) {return;}
 			connection.setAutoCommit(false);
@@ -69,6 +71,11 @@ public abstract class DatabaseConnection {
 			if (!dab.getSQLWrite().shutdownStatus().get()) {
 				statements.clear();
 			}
+			try {
+				connection.setAutoCommit(true);
+			} catch (SQLException e) {
+				dab.writeError(e);
+			}
 			dab.getSQLWrite().returnConnection(dc);
 		}
 	}
@@ -83,7 +90,7 @@ public abstract class DatabaseConnection {
 		logReadErrors.set(logErrors);
 		QueryResult qr = new QueryResult();
 		try {
-			if (connection == null || connection.isClosed()) {openConnection();}
+			if (!isValid()) {fixConnection();}
 			Statement state = connection.createStatement();
 			ResultSet resultSet = state.executeQuery(statement);
 			ResultSetMetaData rsmd = resultSet.getMetaData();
@@ -110,14 +117,34 @@ public abstract class DatabaseConnection {
 		}
 	}
 	
+	public boolean isValid() {
+		try {
+			if (connection == null || connection.isClosed()) {
+				return false;
+			}
+			if (!readOnly.get() && connection.isReadOnly()) {
+				return false;
+			}
+		} catch (SQLException e) {
+			dab.writeError(e);
+			return false;
+		}
+		return true;
+	}
 	
-	
+	public void fixConnection() {
+		closeConnection();
+		openConnection();
+	}
 	protected abstract void openConnection();
-	
 	public synchronized void closeConnection() {
 		try {
-			connection.close();
-		} catch (Exception e) {}
+			if (!connection.isClosed()) {
+				connection.close();
+			}
+		} catch (Exception e) {
+			dab.writeError(e, "Connection failed to close.");
+		}
 	}
 
 

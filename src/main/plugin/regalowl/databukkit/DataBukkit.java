@@ -19,7 +19,7 @@ public class DataBukkit {
 	private YamlHandler yh;
 	private CommonFunctions cf;
 	private FileTools ft;
-	
+	private ErrorWriter ew;
 	
 	private boolean dataBaseExists;
 	private String host;
@@ -41,6 +41,7 @@ public class DataBukkit {
 		yh = new YamlHandler(plugin);
 		cf = new CommonFunctions();
 		ft = new FileTools(plugin);
+		ew = new ErrorWriter(getErrorFilePath(), this);
 		useMySql = false;
 		dataBaseExists = false;
 		shutdown = false;
@@ -173,19 +174,23 @@ public class DataBukkit {
 	public FileTools getFileTools() {
 		return ft;
 	}
+	
+	public ErrorWriter getErrorWriter() {
+		return ew;
+	}
 
 	public boolean useMySQL() {
 		return useMySql;
 	}
 	
 	public void writeError(Exception e, String info) {
-		new ErrorWriter(e, info, getErrorFilePath(), plugin, false);
+		ew.writeError(e, info, false);
 	}
 	public void writeError(Exception e) {
-		new ErrorWriter(e, null, getErrorFilePath(), plugin, false);
+		ew.writeError(e, null, false);
 	}
 	public void writeError(String info) {
-		new ErrorWriter(null, info, getErrorFilePath(), plugin, false);
+		ew.writeError(null, info, false);
 	}
 	
 	public void shutDown() {

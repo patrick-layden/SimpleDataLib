@@ -41,9 +41,9 @@ public class SQLWrite {
 
 		DatabaseConnection dc = null;
 		if (dab.useMySQL()) {
-			dc = new MySQLConnection(dab, false);
+			dc = new MySQLConnection(dab, false, false);
 		} else {
-			dc = new SQLiteConnection(dab, false);
+			dc = new SQLiteConnection(dab, false, false);
 		}
 		returnConnection(dc);
 		logSQL.set(false);
@@ -163,9 +163,9 @@ public class SQLWrite {
 			dab.getLogger().info("[DataBukkit["+dab.getPlugin().getName()+"]]Saving the remaining SQL queue: ["+buffer.size()+" statements].  Please wait.");
 			DatabaseConnection database = null;
 			if (dab.useMySQL()) {
-				database = new MySQLConnection(dab, true);
+				database = new MySQLConnection(dab, false, true);
 			} else {
-				database = new SQLiteConnection(dab, true);
+				database = new SQLiteConnection(dab, false, true);
 			}
 			ArrayList<String> writeArray = new ArrayList<String>();
 			while (buffer.size() > 0) {
@@ -288,7 +288,8 @@ public class SQLWrite {
 	}
 	
 	public synchronized void logSQL(String statement) {
-		new ErrorWriter(null, statement, dab.getPluginFolderPath() + "SQL.log", dab.getPlugin(), true);
+		ErrorWriter ew = new ErrorWriter(dab.getPluginFolderPath() + "SQL.log", dab);
+		ew.writeError(null, statement, true);
 	}
 	/**
 	 * This method will call the method of your choice in the class of your choice (the class of the object) after the current write operation is complete.

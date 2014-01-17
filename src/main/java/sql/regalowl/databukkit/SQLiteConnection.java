@@ -6,8 +6,15 @@ public class SQLiteConnection extends DatabaseConnection {
 
 	private String sqlitePath;
 	
-	SQLiteConnection(DataBukkit dab, boolean override) {
-		super(dab, override);
+	/**
+	 * Creates and opens a new SQLite connection.
+	 * @param dab The DataBukkit object.
+	 * @param readOnly Whether or not this connection should be read only.
+	 * @param override Whether or not to enable the shutdown override for this connection.  
+	 * If enabled this connection can be used to write while a plugin is being shut down.
+	 */
+	SQLiteConnection(DataBukkit dab, boolean readOnly, boolean override) {
+		super(dab, readOnly, override);
 		sqlitePath = dab.getSQLitePath();
 		openConnection();
 	}
@@ -17,14 +24,12 @@ public class SQLiteConnection extends DatabaseConnection {
 		try {
 			Class.forName("org.sqlite.JDBC");
 			connection = DriverManager.getConnection("jdbc:sqlite:" + sqlitePath);
-		} catch (Exception e) {
-			try {
-				Class.forName("org.sqlite.JDBC");
-				connection = DriverManager.getConnection("jdbc:sqlite:" + sqlitePath);
-			} catch (Exception e2) {
-				dab.writeError(e2, "Fatal database connection error.");
-				return;
+			connection.setReadOnly(readOnly.get());
+			if (!isValid()) {
+				//TODO
 			}
+		} catch (Exception e) {
+			dab.writeError(e, "Database connection error.");
 		}
 	}
 
