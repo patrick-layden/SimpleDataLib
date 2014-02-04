@@ -20,8 +20,7 @@ import org.bukkit.scheduler.BukkitTask;
 public class SQLWrite {
 
 	private DataBukkit dab;
-	private ConcurrentHashMap<Long, String> buffer = new ConcurrentHashMap<Long, String>();
-	//private ArrayList<String> writeStatements = new ArrayList<String>();
+	private ConcurrentHashMap<Long, WriteStatement> buffer = new ConcurrentHashMap<Long, WriteStatement>();
 	private BukkitTask writeTask;
 	private AtomicBoolean writeActive = new AtomicBoolean();
 	private AtomicLong bufferCounter = new AtomicLong();
@@ -86,19 +85,25 @@ public class SQLWrite {
 	
 	public synchronized void executeSynchronously(String statement) {
 		DatabaseConnection database = getDatabaseConnection();
-		ArrayList<String> statements = new ArrayList<String>();
-		statements.add(statement);
+		ArrayList<WriteStatement> statements = new ArrayList<WriteStatement>();
+		statements.add(new WriteStatement(statement, dab));
 		database.write(statements, logWriteErrors.get());
 	}
 	public synchronized void convertExecuteSynchronously(String statement) {
 		executeSynchronously(convertSQL(statement));
 	}
 
-	
+	public synchronized void addWriteStatementsToQueue(List<WriteStatement> statements) {
+		for (WriteStatement statement : statements) {
+			if (statement == null) {continue;}
+			buffer.put(bufferCounter.getAndIncrement(), statement);
+		}
+		startWriteTask();
+	}
 	public synchronized void addToQueue(List<String> statements) {
 		for (String statement : statements) {
 			if (statement == null) {continue;}
-			buffer.put(bufferCounter.getAndIncrement(), statement);
+			buffer.put(bufferCounter.getAndIncrement(), new WriteStatement(statement, dab));
 		}
 		startWriteTask();
 	}
@@ -106,6 +111,11 @@ public class SQLWrite {
 		addToQueue(convertSQL(statement));
 	}
 	public synchronized void addToQueue(String statement) {
+		if (statement == null) {return;}
+		buffer.put(bufferCounter.getAndIncrement(), new WriteStatement(statement, dab));
+		startWriteTask();
+	}
+	public synchronized void addToQueue(WriteStatement statement) {
 		if (statement == null) {return;}
 		buffer.put(bufferCounter.getAndIncrement(), statement);
 		startWriteTask();
@@ -117,7 +127,7 @@ public class SQLWrite {
 		writeTask = dab.getPlugin().getServer().getScheduler().runTaskLaterAsynchronously(dab.getPlugin(), new Runnable() {
 			public void run() {
 				DatabaseConnection database = getDatabaseConnection();
-				ArrayList<String> writeArray = new ArrayList<String>();
+				ArrayList<WriteStatement> writeArray = new ArrayList<WriteStatement>();
 				while (buffer.size() > 0) {
 					writeArray.add(buffer.get(processNext.get()));
 					buffer.remove(processNext.getAndIncrement());
@@ -167,7 +177,7 @@ public class SQLWrite {
 			} else {
 				database = new SQLiteConnection(dab, false, true);
 			}
-			ArrayList<String> writeArray = new ArrayList<String>();
+			ArrayList<WriteStatement> writeArray = new ArrayList<WriteStatement>();
 			while (buffer.size() > 0) {
 				writeArray.add(buffer.get(processNext.get()));
 				buffer.remove(processNext.getAndIncrement());
@@ -287,9 +297,9 @@ public class SQLWrite {
 		return logSQL.get();
 	}
 	
-	public synchronized void logSQL(String statement) {
+	public synchronized void logSQL(WriteStatement statement) {
 		ErrorWriter ew = new ErrorWriter(dab.getPluginFolderPath() + "SQL.log", dab);
-		ew.writeError(null, statement, true);
+		ew.writeError(null, statement.getStatement(), true);
 	}
 	/**
 	 * This method will call the method of your choice in the class of your choice (the class of the object) after the current write operation is complete.

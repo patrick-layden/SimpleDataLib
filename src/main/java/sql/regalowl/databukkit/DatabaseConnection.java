@@ -13,16 +13,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 
 
-
 public abstract class DatabaseConnection {
 
 	protected DataBukkit dab;
 	protected DatabaseConnection dc;
 	protected Connection connection;
-	protected ArrayList<String> statements = new ArrayList<String>();
-	protected String currentStatement;
+	protected ArrayList<WriteStatement> statements = new ArrayList<WriteStatement>();
+	protected WriteStatement currentStatement;
 	protected PreparedStatement preparedStatement;
-	protected AtomicBoolean logWriteErrors = new AtomicBoolean();
 	protected AtomicBoolean logReadErrors = new AtomicBoolean();
 	
     protected AtomicBoolean shutDownOverride = new AtomicBoolean();
@@ -36,34 +34,30 @@ public abstract class DatabaseConnection {
 	}
 	
 	
-	public synchronized void write(List<String> sql, boolean logErrors) {
+	public synchronized void write(List<WriteStatement> sql, boolean logErrors) {
 		try {
-			boolean logSQL = dab.getSQLWrite().logSQL();
-			logWriteErrors.set(logErrors);
-			if (!isValid()) {fixConnection();}
-			for (String csql : sql) {statements.add(csql);}
+			currentStatement = null;
+			if (!isWriteable()) {fixConnection();}
+			for (WriteStatement cs : sql) {statements.add(cs);}
 			if (statements.size() == 0) {return;}
-			connection.setAutoCommit(false);
-			for (String statement : statements) {
+			for (WriteStatement statement : statements) {
 				currentStatement = statement;
-				if (logSQL) {dab.getSQLWrite().logSQL(currentStatement);}
-				preparedStatement = connection.prepareStatement(currentStatement);
+				if (dab.getSQLWrite().logSQL()) {dab.getSQLWrite().logSQL(currentStatement);}
+				preparedStatement = connection.prepareStatement(currentStatement.getStatement());
 				preparedStatement.executeUpdate();
 			}
 			if (dab.getSQLWrite().shutdownStatus().get() && !shutDownOverride.get()) {
 				connection.rollback();
-				dab.getSQLWrite().addToQueue(statements);
+				dab.getSQLWrite().addWriteStatementsToQueue(statements);
 			} else {
 				connection.commit();
 			}
 		} catch (SQLException e) {
 			try {
 				connection.rollback();
-				if (logWriteErrors.get()) {
-					dab.writeError(e, "SQL write failed.  The failing SQL statement is in the following brackets: [" + currentStatement + "]");
-				}
 				statements.remove(currentStatement);
-				dab.getSQLWrite().addToQueue(statements);
+				currentStatement.writeFailed(e, logErrors);
+				dab.getSQLWrite().addWriteStatementsToQueue(statements);
 			} catch (SQLException e1) {
 				dab.writeError(e, "Rollback failed.  Cannot recover. Data loss may have occurred.");
 			}
@@ -126,15 +120,42 @@ public abstract class DatabaseConnection {
 				return false;
 			}
 		} catch (SQLException e) {
-			dab.writeError(e);
 			return false;
 		}
 		return true;
 	}
 	
+	public boolean isWriteable() {
+		if (!isValid()) {return false;}
+		try {
+			connection.setAutoCommit(false);
+		} catch (SQLException se) {
+			return false;
+		}
+		return true;
+	}
 	public void fixConnection() {
 		closeConnection();
 		openConnection();
+		if (readOnly.get()) {
+			if (!isValid()) {
+				dab.getLogger().severe("-----------------------------------------------------");
+				dab.getLogger().severe("[DataBukkit["+dab.getPlugin().getName()+"]]Fatal database connection error. "
+						+ "Make sure your database is unlocked and readable in order to use this plugin."
+						+ " Disabling "+dab.getPlugin().getName()+".");
+				dab.getLogger().severe("-----------------------------------------------------");
+				dab.getPlugin().getPluginLoader().disablePlugin(dab.getPlugin());
+			}
+		} else {
+			if (!isWriteable()) {
+				dab.getLogger().severe("-----------------------------------------------------");
+				dab.getLogger().severe("[DataBukkit["+dab.getPlugin().getName()+"]]Fatal database connection error. "
+						+ "Make sure your database is unlocked and writeable in order to use this plugin."
+						+ " Disabling "+dab.getPlugin().getName()+".");
+				dab.getLogger().severe("-----------------------------------------------------");
+				dab.getPlugin().getPluginLoader().disablePlugin(dab.getPlugin());
+			}
+		}
 	}
 	protected abstract void openConnection();
 	public synchronized void closeConnection() {
