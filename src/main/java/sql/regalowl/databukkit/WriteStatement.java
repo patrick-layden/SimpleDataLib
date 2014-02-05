@@ -1,20 +1,15 @@
 package regalowl.databukkit;
 
 
-public class WriteStatement {
+public class WriteStatement extends BasicStatement {
 
-	private String statement;
 	private int writeFailures;
-	private DataBukkit dab;
 	
 	public WriteStatement(String statement, DataBukkit dab) {
-		this.statement = statement;
+		super(statement, dab);
 		this.writeFailures = 0;
-		this.dab = dab;
 	}
-	public String getStatement() {
-		return statement;
-	}
+
 	
 	public void writeFailed(Exception e, boolean logError) {
 		try {

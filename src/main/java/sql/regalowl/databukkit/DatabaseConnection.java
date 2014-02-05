@@ -1,12 +1,12 @@
 package regalowl.databukkit;
 
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -19,7 +19,8 @@ public abstract class DatabaseConnection {
 	protected DatabaseConnection dc;
 	protected Connection connection;
 	protected ArrayList<WriteStatement> statements = new ArrayList<WriteStatement>();
-	protected WriteStatement currentStatement;
+	protected WriteStatement writeStatement;
+	protected BasicStatement readStatement;
 	protected PreparedStatement preparedStatement;
 	protected AtomicBoolean logReadErrors = new AtomicBoolean();
 	
@@ -36,14 +37,15 @@ public abstract class DatabaseConnection {
 	
 	public synchronized void write(List<WriteStatement> sql, boolean logErrors) {
 		try {
-			currentStatement = null;
+			writeStatement = null;
 			if (!isWriteable()) {fixConnection();}
 			for (WriteStatement cs : sql) {statements.add(cs);}
 			if (statements.size() == 0) {return;}
 			for (WriteStatement statement : statements) {
-				currentStatement = statement;
-				if (dab.getSQLWrite().logSQL()) {dab.getSQLWrite().logSQL(currentStatement);}
-				preparedStatement = connection.prepareStatement(currentStatement.getStatement());
+				writeStatement = statement;
+				if (dab.getSQLWrite().logSQL()) {dab.getSQLWrite().logSQL(writeStatement);}
+				preparedStatement = connection.prepareStatement(writeStatement.getStatement());
+				applyParameters(writeStatement);
 				preparedStatement.executeUpdate();
 			}
 			if (dab.getSQLWrite().shutdownStatus().get() && !shutDownOverride.get()) {
@@ -55,8 +57,8 @@ public abstract class DatabaseConnection {
 		} catch (SQLException e) {
 			try {
 				connection.rollback();
-				statements.remove(currentStatement);
-				currentStatement.writeFailed(e, logErrors);
+				statements.remove(writeStatement);
+				writeStatement.writeFailed(e, logErrors);
 				dab.getSQLWrite().addWriteStatementsToQueue(statements);
 			} catch (SQLException e1) {
 				dab.writeError(e, "Rollback failed.  Cannot recover. Data loss may have occurred.");
@@ -80,13 +82,16 @@ public abstract class DatabaseConnection {
 	 * @param statement
 	 * @return QueryResult
 	 */
-	public synchronized QueryResult read(String statement, boolean logErrors) {
+	public synchronized QueryResult read(BasicStatement statement, boolean logErrors) {
+		readStatement = null;
 		logReadErrors.set(logErrors);
 		QueryResult qr = new QueryResult();
 		try {
 			if (!isValid()) {fixConnection();}
-			Statement state = connection.createStatement();
-			ResultSet resultSet = state.executeQuery(statement);
+			readStatement = statement;
+			preparedStatement = connection.prepareStatement(readStatement.getStatement());
+			applyParameters(readStatement);
+			ResultSet resultSet = preparedStatement.executeQuery();
 			ResultSetMetaData rsmd = resultSet.getMetaData();
 			int columnCount = rsmd.getColumnCount();
 			for (int i = 1; i <= columnCount; i++) {
@@ -98,7 +103,7 @@ public abstract class DatabaseConnection {
 				}
 			}
 			resultSet.close();
-			state.close();
+			preparedStatement.close();
 			statement = null;
 			return qr;
 		} catch (SQLException e) {
@@ -108,6 +113,48 @@ public abstract class DatabaseConnection {
 			return qr;
 		} finally {
 			dab.getSQLRead().returnConnection(dc);
+		}
+	}
+	
+	private void applyParameters(BasicStatement currentStatement) {
+		if (!currentStatement.usesParameters()) {return;}
+		ArrayList<Object> parameters = currentStatement.getParameters();
+		for (int i = 0; i < parameters.size(); i++) {
+			Object paramObject = parameters.get(i);
+			try {
+				if (paramObject instanceof String) {
+					String param = (String)paramObject;
+					preparedStatement.setString(i+1, param);
+				} else if (paramObject instanceof Integer) {
+					Integer param = (Integer)paramObject;
+					preparedStatement.setInt(i+1, param);
+				} else if (paramObject instanceof Long) {
+					Long param = (Long)paramObject;
+					preparedStatement.setLong(i+1, param);
+				} else if (paramObject instanceof Float) {
+					Float param = (Float)paramObject;
+					preparedStatement.setFloat(i+1, param);
+				} else if (paramObject instanceof Double) {
+					Double param = (Double)paramObject;
+					preparedStatement.setDouble(i+1, param);
+				} else if (paramObject instanceof Boolean) {
+					Boolean param = (Boolean)paramObject;
+					preparedStatement.setBoolean(i+1, param);
+				} else if (paramObject instanceof BigDecimal) {
+					BigDecimal param = (BigDecimal)paramObject;
+					preparedStatement.setBigDecimal(i+1, param);
+				} else if (paramObject instanceof Short) {
+					Short param = (Short)paramObject;
+					preparedStatement.setShort(i+1, param);
+				} else if (paramObject instanceof Byte) {
+					Byte param = (Byte)paramObject;
+					preparedStatement.setByte(i+1, param);
+				} else {
+					preparedStatement.setObject(i+1, paramObject);
+				}
+			} catch (Exception e) {
+				dab.writeError(e);
+			}
 		}
 	}
 	

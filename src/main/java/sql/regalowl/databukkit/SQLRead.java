@@ -81,11 +81,20 @@ public class SQLRead {
 	 * This method should be called asynchronously to prevent lag
 	 * @return QueryResult
 	 */
-	public QueryResult aSyncSelect(String select) {
+	public QueryResult aSyncSelect(BasicStatement select) {
 		return getDatabaseConnection().read(select, logReadErrors.get());
 	}
-
 	
+	/**
+	 * 
+	 * This method should be called asynchronously to prevent lag
+	 * @return QueryResult
+	 */
+	public QueryResult aSyncSelect(String select) {
+		BasicStatement bs = new BasicStatement(select, dab);
+		return getDatabaseConnection().read(bs, logReadErrors.get());
+	}
+
 	
 	/**
 	 * This method will perform a query asynchronously, and then synchronously call the method of your choice in the class of your choice with the QueryResult as the parameter.
@@ -95,16 +104,28 @@ public class SQLRead {
 	 * @param method The name of the method you want to call.
 	 * @param query The SQL select query to perform.
 	 */
-	public void syncRead(Object object, String method, String query, Object args) {
+	public void syncRead(Object object, String method, BasicStatement query, Object args) {
 		new SyncRead(object, method, query, args);
+	}
+	/**
+	 * This method will perform a query asynchronously, and then synchronously call the method of your choice in the class of your choice with the QueryResult as the parameter.
+	 * This method does not need to be called asynchronously but the performance may be less than other methods due to reflection.
+	 * 
+	 * @param object The object that holds the method you want to call.
+	 * @param method The name of the method you want to call.
+	 * @param query The SQL select query to perform.
+	 */
+	public void syncRead(Object object, String method, String query, Object args) {
+		BasicStatement bs = new BasicStatement(query, dab);
+		new SyncRead(object, method, bs, args);
 	}
 	private class SyncRead {
 		private String m;
-		private String q;
+		private BasicStatement q;
 		private Object o;
 		private QueryResult qr;
 		private Object args;
-		SyncRead(Object object, String method, String query, Object arguments) {
+		SyncRead(Object object, String method, BasicStatement query, Object arguments) {
 			this.o = object;
 			this.m = method;
 			this.q = query;
@@ -134,8 +155,9 @@ public class SQLRead {
 	 * @return ArrayList<String>
 	 */
 	public ArrayList<String> getStringList(String statement) {
+		BasicStatement bs = new BasicStatement(statement, dab);
 		ArrayList<String> data = new ArrayList<String>();
-		QueryResult result = getDatabaseConnection().read(statement, logReadErrors.get());
+		QueryResult result = getDatabaseConnection().read(bs, logReadErrors.get());
 		while (result.next()) {
 			data.add(result.getString(1));
 		}
@@ -147,8 +169,9 @@ public class SQLRead {
 	 * @return ArrayList<Double>
 	 */
 	public ArrayList<Double> getDoubleList(String statement) {
+		BasicStatement bs = new BasicStatement(statement, dab);
 		ArrayList<Double> data = new ArrayList<Double>();
-		QueryResult result = getDatabaseConnection().read(statement, logReadErrors.get());
+		QueryResult result = getDatabaseConnection().read(bs, logReadErrors.get());
 		while (result.next()) {
 			data.add(result.getDouble(1));
 		}
@@ -161,8 +184,9 @@ public class SQLRead {
 	 * @return ArrayList<Integer>
 	 */
 	public ArrayList<Integer> getIntList(String statement) {
+		BasicStatement bs = new BasicStatement(statement, dab);
 		ArrayList<Integer> data = new ArrayList<Integer>();
-		QueryResult result = getDatabaseConnection().read(statement, logReadErrors.get());
+		QueryResult result = getDatabaseConnection().read(bs, logReadErrors.get());
 		while (result.next()) {
 			data.add(result.getInt(1));
 		}
@@ -175,8 +199,9 @@ public class SQLRead {
 	 * @return ArrayList<Long>
 	 */
 	public ArrayList<Long> getLongList(String statement) {
+		BasicStatement bs = new BasicStatement(statement, dab);
 		ArrayList<Long> data = new ArrayList<Long>();
-		QueryResult result = getDatabaseConnection().read(statement, logReadErrors.get());
+		QueryResult result = getDatabaseConnection().read(bs, logReadErrors.get());
 		while (result.next()) {
 			data.add(result.getLong(1));
 		}
@@ -189,8 +214,9 @@ public class SQLRead {
 	 * @return ArrayList<Flost>
 	 */
 	public ArrayList<Float> getFloatList(String statement) {
+		BasicStatement bs = new BasicStatement(statement, dab);
 		ArrayList<Float> data = new ArrayList<Float>();
-		QueryResult result = getDatabaseConnection().read(statement, logReadErrors.get());
+		QueryResult result = getDatabaseConnection().read(bs, logReadErrors.get());
 		while (result.next()) {
 			data.add(result.getFloat(1));
 		}
@@ -203,8 +229,9 @@ public class SQLRead {
 	 * @return ArrayList<Boolean>
 	 */
 	public ArrayList<Boolean> getBooleanList(String statement) {
+		BasicStatement bs = new BasicStatement(statement, dab);
 		ArrayList<Boolean> data = new ArrayList<Boolean>();
-		QueryResult result = getDatabaseConnection().read(statement, logReadErrors.get());
+		QueryResult result = getDatabaseConnection().read(bs, logReadErrors.get());
 		while (result.next()) {
 			data.add(result.getBoolean(1));
 		}
@@ -218,7 +245,8 @@ public class SQLRead {
 	 * @return Integer
 	 */
 	public Integer getInt(String statement) {
-		QueryResult result = getDatabaseConnection().read(statement, logReadErrors.get());
+		BasicStatement bs = new BasicStatement(statement, dab);
+		QueryResult result = getDatabaseConnection().read(bs, logReadErrors.get());
 		Integer data = null;
 		if (result.next()) {
 			data = result.getInt(1);
@@ -232,7 +260,8 @@ public class SQLRead {
 	 * @return Boolean
 	 */
 	public Boolean getBoolean(String statement) {
-		QueryResult result = getDatabaseConnection().read(statement, logReadErrors.get());
+		BasicStatement bs = new BasicStatement(statement, dab);
+		QueryResult result = getDatabaseConnection().read(bs, logReadErrors.get());
 		Boolean data = null;
 		if (result.next()) {
 			data = result.getBoolean(1);
@@ -246,7 +275,8 @@ public class SQLRead {
 	 * @return String
 	 */
 	public String getString(String statement) {
-		QueryResult result = getDatabaseConnection().read(statement, logReadErrors.get());
+		BasicStatement bs = new BasicStatement(statement, dab);
+		QueryResult result = getDatabaseConnection().read(bs, logReadErrors.get());
 		String data = null;
 		if (result.next()) {
 			data = result.getString(1);
@@ -260,7 +290,8 @@ public class SQLRead {
 	 * @return Double
 	 */
 	public Double getDouble(String statement) {
-		QueryResult result = getDatabaseConnection().read(statement, logReadErrors.get());
+		BasicStatement bs = new BasicStatement(statement, dab);
+		QueryResult result = getDatabaseConnection().read(bs, logReadErrors.get());
 		Double data = null;
 		if (result.next()) {
 			data = result.getDouble(1);
@@ -274,7 +305,8 @@ public class SQLRead {
 	 * @return Long
 	 */
 	public Long getLong(String statement) {
-		QueryResult result = getDatabaseConnection().read(statement, logReadErrors.get());
+		BasicStatement bs = new BasicStatement(statement, dab);
+		QueryResult result = getDatabaseConnection().read(bs, logReadErrors.get());
 		Long data = null;
 		if (result.next()) {
 			data = result.getLong(1);
@@ -288,7 +320,8 @@ public class SQLRead {
 	 * @return Float
 	 */
 	public Float getFloat(String statement) {
-		QueryResult result = getDatabaseConnection().read(statement, logReadErrors.get());
+		BasicStatement bs = new BasicStatement(statement, dab);
+		QueryResult result = getDatabaseConnection().read(bs, logReadErrors.get());
 		Float data = null;
 		if (result.next()) {
 			data = result.getFloat(1);
@@ -303,7 +336,8 @@ public class SQLRead {
 	 * @return Integer
 	 */
 	public int countTableEntries(String table) {
-		QueryResult result = getDatabaseConnection().read("SELECT COUNT(*) FROM " + table, logReadErrors.get());
+		BasicStatement bs = new BasicStatement("SELECT COUNT(*) FROM " + table, dab);
+		QueryResult result = getDatabaseConnection().read(bs, logReadErrors.get());
 		result.next();
 		int rowcount = result.getInt(1);
 		result.close();
