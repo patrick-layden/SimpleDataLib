@@ -5,6 +5,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,11 +17,14 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import org.bukkit.plugin.Plugin;
+import au.com.bytecode.opencsv.CSVReader;
+import au.com.bytecode.opencsv.CSVWriter;
 
 
 
@@ -219,5 +223,60 @@ public class FileTools {
 		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
 		Calendar cal = Calendar.getInstance();
 		return dateFormat.format(cal.getTime());
+	}
+	
+	public QueryResult readCSV(String filePath) {
+		try {
+			QueryResult qr = new QueryResult();
+			if (!fileExists(filePath)) {
+				return null;
+			}
+		    CSVReader reader = new CSVReader(new FileReader(filePath));
+		    List<String[]> rows = reader.readAll();
+		    boolean header = true;
+		  	for (String[] row:rows) {
+		  		if (header) {
+		  			for (int i=0; i < row.length; i++) {
+		  				qr.addColumnName(row[i]);
+		  			}
+		  			header = false;
+		  		} else {
+		  			for (int i=0; i < row.length; i++) {
+		  				qr.addData(i+1, row[i]);
+		  			}
+		  		}
+		    }
+		  	reader.close();
+		  	return qr;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	public void writeCSV(QueryResult data, String filePath) {
+		try {
+			if (fileExists(filePath)) {
+				deleteFile(filePath);
+			}
+		    CSVWriter writer = new CSVWriter(new FileWriter(filePath));
+			int colCount = data.getColumnCount();
+		    String[] columnNames = new String[colCount];
+		    ArrayList<String> namesArray = data.getColumnNames();
+		    for (int i = 0; i < colCount; i++) {
+				columnNames[i] = namesArray.get(i);
+			}
+		    writer.writeNext(columnNames);
+			while (data.next()) {
+				String[] row = new String[colCount];
+				for (int i = 0; i < colCount; i++) {
+					row[i] = data.getString(i+1);
+				}
+				writer.writeNext(row);
+			}
+			writer.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 }

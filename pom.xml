@@ -2,19 +2,43 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>regalowl.databukkit</groupId>
   <artifactId>databukkit</artifactId>
-  <version>0.0.41-SNAPSHOT</version>
-  <build>
-    <plugins>
-      <plugin>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.1</version>
-        <configuration>
-          <source>1.6</source>
-          <target>1.6</target>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
+  <version>0.0.42-SNAPSHOT</version>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-shade-plugin</artifactId>
+				<version>2.0</version>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>shade</goal>
+						</goals>
+						<configuration>
+							<minimizeJar>true</minimizeJar>
+							<filters>
+								<filter>
+									<artifact>*:*</artifact>
+									<excludes>
+										<exclude>META-INF/*.SF</exclude>
+										<exclude>META-INF/*.DSA</exclude>
+										<exclude>META-INF/*.RSA</exclude>
+									</excludes>
+								</filter>
+							</filters>
+							<relocations>
+								<relocation>
+									<pattern>net.sf.opencsv</pattern>
+									<shadedPattern>regalowl.databukkit.opencsv</shadedPattern>
+								</relocation>
+							</relocations>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
   <properties>
   	<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
   	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -39,6 +63,11 @@
   		<artifactId>bukkit</artifactId>
   		<version>1.6.2-R0.1-SNAPSHOT</version>
   		<scope>provided</scope>
+  	</dependency>
+  	<dependency>
+  		<groupId>net.sf.opencsv</groupId>
+  		<artifactId>opencsv</artifactId>
+  		<version>2.0</version>
   	</dependency>
   </dependencies>
 </project>

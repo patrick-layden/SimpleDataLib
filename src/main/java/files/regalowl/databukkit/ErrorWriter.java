@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 
 public class ErrorWriter {
@@ -45,9 +46,13 @@ public class ErrorWriter {
 			BufferedWriter bw = new BufferedWriter(fw);
 			bw.newLine();
 			bw.newLine();
-			if (text != null) {bw.write(text);}
+			bw.write(plugin.getName()+"["+plugin.getDescription().getVersion()+"], "+ Bukkit.getServer().getName());
 			bw.newLine();
-			if (error != null) {bw.write(error);}
+			if (text != null) {
+				bw.write(String.format(text));
+				bw.newLine();
+			}
+			if (error != null) {bw.write(String.format(error));}
 			bw.newLine();
 			bw.newLine();
 			bw.close();

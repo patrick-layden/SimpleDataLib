@@ -81,6 +81,19 @@ public class SQLRead {
 	 * This method should be called asynchronously to prevent lag
 	 * @return QueryResult
 	 */
+	public QueryResult aSyncSelect(String statement, ArrayList<Object> parameters) {
+		BasicStatement bs = new BasicStatement(statement, dab);
+		for (Object param:parameters) {
+			bs.addParameter(param);
+		}
+		return getDatabaseConnection().read(bs, logReadErrors.get());
+	}
+	
+	/**
+	 * 
+	 * This method should be called asynchronously to prevent lag
+	 * @return QueryResult
+	 */
 	public QueryResult aSyncSelect(BasicStatement select) {
 		return getDatabaseConnection().read(select, logReadErrors.get());
 	}

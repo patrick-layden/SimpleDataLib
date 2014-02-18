@@ -25,11 +25,7 @@ public class QueryResult {
 		data.get(columnIndex - 1).add(object);
 	}
 	
-	
-	
-	
-	
-	
+
 	public boolean next() {
 		currentRow++;
 		if (data.isEmpty()) {
@@ -47,7 +43,12 @@ public class QueryResult {
 	
 	
 	
-
+	public int getColumnCount() {
+		return colNames.size();
+	}
+	public ArrayList<String> getColumnNames() {
+		return colNames;
+	}
 	
 	
 	

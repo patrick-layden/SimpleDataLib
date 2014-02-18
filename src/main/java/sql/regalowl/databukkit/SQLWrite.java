@@ -120,6 +120,15 @@ public class SQLWrite {
 		buffer.put(bufferCounter.getAndIncrement(), statement);
 		startWriteTask();
 	}
+	public synchronized void addToQueue(String statement, ArrayList<Object> parameters) {
+		if (statement == null) {return;}
+		WriteStatement ws = new WriteStatement(statement, dab);
+		for (Object param:parameters) {
+			ws.addParameter(param);
+		}
+		buffer.put(bufferCounter.getAndIncrement(), ws);
+		startWriteTask();
+	}
 
 	private synchronized void startWriteTask() {
 		if (writeActive.get() || buffer.isEmpty() || shutDown.get()) {return;}
@@ -213,37 +222,44 @@ public class SQLWrite {
 		}
 		statement = statement.substring(0, statement.length() - 2);
 		statement += ") VALUES (";
-		for (String value:values.values()) {
-			statement += quoteValue(value) + ", ";
+		for (int i=0; i<values.size(); i++) {
+			statement +=  "?,";
 		}
-		statement = statement.substring(0, statement.length() - 2);
-		statement += ")";		
-		addToQueue(statement);
+		statement = statement.substring(0, statement.length() - 1);
+		statement += ")";
+		WriteStatement ws = new WriteStatement(statement, dab);
+		for (String value:values.values()) {
+			ws.addParameter(convertSQL(value));
+		}
+		addToQueue(ws);
 	}
-	/**
-	 * 
-	 * @param table: Name of table
-	 * @param values: HashMap<Name of field, String form of value>
-	 * 
-	 */
+
 	public void performUpdate(String table, HashMap<String, String> values, HashMap<String, String> conditions) {
 		String statement = "UPDATE " + table + " SET ";
 		Iterator<String> it = values.keySet().iterator();
 		while (it.hasNext()) {
-			String field = it.next();
-			String value = values.get(field);
-			statement += field + " = " + quoteValue(value) + ", ";
+			statement += it.next() + " = ?, ";
 		}
 		statement = statement.substring(0, statement.length() - 2);
 		statement += " WHERE ";
 		it = conditions.keySet().iterator();
 		while (it.hasNext()) {
 			String field = it.next();
-			String condition = conditions.get(field);
-			statement += field + " = " + quoteValue(condition) + " AND ";
+			statement += field + " = ? AND ";
 		}
 		statement = statement.substring(0, statement.length() - 5);
-		addToQueue(statement);
+		WriteStatement ws = new WriteStatement(statement, dab);
+		it = values.keySet().iterator();
+		while (it.hasNext()) {
+			String field = it.next();
+			ws.addParameter(values.get(field));
+		}
+		it = conditions.keySet().iterator();
+		while (it.hasNext()) {
+			String field = it.next();
+			ws.addParameter(conditions.get(field));
+		}
+		addToQueue(ws);
 	}
 	
 	public void performDelete(String table, HashMap<String, String> conditions) {
@@ -251,13 +267,19 @@ public class SQLWrite {
 		Iterator<String> it = conditions.keySet().iterator();
 		while (it.hasNext()) {
 			String field = it.next();
-			String condition = conditions.get(field);
-			statement += field + " = " + quoteValue(condition) + " AND ";
+			statement += field + " = ? AND ";
 		}
 		statement = statement.substring(0, statement.length() - 5);
-		addToQueue(statement);
+		WriteStatement ws = new WriteStatement(statement, dab);
+		
+		it = conditions.keySet().iterator();
+		while (it.hasNext()) {
+			String field = it.next();
+			ws.addParameter(conditions.get(field));
+		}
+		addToQueue(ws);
 	}
-	
+	/*
 	public String quoteValue(String value) {
 		String valueTest = value.replaceAll("[^()]", "");
 		if (valueTest.equalsIgnoreCase("()")) {
@@ -266,7 +288,7 @@ public class SQLWrite {
 			return "'" + convertSQL(value) + "'";
 		}
 	}
-	
+	*/
 	public String convertSQL(String statement) {
 		if (statement == null) {return statement;}
 		if (dab.useMySQL()) {
@@ -299,7 +321,18 @@ public class SQLWrite {
 	
 	public synchronized void logSQL(WriteStatement statement) {
 		ErrorWriter ew = new ErrorWriter(dab.getPluginFolderPath() + "SQL.log", dab);
-		ew.writeError(null, statement.getStatement(), true);
+		ArrayList<Object> parameters = statement.getParameters();
+		if (parameters != null && parameters.size() > 0) {
+			String paramList = "[";
+			for (Object p:parameters) {
+				paramList += p.toString() + ", ";
+			}
+			paramList = paramList.substring(0, paramList.length() - 2) + "]";
+			ew.writeError(null, statement.getStatement() + "%nParameters: "+paramList, true);
+		} else {
+			ew.writeError(null, statement.getStatement(), true);
+		}
+		
 	}
 	/**
 	 * This method will call the method of your choice in the class of your choice (the class of the object) after the current write operation is complete.
