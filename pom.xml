@@ -44,7 +44,7 @@
   	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
   <name>DataBukkit</name>
-  <description>DataBukkit provides a fast and easy to use API for database access, YML access, and error logging.  DataBukkit uses either SQLite or MySQL for database access, depending on which is available.  All database writes use asyncronous transactions which dramatically improves performance, especially for large write operations with hundreds of inserts.</description>
+  <description>DataBukkit provides a fast and easy to use API for database access, YML access, CSV access, and error logging.  DataBukkit uses either SQLite or MySQL for database access, depending on which is available.  All database writes use asyncronous transactions which dramatically improves performance, especially for large write operations with hundreds of inserts.</description>
   	<repositories>
 		<repository>
 			<id>bukkit-repo</id>
