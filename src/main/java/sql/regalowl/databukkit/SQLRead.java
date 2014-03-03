@@ -3,6 +3,8 @@ package regalowl.databukkit;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -81,7 +83,7 @@ public class SQLRead {
 	 * This method should be called asynchronously to prevent lag
 	 * @return QueryResult
 	 */
-	public QueryResult aSyncSelect(String statement, ArrayList<Object> parameters) {
+	public QueryResult select(String statement, ArrayList<Object> parameters) {
 		BasicStatement bs = new BasicStatement(statement, dab);
 		for (Object param:parameters) {
 			bs.addParameter(param);
@@ -94,7 +96,7 @@ public class SQLRead {
 	 * This method should be called asynchronously to prevent lag
 	 * @return QueryResult
 	 */
-	public QueryResult aSyncSelect(BasicStatement select) {
+	public QueryResult select(BasicStatement select) {
 		return getDatabaseConnection().read(select, logReadErrors.get());
 	}
 	
@@ -103,9 +105,63 @@ public class SQLRead {
 	 * This method should be called asynchronously to prevent lag
 	 * @return QueryResult
 	 */
-	public QueryResult aSyncSelect(String select) {
+	public QueryResult select(String select) {
 		BasicStatement bs = new BasicStatement(select, dab);
 		return getDatabaseConnection().read(bs, logReadErrors.get());
+	}
+	
+	/**
+	 * 
+	 * This method should be called asynchronously to prevent lag
+	 * @return QueryResult
+	 */
+	public QueryResult select(String table, ArrayList<String> fields, HashMap<String, String> conditions) {
+		String statement = "SELECT ";
+		for (String field: fields) {
+			statement += field + ", ";
+		}
+		statement = statement.substring(0, statement.length() - 2);
+		statement += " FROM " + table;
+		if (conditions != null && conditions.size() > 0) {
+			statement += " WHERE ";
+			Iterator<String> it = conditions.keySet().iterator();
+			while (it.hasNext()) {
+				String fld = it.next();
+				statement += fld + " = ? AND ";
+			}
+			statement = statement.substring(0, statement.length() - 5);
+		}
+		BasicStatement bs = new BasicStatement(statement, dab);
+		if (conditions != null && conditions.size() > 0) {
+			Iterator<String> it = conditions.keySet().iterator();
+			while (it.hasNext()) {
+				String fld = it.next();
+				bs.addParameter(conditions.get(fld));
+			}
+		}
+		return getDatabaseConnection().read(bs, logReadErrors.get());
+	}
+	
+	/**
+	 * 
+	 * This method should be called asynchronously to prevent lag
+	 * @return QueryResult
+	 */
+	public QueryResult select(String table, String field, HashMap<String, String> conditions) {
+		ArrayList<String> fields = new ArrayList<String>();
+		fields.add(field);
+		return select(table, fields, conditions);
+	}
+	
+	/**
+	 * 
+	 * This method should be called asynchronously to prevent lag
+	 * @return QueryResult
+	 */
+	public QueryResult select(String table, HashMap<String, String> conditions) {
+		ArrayList<String> fields = new ArrayList<String>();
+		fields.add("*");
+		return select(table, fields, conditions);
 	}
 
 	
@@ -167,13 +223,31 @@ public class SQLRead {
 	 * This method should be called asynchronously to prevent lag
 	 * @return ArrayList<String>
 	 */
-	public ArrayList<String> getStringList(String statement) {
+	public ArrayList<String> getStringList(String table, String field, HashMap<String, String> conditions) {
+		String statement = "SELECT " + field + " FROM " + table;
+		if (conditions != null && conditions.size() > 0) {
+			statement += " WHERE ";
+			Iterator<String> it = conditions.keySet().iterator();
+			while (it.hasNext()) {
+				String fld = it.next();
+				statement += fld + " = ? AND ";
+			}
+			statement = statement.substring(0, statement.length() - 5);
+		}
 		BasicStatement bs = new BasicStatement(statement, dab);
+		if (conditions != null && conditions.size() > 0) {
+			Iterator<String> it = conditions.keySet().iterator();
+			while (it.hasNext()) {
+				String fld = it.next();
+				bs.addParameter(conditions.get(fld));
+			}
+		}
 		ArrayList<String> data = new ArrayList<String>();
 		QueryResult result = getDatabaseConnection().read(bs, logReadErrors.get());
 		while (result.next()) {
 			data.add(result.getString(1));
 		}
+		result.close();
 		return data;
 	}
 	/**
@@ -287,11 +361,28 @@ public class SQLRead {
 	 * This method should be called asynchronously to prevent lag
 	 * @return String
 	 */
-	public String getString(String statement) {
+	public String getString(String table, String field, HashMap<String, String> conditions) {
+		String statement = "SELECT " + field + " FROM " + table;
+		if (conditions != null && conditions.size() > 0) {
+			statement += " WHERE ";
+			Iterator<String> it = conditions.keySet().iterator();
+			while (it.hasNext()) {
+				String fld = it.next();
+				statement += fld + " = ? AND ";
+			}
+			statement = statement.substring(0, statement.length() - 5);
+		}
 		BasicStatement bs = new BasicStatement(statement, dab);
-		QueryResult result = getDatabaseConnection().read(bs, logReadErrors.get());
+		if (conditions != null && conditions.size() > 0) {
+			Iterator<String> it = conditions.keySet().iterator();
+			while (it.hasNext()) {
+				String fld = it.next();
+				bs.addParameter(conditions.get(fld));
+			}
+		}
 		String data = null;
-		if (result.next()) {
+		QueryResult result = getDatabaseConnection().read(bs, logReadErrors.get());
+		while (result.next()) {
 			data = result.getString(1);
 		}
 		result.close();

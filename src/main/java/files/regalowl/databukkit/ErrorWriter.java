@@ -46,7 +46,8 @@ public class ErrorWriter {
 			BufferedWriter bw = new BufferedWriter(fw);
 			bw.newLine();
 			bw.newLine();
-			bw.write(plugin.getName()+"["+plugin.getDescription().getVersion()+"], "+ Bukkit.getServer().getName());
+			bw.write(plugin.getName()+"["+plugin.getDescription().getVersion()+"], "+ Bukkit.getServer().getName()+
+					"["+Bukkit.getServer().getVersion()+"], ["+dab.getCommonFunctions().getTimeStamp()+"]");
 			bw.newLine();
 			if (text != null) {
 				bw.write(String.format(text));

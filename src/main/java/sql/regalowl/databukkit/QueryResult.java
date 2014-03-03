@@ -77,7 +77,7 @@ public class QueryResult {
 		if (dat == null) {
 			return null;
 		} else {
-			return Integer.parseInt(dat);
+			return (int)Double.parseDouble(dat);
 		}
 	}
 	public Long getLong(String column) {
@@ -88,7 +88,7 @@ public class QueryResult {
 		if (dat == null) {
 			return null;
 		} else {
-			return Long.parseLong(dat);
+			return (long)Double.parseDouble(dat);
 		}
 	}
 	public Float getFloat(String column) {
@@ -132,7 +132,7 @@ public class QueryResult {
 		if (dat == null) {
 			return null;
 		} else {
-			return Integer.parseInt(dat);
+			return (int)Double.parseDouble(dat);
 		}
 	}
 	public Long getLong(Integer column) {
@@ -140,7 +140,7 @@ public class QueryResult {
 		if (dat == null) {
 			return null;
 		} else {
-			return Long.parseLong(dat);
+			return (long)Double.parseDouble(dat);
 		}
 	}
 	public Float getFloat(Integer column) {

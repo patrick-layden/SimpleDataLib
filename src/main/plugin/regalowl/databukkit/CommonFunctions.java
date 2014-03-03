@@ -3,7 +3,9 @@ package regalowl.databukkit;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,6 +66,10 @@ public class CommonFunctions {
 	}
 	*/
 	
+	public String getTimeStamp() {
+		 Date date = new Date();
+		return new Timestamp(date.getTime()).toString();
+	}
 	
 	
 	

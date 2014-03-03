@@ -279,16 +279,7 @@ public class SQLWrite {
 		}
 		addToQueue(ws);
 	}
-	/*
-	public String quoteValue(String value) {
-		String valueTest = value.replaceAll("[^()]", "");
-		if (valueTest.equalsIgnoreCase("()")) {
-			return convertSQL(value);
-		} else {
-			return "'" + convertSQL(value) + "'";
-		}
-	}
-	*/
+
 	public String convertSQL(String statement) {
 		if (statement == null) {return statement;}
 		if (dab.useMySQL()) {
@@ -325,12 +316,13 @@ public class SQLWrite {
 		if (parameters != null && parameters.size() > 0) {
 			String paramList = "[";
 			for (Object p:parameters) {
-				paramList += p.toString() + ", ";
+				if (p == null) {p = "";}
+				paramList += "["+p.toString() + "], ";
 			}
 			paramList = paramList.substring(0, paramList.length() - 2) + "]";
-			ew.writeError(null, statement.getStatement() + "%nParameters: "+paramList, true);
+			ew.writeError(null, statement.getStatement().replace("%n", "[new line]") + "%nParameters: "+paramList.replace("%n", "[new line]"), true);
 		} else {
-			ew.writeError(null, statement.getStatement(), true);
+			ew.writeError(null, statement.getStatement().replace("%n", "[new line]"), true);
 		}
 		
 	}

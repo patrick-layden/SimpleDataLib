@@ -22,7 +22,8 @@ public class WriteStatement extends BasicStatement {
 				}, 60L);
 			} else {
 				if (logError) {
-					dab.writeError(e, "SQL write failed "+writeFailures+" time(s).  The failing SQL statement is in the following brackets: [" + statement + "]");
+					ErrorWriter ew = dab.getErrorWriter();
+					ew.writeError(e, "SQL write failed "+writeFailures+" time(s).  The failing SQL statement is in the following brackets: [" + statement + "]", true);
 				}
 			}
 		} catch (Exception e2) {
