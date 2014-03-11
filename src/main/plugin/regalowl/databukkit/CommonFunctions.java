@@ -45,18 +45,30 @@ public class CommonFunctions {
 		return round(input, 2);
 	}
 	public double round(double input, int decimals) {
-		BigDecimal result = round(new BigDecimal(String.valueOf(input)), decimals);
-		return result.doubleValue();
+		try {
+			BigDecimal result = round(new BigDecimal(String.valueOf(input)), decimals);
+			return result.doubleValue();
+		} catch (Exception e) {
+			return input;
+		}
 	}
 	public BigDecimal round(BigDecimal input, int decimals) {
-		BigDecimal factor = new BigDecimal(String.valueOf(Math.pow(10, decimals)));
-		return new BigDecimal(input.multiply(factor).toBigInteger()).divide(factor);
+		try {
+			BigDecimal factor = new BigDecimal(String.valueOf(Math.pow(10, decimals)));
+			return new BigDecimal(input.multiply(factor).toBigInteger()).divide(factor);
+		} catch (Exception e) {
+			return input;
+		}
 	}
 	public String roundString(BigDecimal input, int decimals) {
 		return round(input, decimals).toPlainString();
 	}
 	public String roundString(double input, int decimals) {
-		return round(new BigDecimal(String.valueOf(input)), decimals).toPlainString();
+		try {
+			return round(new BigDecimal(String.valueOf(input)), decimals).toPlainString();
+		} catch (Exception e) {
+			return input+"";
+		}
 	}
 	/*
 	public double round(double input, int decimals) {
