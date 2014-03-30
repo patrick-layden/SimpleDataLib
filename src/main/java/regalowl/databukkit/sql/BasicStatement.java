@@ -1,6 +1,8 @@
-package regalowl.databukkit;
+package regalowl.databukkit.sql;
 
 import java.util.ArrayList;
+
+import regalowl.databukkit.DataBukkit;
 
 
 public class BasicStatement {

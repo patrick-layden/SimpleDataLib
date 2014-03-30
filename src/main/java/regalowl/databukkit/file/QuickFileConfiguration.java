@@ -1,4 +1,4 @@
-package regalowl.databukkit;
+package regalowl.databukkit.file;
 
 import org.bukkit.configuration.file.FileConfiguration;
 

@@ -1,4 +1,7 @@
-package regalowl.databukkit;
+package regalowl.databukkit.sql;
+
+import regalowl.databukkit.DataBukkit;
+import regalowl.databukkit.file.ErrorWriter;
 
 
 public class WriteStatement extends BasicStatement {

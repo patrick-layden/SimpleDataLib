@@ -1,4 +1,4 @@
-package regalowl.databukkit;
+package regalowl.databukkit.file;
 
 
 
@@ -26,7 +26,7 @@ public class YamlHandler {
     private ConcurrentHashMap<String, FileConfiguration> configs = new ConcurrentHashMap<String, FileConfiguration>();
     private ConcurrentHashMap<String, File> files = new ConcurrentHashMap<String, File>();
     
-    YamlHandler(Plugin plugin) {
+    public YamlHandler(Plugin plugin) {
     	this.plugin = plugin;
     	log = Logger.getLogger("Minecraft");
     }

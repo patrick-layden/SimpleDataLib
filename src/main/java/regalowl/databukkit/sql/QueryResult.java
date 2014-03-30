@@ -1,4 +1,4 @@
-package regalowl.databukkit;
+package regalowl.databukkit.sql;
 
 
 import java.util.ArrayList;
@@ -14,7 +14,7 @@ public class QueryResult {
 	private Object additionalData;
 	private int currentRow;
 	
-	QueryResult() {
+	public QueryResult() {
 		currentRow = -1;
 	}
 	public void addColumnName(String name) {

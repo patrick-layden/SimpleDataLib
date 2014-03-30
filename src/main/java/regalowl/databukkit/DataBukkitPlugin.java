@@ -8,6 +8,8 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import regalowl.databukkit.file.YamlHandler;
+
 
 public class DataBukkitPlugin extends JavaPlugin {
 	public static DataBukkitPlugin dataBukkit;

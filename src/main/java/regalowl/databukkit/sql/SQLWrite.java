@@ -1,4 +1,4 @@
-package regalowl.databukkit;
+package regalowl.databukkit.sql;
 
 
 import java.lang.reflect.Method;
@@ -16,6 +16,9 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.bukkit.scheduler.BukkitTask;
+
+import regalowl.databukkit.DataBukkit;
+import regalowl.databukkit.file.ErrorWriter;
 
 public class SQLWrite {
 
@@ -290,6 +293,15 @@ public class SQLWrite {
 			statement = statement.replace("NOW()", "datetime('NOW', 'localtime')");
 			statement = statement.replace("AUTO_INCREMENT", "AUTOINCREMENT");
 			statement = statement.replace("auto_increment", "autoincrement");
+		}
+		return statement;
+	}
+	
+	public String longText(String statement) {
+		if (dab.useMySQL()) {
+			statement = statement.replace(" TEXT ", " LONGTEXT ");
+		} else {
+			statement = statement.replace(" LONGTEXT ", " TEXT ");
 		}
 		return statement;
 	}

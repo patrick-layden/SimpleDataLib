@@ -1,6 +1,12 @@
 package regalowl.databukkit;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
+import java.io.Serializable;
 import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
@@ -11,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.bukkit.ChatColor;
+import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
 
 public class CommonFunctions {
 
@@ -243,6 +250,23 @@ public class CommonFunctions {
 		    string += (key + "," + value + ";");
 		}
 		return string;
+	}
+	
+	
+	public Object createObjectFromBase64(String base64String) throws IOException, ClassNotFoundException {
+		byte[] data = Base64Coder.decode(base64String);
+		ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data));
+		Object o = ois.readObject();
+		ois.close();
+		return o;
+	}
+
+	public String convertObjectToBase64(Serializable o) throws IOException {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		ObjectOutputStream oos = new ObjectOutputStream(baos);
+		oos.writeObject(o);
+		oos.close();
+		return new String(Base64Coder.encode(baos.toByteArray()));
 	}
 
 	

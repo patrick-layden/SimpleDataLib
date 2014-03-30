@@ -1,4 +1,4 @@
-package regalowl.databukkit;
+package regalowl.databukkit.file;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -23,6 +23,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import org.bukkit.plugin.Plugin;
+
+import regalowl.databukkit.sql.QueryResult;
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 

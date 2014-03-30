@@ -1,4 +1,4 @@
-package regalowl.databukkit;
+package regalowl.databukkit.file;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -8,6 +8,8 @@ import java.io.IOException;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 
+import regalowl.databukkit.DataBukkit;
+
 public class ErrorWriter {
 
 	private DataBukkit dab;
@@ -16,7 +18,7 @@ public class ErrorWriter {
 	private String error;
 	private Plugin plugin;
 
-	ErrorWriter(String path, DataBukkit dab) {
+	public ErrorWriter(String path, DataBukkit dab) {
 		this.dab = dab;
 		this.path = path;
 		this.plugin = dab.getPlugin();

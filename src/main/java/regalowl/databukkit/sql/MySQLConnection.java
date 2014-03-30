@@ -1,8 +1,10 @@
-package regalowl.databukkit;
+package regalowl.databukkit.sql;
 
 
 
 import java.sql.DriverManager;
+
+import regalowl.databukkit.DataBukkit;
 
 public class MySQLConnection extends DatabaseConnection {
 	
