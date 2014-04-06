@@ -49,6 +49,7 @@ public abstract class DatabaseConnection {
 				preparedStatement = connection.prepareStatement(writeStatement.getStatement());
 				applyParameters(writeStatement);
 				preparedStatement.executeUpdate();
+				preparedStatement.close();
 			}
 			if (dab.getSQLWrite().shutdownStatus().get() && !shutDownOverride.get()) {
 				connection.rollback();
