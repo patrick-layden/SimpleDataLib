@@ -14,7 +14,12 @@ public class QueryResult {
 	private Object additionalData;
 	private int currentRow;
 	
+	private boolean successful;
+	private Exception sqlError;
+	private String failedSQL;
+
 	public QueryResult() {
+		this.successful = true;
 		currentRow = -1;
 	}
 	public void addColumnName(String name) {
@@ -165,6 +170,22 @@ public class QueryResult {
 	}
 	public Object getAdditionalData() {
 		return additionalData;
+	}
+	
+	
+	public void setException(Exception e, String failedSQL) {
+		this.sqlError = e;
+		this.successful = false;
+		this.failedSQL = failedSQL;
+	}
+	public Exception getException() {
+		return sqlError;
+	}
+	public String getFailedSQL() {
+		return failedSQL;
+	}
+	public boolean successful() {
+		return successful;
 	}
 	
 	

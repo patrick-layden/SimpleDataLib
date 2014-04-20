@@ -1,207 +1,211 @@
 package regalowl.databukkit.sql;
 
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
-import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import regalowl.databukkit.DataBukkit;
-import regalowl.databukkit.file.ErrorWriter;
 
 public class SQLWrite {
 
 	private DataBukkit dab;
+	private ConnectionPool pool;
+	
 	private ConcurrentHashMap<Long, WriteStatement> buffer = new ConcurrentHashMap<Long, WriteStatement>();
-	private BukkitTask writeTask;
-	private AtomicBoolean writeActive = new AtomicBoolean();
 	private AtomicLong bufferCounter = new AtomicLong();
 	private AtomicLong processNext = new AtomicLong();
+	
 	private AtomicBoolean logWriteErrors = new AtomicBoolean();;
-    private Queue<DatabaseConnection> connections = new LinkedList<DatabaseConnection>();
-    private Queue<DatabaseConnection> activeConnections = new LinkedList<DatabaseConnection>();
-    private Lock connectionLock = new ReentrantLock();
-    private Condition connectionAvailable = connectionLock.newCondition();
-	private AtomicBoolean shutDown = new AtomicBoolean();
-    private final long writeDelay = 20L;
     private AtomicBoolean logSQL = new AtomicBoolean();
-
-	public SQLWrite(DataBukkit dabu) {
+    
+	private AtomicBoolean writeActive = new AtomicBoolean();
+    private WriteTask writeTask;
+    private final long writeTaskInterval = 600L;
+    
+	public SQLWrite(DataBukkit dab, ConnectionPool pool) {
+		this.dab = dab;
+		this.pool = pool;
 		logWriteErrors.set(true);
-		this.dab = dabu;
-
-		DatabaseConnection dc = null;
-		if (dab.useMySQL()) {
-			dc = new MySQLConnection(dab, false, false);
-		} else {
-			dc = new SQLiteConnection(dab, false, false);
-		}
-		returnConnection(dc);
 		logSQL.set(false);
 		bufferCounter.set(0);
 		processNext.set(0);
 		writeActive.set(false);
-		shutDown.set(false);
+		writeTask = new WriteTask();
+		writeTask.runTaskTimerAsynchronously(dab.getPlugin(), writeTaskInterval, writeTaskInterval);
 	}
 	
 	
-	
-	
-	public void returnConnection(DatabaseConnection connection) {
-		connectionLock.lock();
-		try {
-			activeConnections.remove(connection);
-			connections.add(connection);
-			connectionAvailable.signal();
-		} finally {
-			connectionLock.unlock();
-		}
-	}
-	private DatabaseConnection getDatabaseConnection() {
-		connectionLock.lock();
-		try {
-			while (connections.isEmpty()) {
-				try {
-					connectionAvailable.await();
-				} catch (InterruptedException e) {
-					dab.writeError(e, null);
-				}
-			}
-			DatabaseConnection connect = connections.remove();
-			activeConnections.add(connect);
-			return connect;
-		} finally {
-			connectionLock.unlock();
-		}
-	}
-	
-	public synchronized void executeSynchronously(String statement) {
-		DatabaseConnection database = getDatabaseConnection();
-		ArrayList<WriteStatement> statements = new ArrayList<WriteStatement>();
-		statements.add(new WriteStatement(statement, dab));
-		database.write(statements, logWriteErrors.get());
-	}
-	public synchronized void convertExecuteSynchronously(String statement) {
-		executeSynchronously(convertSQL(statement));
-	}
 
-	public synchronized void addWriteStatementsToQueue(List<WriteStatement> statements) {
-		for (WriteStatement statement : statements) {
-			if (statement == null) {continue;}
-			buffer.put(bufferCounter.getAndIncrement(), statement);
-		}
-		startWriteTask();
-	}
-	public synchronized void addToQueue(List<String> statements) {
-		for (String statement : statements) {
-			if (statement == null) {continue;}
-			buffer.put(bufferCounter.getAndIncrement(), new WriteStatement(statement, dab));
-		}
-		startWriteTask();
-	}
-	public synchronized void convertAddToQueue(String statement) {
-		addToQueue(convertSQL(statement));
-	}
-	public synchronized void addToQueue(String statement) {
-		if (statement == null) {return;}
-		buffer.put(bufferCounter.getAndIncrement(), new WriteStatement(statement, dab));
-		startWriteTask();
-	}
 	public synchronized void addToQueue(WriteStatement statement) {
 		if (statement == null) {return;}
 		buffer.put(bufferCounter.getAndIncrement(), statement);
-		startWriteTask();
 	}
+	public synchronized void addWriteStatementsToQueue(List<WriteStatement> statements) {
+		if (statements == null) {return;}
+		for (WriteStatement statement : statements) {
+			addToQueue(statement);
+		}
+	}
+	public synchronized void addToQueue(String statement) {
+		if (statement == null) {return;}
+		addToQueue(new WriteStatement(statement, dab));
+	}
+	public synchronized void addToQueue(List<String> statements) {
+		if (statements == null) {return;}
+		for (String statement : statements) {
+			addToQueue(statement);
+		}
+	}
+	public synchronized void convertAddToQueue(String statement) {
+		if (statement == null) {return;}
+		addToQueue(convertSQL(statement));
+	}
+
 	public synchronized void addToQueue(String statement, ArrayList<Object> parameters) {
 		if (statement == null) {return;}
 		WriteStatement ws = new WriteStatement(statement, dab);
 		for (Object param:parameters) {
 			ws.addParameter(param);
 		}
-		buffer.put(bufferCounter.getAndIncrement(), ws);
-		startWriteTask();
+		addToQueue(ws);
 	}
 
-	private synchronized void startWriteTask() {
-		if (writeActive.get() || buffer.isEmpty() || shutDown.get()) {return;}
-		writeActive.set(true);
-		writeTask = dab.getPlugin().getServer().getScheduler().runTaskLaterAsynchronously(dab.getPlugin(), new Runnable() {
-			public void run() {
-				DatabaseConnection database = getDatabaseConnection();
-				ArrayList<WriteStatement> writeArray = new ArrayList<WriteStatement>();
-				while (buffer.size() > 0) {
-					writeArray.add(buffer.get(processNext.get()));
-					buffer.remove(processNext.getAndIncrement());
-				}
-				database.write(writeArray, logWriteErrors.get());
-				if (shutDown.get()) {return;}
-				writeActive.set(false);
-				if (!buffer.isEmpty()) {startWriteTask();}
+
+	
+    private class WriteTask extends BukkitRunnable {
+    	private boolean stop;
+    	private ArrayList<WriteStatement> writeArray;
+    	private DatabaseConnection database;
+    	
+    	public WriteTask() {
+    		this.stop = false;
+    	}
+    	
+		public void run() {
+			if (stop) {return;}
+			if (buffer.size() == 0) {return;}
+			writeActive.set(true);
+			database = pool.getDatabaseConnection();
+			writeArray = new ArrayList<WriteStatement>();
+			while (buffer.size() > 0) {
+				writeArray.add(buffer.get(processNext.get()));
+				buffer.remove(processNext.getAndIncrement());
 			}
-		}, writeDelay);
-	}
+			write(writeArray);
+			pool.returnConnection(database);
+			writeActive.set(false);
+		}
+
+		private void write(ArrayList<WriteStatement> writeArray) {
+			WriteResult result = database.write(writeArray);
+			if (result.wasSuccessful()) {
+					if (logSQL.get() && result.getSuccessfulSQL() != null && !result.getSuccessfulSQL().isEmpty()) {
+						for (WriteStatement ws:result.getSuccessfulSQL()) {
+							ws.logStatement();
+						}
+					}
+			} else {
+				if (logWriteErrors.get()) {
+					result.getFailedSQL().writeFailed(result.getException());
+				}
+				if (result.getRemainingSQL() != null && !result.getRemainingSQL().isEmpty()) {
+					addWriteStatementsToQueue(result.getRemainingSQL());
+				}
+			}
+		}
+		
+		public void stop() {
+			this.stop = true;
+		}
+		
+		public ArrayList<WriteStatement> getActiveStatements() {
+			return writeArray;
+		}
+    }
+	
+	
+
 
 	public int getBufferSize() {
 		return buffer.size();
 	}
 
-	public synchronized int getActiveThreads() {
-		return 1 - connections.size();
-	}
-/*
-	public synchronized ArrayList<String> getBuffer() {
-		ArrayList<String> abuffer = new ArrayList<String>();
-		for (String item : buffer.values()) {
-			abuffer.add(item);
-		}
-		return abuffer;
-	}
-*/
+
+
 	public synchronized void shutDown() {
-		shutDown.set(true);
+		writeTask.stop();
+		addWriteStatementsToQueue(writeTask.getActiveStatements());
 		if (writeTask != null) {writeTask.cancel();}
-		writeActive.set(true);
-		while (!connections.isEmpty()){
-			connections.remove().closeConnection();
-		}
-		while (!activeConnections.isEmpty()){
-			activeConnections.remove().closeConnection();
-		}
+		pool.shutDown();
 		saveBuffer();
 	}
-	private synchronized void saveBuffer() {
-		if (buffer.size() > 0) {
-			dab.getLogger().info("[DataBukkit["+dab.getPlugin().getName()+"]]Saving the remaining SQL queue: ["+buffer.size()+" statements].  Please wait.");
-			DatabaseConnection database = null;
-			if (dab.useMySQL()) {
-				database = new MySQLConnection(dab, false, true);
-			} else {
-				database = new SQLiteConnection(dab, false, true);
-			}
-			ArrayList<WriteStatement> writeArray = new ArrayList<WriteStatement>();
-			while (buffer.size() > 0) {
-				writeArray.add(buffer.get(processNext.get()));
-				buffer.remove(processNext.getAndIncrement());
-			}
-			database.write(writeArray, logWriteErrors.get());
-			buffer.clear();
-			dab.getLogger().info("[DataBukkit["+dab.getPlugin().getName()+"]]SQL queue save complete.");
+	private void saveBuffer() {
+		if (buffer.size() == 0) {return;}
+		dab.getLogger().info("[DataBukkit[" + dab.getPlugin().getName() + "]]Saving the remaining SQL queue: [" + buffer.size() + " statements].  Please wait.");
+		DatabaseConnection database = new DatabaseConnection(dab, false);
+		ArrayList<WriteStatement> writeArray = new ArrayList<WriteStatement>();
+		while (buffer.size() > 0) {
+			writeArray.add(buffer.get(processNext.get()));
+			buffer.remove(processNext.getAndIncrement());
 		}
+		WriteResult result = database.write(writeArray);
+		if (result.wasSuccessful()) {
+			if (logSQL.get() && result.getSuccessfulSQL() != null && !result.getSuccessfulSQL().isEmpty()) {
+				for (WriteStatement ws : result.getSuccessfulSQL()) {
+					ws.logStatement();
+				}
+			}
+		} else {
+			dab.getLogger().severe("[DataBukkit[" + dab.getPlugin().getName() + "]]A database error occurred while shutting down.  Attempting to save remaining data... This may take longer than usual.");
+			if (logWriteErrors.get()) {
+				result.getFailedSQL().logError(result.getException());
+			}
+			if (result.getRemainingSQL() != null && !result.getRemainingSQL().isEmpty()) {
+				for (WriteStatement ws : result.getRemainingSQL()) {
+					ArrayList<WriteStatement> statement = new ArrayList<WriteStatement>();
+					statement.add(ws);
+					WriteResult r = database.write(statement);
+					if (r.wasSuccessful()) {
+						if (logSQL.get() && r.getSuccessfulSQL() != null && !r.getSuccessfulSQL().isEmpty()) {
+							r.getSuccessfulSQL().get(0).logStatement();
+						}
+					} else {
+						if (logWriteErrors.get()) {
+							r.getFailedSQL().logError(r.getException());
+						}
+					}
+				}
+			}
+		}
+		buffer.clear();
+		dab.getLogger().info("[DataBukkit[" + dab.getPlugin().getName() + "]]SQL queue save complete.");
+
 	}
-	public AtomicBoolean shutdownStatus() {
-		return shutDown;
-	}
+
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	
 	
@@ -282,6 +286,11 @@ public class SQLWrite {
 		}
 		addToQueue(ws);
 	}
+	
+	
+	
+	
+	
 
 	public String convertSQL(String statement) {
 		if (statement == null) {return statement;}
@@ -296,7 +305,6 @@ public class SQLWrite {
 		}
 		return statement;
 	}
-	
 	public String longText(String statement) {
 		if (dab.useMySQL()) {
 			statement = statement.replace(" TEXT ", " LONGTEXT ");
@@ -306,8 +314,14 @@ public class SQLWrite {
 		return statement;
 	}
 	
+	
+	
+	
 	public void setErrorLogging(boolean state) {
 		logWriteErrors.set(state);
+	}
+	public boolean logWriteErrors() {
+		return logWriteErrors.get();
 	}
 	
 	public boolean writeActive() {
@@ -317,59 +331,8 @@ public class SQLWrite {
 	public void setLogSQL(boolean state) {
 		logSQL.set(state);
 	}
-	
 	public boolean logSQL() {
 		return logSQL.get();
-	}
-	
-	public synchronized void logSQL(WriteStatement statement) {
-		ErrorWriter ew = new ErrorWriter(dab.getPluginFolderPath() + "SQL.log", dab);
-		ArrayList<Object> parameters = statement.getParameters();
-		if (parameters != null && parameters.size() > 0) {
-			String paramList = "[";
-			for (Object p:parameters) {
-				if (p == null) {p = "";}
-				paramList += "["+p.toString() + "], ";
-			}
-			paramList = paramList.substring(0, paramList.length() - 2) + "]";
-			ew.writeError(null, statement.getStatement().replace("%n", "[new line]") + "%nParameters: "+paramList.replace("%n", "[new line]"), true);
-		} else {
-			ew.writeError(null, statement.getStatement().replace("%n", "[new line]"), true);
-		}
-		
-	}
-	/**
-	 * This method will call the method of your choice in the class of your choice (the class of the object) after the current write operation is complete.
-	 * 
-	 * @param object The object that holds the method you want to call.
-	 * @param method The name of the method you want to call.
-	 */
-	public void afterWrite(Object object, String method) {
-		new AfterWrite(object, method);
-	}
-	private class AfterWrite {
-		private String m;
-		private Object o;
-		private BukkitTask afterWriteTask;
-		AfterWrite(Object object, String method) {
-			this.o = object;
-			this.m = method;
-			afterWriteTask = dab.getPlugin().getServer().getScheduler().runTaskTimer(dab.getPlugin(), new Runnable() {
-				public void run() {
-					if (!writeActive.get() && buffer.size() == 0) {
-						try {
-							Method meth = o.getClass().getMethod(m);
-							meth.invoke(o.getClass().newInstance());
-						} catch (Exception e) {
-							dab.writeError(e, null);
-						} finally {
-							afterWriteTask.cancel();
-						}
-						return;
-					}
-				}
-			}, 1L, 1L);
-		}
 	}
 
 }

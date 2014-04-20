@@ -1,13 +1,13 @@
 package regalowl.databukkit.sql;
 
 
-import java.math.BigDecimal;
+
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -15,86 +15,69 @@ import regalowl.databukkit.DataBukkit;
 
 
 
-public abstract class DatabaseConnection {
+public class DatabaseConnection {
 
-	protected DataBukkit dab;
-	protected DatabaseConnection dc;
-	protected Connection connection;
-	protected ArrayList<WriteStatement> statements = new ArrayList<WriteStatement>();
-	protected WriteStatement writeStatement;
-	protected BasicStatement readStatement;
-	protected PreparedStatement preparedStatement;
-	protected AtomicBoolean logReadErrors = new AtomicBoolean();
-	
-    protected AtomicBoolean shutDownOverride = new AtomicBoolean();
-    protected AtomicBoolean readOnly = new AtomicBoolean();
+	private DataBukkit dab;
+	private Connection connection;
+    private AtomicBoolean readOnly = new AtomicBoolean();
+    private AtomicBoolean lock = new AtomicBoolean();
     
-	DatabaseConnection(DataBukkit dab, boolean readOnly, boolean override) {
-		dc = this;
+	public DatabaseConnection(DataBukkit dab, boolean readOnly) {
+		this.lock.set(false);
 		this.dab = dab;
-		this.shutDownOverride.set(override);
 		this.readOnly.set(readOnly);
 	}
 	
 	
-	public synchronized void write(List<WriteStatement> sql, boolean logErrors) {
+	
+	public synchronized WriteResult write(List<WriteStatement> statements) {
+		WriteStatement currentStatement = null;
+		PreparedStatement preparedStatement = null;
 		try {
-			writeStatement = null;
-			if (!isWriteable()) {fixConnection();}
-			for (WriteStatement cs : sql) {statements.add(cs);}
-			if (statements.size() == 0) {return;}
+			prepareConnection();
+			if (statements.size() == 0 || lock.get()) {return new WriteResult(true, statements);}
 			for (WriteStatement statement : statements) {
-				writeStatement = statement;
-				if (dab.getSQLWrite().logSQL()) {dab.getSQLWrite().logSQL(writeStatement);}
-				preparedStatement = connection.prepareStatement(writeStatement.getStatement());
-				applyParameters(writeStatement);
+				currentStatement = statement;
+				preparedStatement = connection.prepareStatement(currentStatement.getStatement());
+				currentStatement.applyParameters(preparedStatement);
 				preparedStatement.executeUpdate();
-				preparedStatement.close();
 			}
-			if (dab.getSQLWrite().shutdownStatus().get() && !shutDownOverride.get()) {
+			if (lock.get()) {
 				connection.rollback();
-				dab.getSQLWrite().addWriteStatementsToQueue(statements);
+				return new WriteResult(false, null, null, null, statements);
 			} else {
 				connection.commit();
+				return new WriteResult(true, statements);
 			}
 		} catch (SQLException e) {
 			try {
 				connection.rollback();
-				statements.remove(writeStatement);
-				writeStatement.writeFailed(e, logErrors);
-				dab.getSQLWrite().addWriteStatementsToQueue(statements);
+				statements.remove(currentStatement);
+				return new WriteResult(false, null, currentStatement, e, statements);
 			} catch (SQLException e1) {
-				dab.writeError(e, "Rollback failed.  Cannot recover. Data loss may have occurred.");
+				dab.writeError(e, "Rollback failed.");
+				return new WriteResult(false, null, null, null, statements);
 			}
 		} finally {
-			if (!dab.getSQLWrite().shutdownStatus().get()) {
-				statements.clear();
-			}
 			try {
-				connection.setAutoCommit(true);
+				if (preparedStatement != null) {
+					preparedStatement.close();
+				};
 			} catch (SQLException e) {
 				dab.writeError(e);
 			}
-			dab.getSQLWrite().returnConnection(dc);
 		}
 	}
-	
-	
-	/**
-	 * This function should be run asynchronously to prevent slowing the main thread.
-	 * @param statement
-	 * @return QueryResult
-	 */
-	public synchronized QueryResult read(BasicStatement statement, boolean logErrors) {
-		readStatement = null;
-		logReadErrors.set(logErrors);
+
+	public synchronized QueryResult read(BasicStatement statement) {
 		QueryResult qr = new QueryResult();
+		PreparedStatement preparedStatement = null;
+		ResultSet resultSet = null;
 		try {
-			if (!isValid()) {fixConnection();}
-			readStatement = statement;
-			preparedStatement = connection.prepareStatement(readStatement.getStatement());
-			applyParameters(readStatement);
-			ResultSet resultSet = preparedStatement.executeQuery();
+			prepareConnection();
+			preparedStatement = connection.prepareStatement(statement.getStatement());
+			statement.applyParameters(preparedStatement);
+			resultSet = preparedStatement.executeQuery();
 			ResultSetMetaData rsmd = resultSet.getMetaData();
 			int columnCount = rsmd.getColumnCount();
 			for (int i = 1; i <= columnCount; i++) {
@@ -105,63 +88,35 @@ public abstract class DatabaseConnection {
 					qr.addData(i, resultSet.getString(i));
 				}
 			}
-			resultSet.close();
-			preparedStatement.close();
-			statement = null;
 			return qr;
 		} catch (SQLException e) {
-			if (logReadErrors.get()) {
-				dab.writeError(e, "The failed SQL statement is in the following brackets: [" + statement + "]");
-			}
+			qr.setException(e, statement.getStatement());
 			return qr;
 		} finally {
-			dab.getSQLRead().returnConnection(dc);
-		}
-	}
-	
-	private void applyParameters(BasicStatement currentStatement) {
-		if (!currentStatement.usesParameters()) {return;}
-		ArrayList<Object> parameters = currentStatement.getParameters();
-		for (int i = 0; i < parameters.size(); i++) {
-			Object paramObject = parameters.get(i);
 			try {
-				if (paramObject instanceof String) {
-					String param = (String)paramObject;
-					preparedStatement.setString(i+1, param);
-				} else if (paramObject instanceof Integer) {
-					Integer param = (Integer)paramObject;
-					preparedStatement.setInt(i+1, param);
-				} else if (paramObject instanceof Long) {
-					Long param = (Long)paramObject;
-					preparedStatement.setLong(i+1, param);
-				} else if (paramObject instanceof Float) {
-					Float param = (Float)paramObject;
-					preparedStatement.setFloat(i+1, param);
-				} else if (paramObject instanceof Double) {
-					Double param = (Double)paramObject;
-					preparedStatement.setDouble(i+1, param);
-				} else if (paramObject instanceof Boolean) {
-					Boolean param = (Boolean)paramObject;
-					preparedStatement.setBoolean(i+1, param);
-				} else if (paramObject instanceof BigDecimal) {
-					BigDecimal param = (BigDecimal)paramObject;
-					preparedStatement.setBigDecimal(i+1, param);
-				} else if (paramObject instanceof Short) {
-					Short param = (Short)paramObject;
-					preparedStatement.setShort(i+1, param);
-				} else if (paramObject instanceof Byte) {
-					Byte param = (Byte)paramObject;
-					preparedStatement.setByte(i+1, param);
-				} else {
-					preparedStatement.setObject(i+1, paramObject);
+				if (preparedStatement != null) {
+					preparedStatement.close();
 				}
-			} catch (Exception e) {
+				if (resultSet != null) {
+					resultSet.close();
+				}
+			} catch (SQLException e) {
 				dab.writeError(e);
 			}
 		}
 	}
+
 	
-	public boolean isValid() {
+	public void lock() {
+		this.lock.set(true);
+	}
+	
+	
+	
+	public synchronized void prepareConnection() {
+		if (!isValid()) {fixConnection();}
+	}
+	private synchronized boolean isValid() {
 		try {
 			if (connection == null || connection.isClosed()) {
 				return false;
@@ -169,47 +124,61 @@ public abstract class DatabaseConnection {
 			if (!readOnly.get() && connection.isReadOnly()) {
 				return false;
 			}
+			if (!readOnly.get()) {
+				try {
+					connection.setAutoCommit(false);
+				} catch (SQLException se) {
+					return false;
+				}
+			}
 		} catch (SQLException e) {
 			return false;
 		}
 		return true;
 	}
-	
-	public boolean isWriteable() {
-		if (!isValid()) {return false;}
-		try {
-			connection.setAutoCommit(false);
-		} catch (SQLException se) {
-			return false;
-		}
-		return true;
-	}
-	public void fixConnection() {
+	private synchronized void fixConnection() {
 		closeConnection();
 		openConnection();
+		if (isValid()) {return;}
+		dab.getLogger().severe("-----------------------------------------------------");
 		if (readOnly.get()) {
-			if (!isValid()) {
-				dab.getLogger().severe("-----------------------------------------------------");
-				dab.getLogger().severe("[DataBukkit["+dab.getPlugin().getName()+"]]Fatal database connection error. "
-						+ "Make sure your database is unlocked and readable in order to use this plugin."
-						+ " Disabling "+dab.getPlugin().getName()+".");
-				dab.getLogger().severe("-----------------------------------------------------");
-				dab.getPlugin().getPluginLoader().disablePlugin(dab.getPlugin());
+			dab.getLogger().severe("[DataBukkit[" + dab.getPlugin().getName() + "]]Fatal database connection error. " 
+		+ "Make sure your database is unlocked and readable in order to use this plugin." + " Disabling " 
+					+ dab.getPlugin().getName() + ".");
+		} else {
+			dab.getLogger().severe("[DataBukkit[" + dab.getPlugin().getName() + "]]Fatal database connection error. " 
+		+ "Make sure your database is unlocked and writeable in order to use this plugin." + " Disabling " + dab.getPlugin().getName() + ".");
+		}
+		dab.getLogger().severe("-----------------------------------------------------");
+		dab.getPlugin().getPluginLoader().disablePlugin(dab.getPlugin());
+	}
+	public synchronized void openConnection() {
+		if (dab.useMySQL()) {
+			try {
+				String username = dab.getUsername();
+				String password = dab.getPassword();
+				int port = dab.getPort();
+				String host = dab.getHost();
+				String database = dab.getDatabase();
+				connection = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + database, username, password);
+				connection.setReadOnly(readOnly.get());
+			} catch (Exception e) {
+				dab.writeError(e, "Database connection error.");
 			}
 		} else {
-			if (!isWriteable()) {
-				dab.getLogger().severe("-----------------------------------------------------");
-				dab.getLogger().severe("[DataBukkit["+dab.getPlugin().getName()+"]]Fatal database connection error. "
-						+ "Make sure your database is unlocked and writeable in order to use this plugin."
-						+ " Disabling "+dab.getPlugin().getName()+".");
-				dab.getLogger().severe("-----------------------------------------------------");
-				dab.getPlugin().getPluginLoader().disablePlugin(dab.getPlugin());
+			try {
+				String sqlitePath = dab.getSQLitePath();
+				Class.forName("org.sqlite.JDBC");
+				connection = DriverManager.getConnection("jdbc:sqlite:" + sqlitePath);
+				connection.setReadOnly(readOnly.get());
+			} catch (Exception e) {
+				dab.writeError(e, "Database connection error.");
 			}
 		}
 	}
-	protected abstract void openConnection();
 	public synchronized void closeConnection() {
 		try {
+			if (connection == null) {return;}
 			if (!connection.isClosed()) {
 				connection.close();
 			}

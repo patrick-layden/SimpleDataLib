@@ -158,18 +158,6 @@ public class YamlHandler {
 		gFC(currentFC).set(path, value);
 	}
 	
-	public QuickFileConfiguration getQuickFileConfiguration(String name) {
-		FileConfiguration fc = gFC(name);
-		if (fc != null) {
-			return new QuickFileConfiguration(fc);
-		} else {
-			return null;
-		}
-	}
-	public QuickFileConfiguration gQFC(String name) {
-		return getQuickFileConfiguration(name);
-	}
-	
 	
 	public void copyFromJar(String name) {
 		File configFile = new File(plugin.getDataFolder(), name + ".yml");

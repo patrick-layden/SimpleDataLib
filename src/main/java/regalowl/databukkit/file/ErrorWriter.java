@@ -25,14 +25,13 @@ public class ErrorWriter {
 	}
 	
 	public void writeError(Exception e, String text, boolean sync) {
+		if (!plugin.isEnabled() && e != null && sync == false) {
+			sync = true;
+		}
 		this.error = dab.getCommonFunctions().getErrorString(e);
 		this.text = text;
 		if (!sync) {
-			plugin.getServer().getScheduler().runTaskLaterAsynchronously(plugin, new Runnable() {
-				public void run() {
-					write();
-				}
-			}, 0L);
+			plugin.getServer().getScheduler().runTaskAsynchronously(plugin, new Runnable() {public void run() {write();}});
 		} else {
 			write();
 		}

@@ -13,15 +13,19 @@ import org.bukkit.plugin.Plugin;
 import regalowl.databukkit.file.ErrorWriter;
 import regalowl.databukkit.file.FileTools;
 import regalowl.databukkit.file.YamlHandler;
+import regalowl.databukkit.sql.ConnectionPool;
 import regalowl.databukkit.sql.SQLRead;
 import regalowl.databukkit.sql.SQLWrite;
+import regalowl.databukkit.sql.SyncSQLWrite;
 
 public class DataBukkit {
 
 	private Plugin plugin;
 	private boolean useMySql;
 	private SQLWrite sw;
+	private SyncSQLWrite ssw;
 	private SQLRead sr;
+	private ConnectionPool pool;
 	private Logger log;
 	private YamlHandler yh;
 	private CommonFunctions cf;
@@ -78,8 +82,14 @@ public class DataBukkit {
 			databaseOk = checkSQLLite();
 		}
 		if (databaseOk) {
-			sw = new SQLWrite(this);
-			sr = new SQLRead(this);
+			if (useMySql) {
+				pool = new ConnectionPool(this, 3);
+			} else {
+				pool = new ConnectionPool(this, 1);
+			}
+			sw = new SQLWrite(this, pool);
+			ssw = new SyncSQLWrite(this, pool);
+			sr = new SQLRead(this, pool);
 			dataBaseExists = true;
 		} else {
 			log.severe("-----------------------------------------------------");
@@ -164,6 +174,10 @@ public class DataBukkit {
 	
 	public SQLWrite getSQLWrite() {
 		return sw;
+	}
+	
+	public SyncSQLWrite getSyncSQLWrite() {
+		return ssw;
 	}
 	
 	public SQLRead getSQLRead() {
