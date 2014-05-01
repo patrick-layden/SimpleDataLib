@@ -98,12 +98,12 @@ public class SQLWrite {
 				writeArray.add(buffer.get(processNext.get()));
 				buffer.remove(processNext.getAndIncrement());
 			}
-			write(writeArray);
+			write();
 			pool.returnConnection(database);
 			writeActive.set(false);
 		}
 
-		private void write(ArrayList<WriteStatement> writeArray) {
+		private void write() {
 			WriteResult result = database.write(writeArray);
 			if (result.getStatus() == WriteResultType.DISABLED) {
 				return;
