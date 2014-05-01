@@ -4,19 +4,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class WriteResult {
-	private boolean successful;
+	private WriteResultType type;
 	private WriteStatement failedSQL;
 	private Exception exception;
 	private List<WriteStatement> remainingSQL = new ArrayList<WriteStatement>();
 	private List<WriteStatement> successfulSQL = new ArrayList<WriteStatement>();
 	
-	public WriteResult(boolean success, List<WriteStatement> successful) {
-		this.successful = success;
+	public WriteResult(WriteResultType type, List<WriteStatement> successful) {
+		this.type = type;
 		this.successfulSQL.addAll(successful);
 	}
 	
-	public WriteResult(boolean success, List<WriteStatement> successful, WriteStatement failedStatement, Exception error, List<WriteStatement> remaining) {
-		this.successful = success;
+	public WriteResult(WriteResultType type, List<WriteStatement> successful, WriteStatement failedStatement, Exception error, List<WriteStatement> remaining) {
+		this.type = type;
 		this.failedSQL = failedStatement;
 		this.exception = error;
 		if (remaining != null) {
@@ -31,8 +31,8 @@ public class WriteResult {
 		}
 	}
 
-	public boolean wasSuccessful() {
-		return successful;
+	public WriteResultType getStatus() {
+		return type;
 	}
 	public WriteStatement getFailedSQL() {
 		return failedSQL;

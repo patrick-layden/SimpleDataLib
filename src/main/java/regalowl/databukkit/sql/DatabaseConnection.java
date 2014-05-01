@@ -35,7 +35,7 @@ public class DatabaseConnection {
 		PreparedStatement preparedStatement = null;
 		try {
 			prepareConnection();
-			if (statements.size() == 0 || lock.get()) {return new WriteResult(true, statements);}
+			if (statements.size() == 0 || lock.get()) {return new WriteResult(WriteResultType.EMPTY, statements);}
 			for (WriteStatement statement : statements) {
 				currentStatement = statement;
 				preparedStatement = connection.prepareStatement(currentStatement.getStatement());
@@ -44,19 +44,19 @@ public class DatabaseConnection {
 			}
 			if (lock.get()) {
 				connection.rollback();
-				return new WriteResult(false, null, null, null, statements);
+				return new WriteResult(WriteResultType.DISABLED, null, null, null, statements);
 			} else {
 				connection.commit();
-				return new WriteResult(true, statements);
+				return new WriteResult(WriteResultType.SUCCESS, statements);
 			}
 		} catch (SQLException e) {
 			try {
 				connection.rollback();
 				statements.remove(currentStatement);
-				return new WriteResult(false, null, currentStatement, e, statements);
+				return new WriteResult(WriteResultType.ERROR, null, currentStatement, e, statements);
 			} catch (SQLException e1) {
 				dab.writeError(e, "Rollback failed.");
-				return new WriteResult(false, null, null, null, statements);
+				return new WriteResult(WriteResultType.ERROR, null, null, null, statements);
 			}
 		} finally {
 			try {
@@ -142,11 +142,11 @@ public class DatabaseConnection {
 		if (isValid()) {return;}
 		dab.getLogger().severe("-----------------------------------------------------");
 		if (readOnly.get()) {
-			dab.getLogger().severe("[DataBukkit[" + dab.getPlugin().getName() + "]]Fatal database connection error. " 
+			dab.getLogger().severe("[" + dab.getPlugin().getName() + "]Fatal database connection error. " 
 		+ "Make sure your database is unlocked and readable in order to use this plugin." + " Disabling " 
 					+ dab.getPlugin().getName() + ".");
 		} else {
-			dab.getLogger().severe("[DataBukkit[" + dab.getPlugin().getName() + "]]Fatal database connection error. " 
+			dab.getLogger().severe("[" + dab.getPlugin().getName() + "]Fatal database connection error. " 
 		+ "Make sure your database is unlocked and writeable in order to use this plugin." + " Disabling " + dab.getPlugin().getName() + ".");
 		}
 		dab.getLogger().severe("-----------------------------------------------------");

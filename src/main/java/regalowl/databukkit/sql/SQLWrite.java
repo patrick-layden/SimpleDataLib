@@ -105,13 +105,15 @@ public class SQLWrite {
 
 		private void write(ArrayList<WriteStatement> writeArray) {
 			WriteResult result = database.write(writeArray);
-			if (result.wasSuccessful()) {
+			if (result.getStatus() == WriteResultType.DISABLED) {
+				return;
+			} else if (result.getStatus() == WriteResultType.SUCCESS) {
 					if (logSQL.get() && result.getSuccessfulSQL() != null && !result.getSuccessfulSQL().isEmpty()) {
 						for (WriteStatement ws:result.getSuccessfulSQL()) {
 							ws.logStatement();
 						}
 					}
-			} else {
+			} else if (result.getStatus() == WriteResultType.ERROR) {
 				if (logWriteErrors.get()) {
 					result.getFailedSQL().writeFailed(result.getException());
 				}
@@ -119,6 +121,7 @@ public class SQLWrite {
 					addWriteStatementsToQueue(result.getRemainingSQL());
 				}
 			}
+			writeArray.clear();
 		}
 		
 		public void stop() {
@@ -148,7 +151,7 @@ public class SQLWrite {
 	}
 	private void saveBuffer() {
 		if (buffer.size() == 0) {return;}
-		dab.getLogger().info("[DataBukkit[" + dab.getPlugin().getName() + "]]Saving the remaining SQL queue: [" + buffer.size() + " statements].  Please wait.");
+		dab.getLogger().info("[" + dab.getPlugin().getName() + "]Saving the remaining SQL queue: [" + buffer.size() + " statements].  Please wait.");
 		DatabaseConnection database = new DatabaseConnection(dab, false);
 		ArrayList<WriteStatement> writeArray = new ArrayList<WriteStatement>();
 		while (buffer.size() > 0) {
@@ -156,14 +159,14 @@ public class SQLWrite {
 			buffer.remove(processNext.getAndIncrement());
 		}
 		WriteResult result = database.write(writeArray);
-		if (result.wasSuccessful()) {
+		if (result.getStatus() == WriteResultType.SUCCESS) {
 			if (logSQL.get() && result.getSuccessfulSQL() != null && !result.getSuccessfulSQL().isEmpty()) {
 				for (WriteStatement ws : result.getSuccessfulSQL()) {
 					ws.logStatement();
 				}
 			}
-		} else {
-			dab.getLogger().severe("[DataBukkit[" + dab.getPlugin().getName() + "]]A database error occurred while shutting down.  Attempting to save remaining data... This may take longer than usual.");
+		} else if (result.getStatus() == WriteResultType.ERROR) {
+			dab.getLogger().severe("[" + dab.getPlugin().getName() + "]A database error occurred while shutting down.  Attempting to save remaining data... This may take longer than usual.");
 			if (logWriteErrors.get()) {
 				result.getFailedSQL().logError(result.getException());
 			}
@@ -172,11 +175,11 @@ public class SQLWrite {
 					ArrayList<WriteStatement> statement = new ArrayList<WriteStatement>();
 					statement.add(ws);
 					WriteResult r = database.write(statement);
-					if (r.wasSuccessful()) {
+					if (r.getStatus() == WriteResultType.SUCCESS) {
 						if (logSQL.get() && r.getSuccessfulSQL() != null && !r.getSuccessfulSQL().isEmpty()) {
 							r.getSuccessfulSQL().get(0).logStatement();
 						}
-					} else {
+					} else if (r.getStatus() == WriteResultType.ERROR) {
 						if (logWriteErrors.get()) {
 							r.getFailedSQL().logError(r.getException());
 						}
@@ -185,7 +188,7 @@ public class SQLWrite {
 			}
 		}
 		buffer.clear();
-		dab.getLogger().info("[DataBukkit[" + dab.getPlugin().getName() + "]]SQL queue save complete.");
+		dab.getLogger().info("[" + dab.getPlugin().getName() + "]SQL queue save complete.");
 
 	}
 

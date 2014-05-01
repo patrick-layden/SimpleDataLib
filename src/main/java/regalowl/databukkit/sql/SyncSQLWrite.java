@@ -23,13 +23,13 @@ public class SyncSQLWrite {
 		if (statements == null) {return;}
 		DatabaseConnection database = pool.getDatabaseConnection();
 		WriteResult result = database.write(statements);
-		if (result.wasSuccessful()) {
+		if (result.getStatus() == WriteResultType.SUCCESS) {
 			if (sw.logSQL() && result.getSuccessfulSQL() != null && !result.getSuccessfulSQL().isEmpty()) {
 				for (WriteStatement ws:result.getSuccessfulSQL()) {
 					ws.logStatement();
 				}
 			}
-		} else {
+		} else if (result.getStatus() == WriteResultType.ERROR) {
 			if (sw.logWriteErrors()) {
 				result.getFailedSQL().writeFailed(result.getException());
 			}

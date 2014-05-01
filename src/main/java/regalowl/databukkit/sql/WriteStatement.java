@@ -33,7 +33,17 @@ public class WriteStatement extends BasicStatement {
 	
 	public void logError(Exception e) {
 		ErrorWriter ew = dab.getErrorWriter();
-		ew.writeError(e, "SQL write failed " + writeFailures + " time(s). The failing SQL statement is in the following brackets: [" + statement + "]", true);
+		String writeString = "SQL write failed " + writeFailures + " time(s). The failing SQL statement is in the following brackets: %n[" + statement + "]";
+		if (parameters != null && parameters.size() > 0) {
+			String paramList = "[";
+			for (Object p:parameters) {
+				if (p == null) {p = "";}
+				paramList += "["+p.toString() + "], ";
+			}
+			paramList = paramList.substring(0, paramList.length() - 2) + "]";
+			writeString += "%nParameters: " + paramList;
+		}
+		ew.writeError(e, writeString, true);
 	}
 	
 	public int failCount() {
