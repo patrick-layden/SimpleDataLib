@@ -82,11 +82,7 @@ public class DataBukkit {
 			databaseOk = checkSQLLite();
 		}
 		if (databaseOk) {
-			if (useMySql) {
-				pool = new ConnectionPool(this, 3);
-			} else {
-				pool = new ConnectionPool(this, 1);
-			}
+			pool = new ConnectionPool(this, 1);
 			sw = new SQLWrite(this, pool);
 			ssw = new SyncSQLWrite(this, pool);
 			sr = new SQLRead(this, pool);
