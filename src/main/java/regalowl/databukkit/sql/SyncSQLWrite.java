@@ -12,6 +12,7 @@ public class SyncSQLWrite {
 	private DataBukkit dab;
 	private SQLWrite sw;
 	private ConnectionPool pool;
+	private ArrayList<WriteStatement> queue = new ArrayList<WriteStatement>();
 	
 	public SyncSQLWrite(DataBukkit dab, ConnectionPool pool) {
 		this.dab = dab;
@@ -19,10 +20,14 @@ public class SyncSQLWrite {
 		this.sw = dab.getSQLWrite();
 	}
 	
-	public void execute(List<WriteStatement> statements) {
-		if (statements == null) {return;}
+	public int getQueueSize() {
+		return queue.size();
+	}
+	
+	public synchronized void writeQueue() {
+		if (queue == null || queue.isEmpty()) {return;}
 		DatabaseConnection database = pool.getDatabaseConnection();
-		WriteResult result = database.write(statements);
+		WriteResult result = database.write(queue);
 		if (result.getStatus() == WriteResultType.SUCCESS) {
 			if (sw.logSQL() && result.getSuccessfulSQL() != null && !result.getSuccessfulSQL().isEmpty()) {
 				for (WriteStatement ws:result.getSuccessfulSQL()) {
@@ -35,28 +40,36 @@ public class SyncSQLWrite {
 			}
 		}
 		pool.returnConnection(database);
+		queue.clear();
 	}
-	public void execute(WriteStatement statement) {
-		if (statement == null) {return;}
-		ArrayList<WriteStatement> statements = new ArrayList<WriteStatement>();
-		statements.add(statement);
-		execute(statements);
+	
+	public synchronized void queue(List<WriteStatement> statements) {
+		for (WriteStatement statement:statements) {
+			if (statement != null) {
+				queue.add(statement);
+			}
+		}
 	}
-	public void execute(String statement) {
-		if (statement == null) {return;}
-		ArrayList<WriteStatement> statements = new ArrayList<WriteStatement>();
-		statements.add(new WriteStatement(statement, dab));
-		execute(statements);
+	public synchronized void queue(WriteStatement statement) {
+		if (statement != null) {
+			queue.add(statement);
+		}
 	}
-	public void convertExecute(String statement) {
-		if (statement == null) {return;}
-		execute(sw.convertSQL(statement));
+	public synchronized void queue(String statement) {
+		if (statement != null) {
+			queue(new WriteStatement(statement, dab));
+		}
+	}
+	public synchronized void convertQueue(String statement) {
+		if (statement != null) {
+			queue(sw.convertSQL(statement));
+		}
 	}
 	
 	
 
 	
-	public void createSqlTable(String name, ArrayList<String> fields) {
+	public synchronized void queueSqlTable(String name, ArrayList<String> fields) {
 		String statement = "CREATE TABLE IF NOT EXISTS " + name + " (";
 		for (int i=0; i < fields.size(); i++) {
 			String field = dab.getSQLWrite().convertSQL(fields.get(i));
@@ -66,9 +79,9 @@ public class SyncSQLWrite {
 				statement += field + ")";
 			}
 		}
-		execute(statement);
+		queue(statement);
 	}
-	public void performInsert(String table, HashMap<String, String> values) {
+	public synchronized void queueInsert(String table, HashMap<String, String> values) {
 		String statement = "INSERT INTO " + table + " (";
 		for (String field:values.keySet()) {
 			statement += field + ", ";
@@ -84,9 +97,9 @@ public class SyncSQLWrite {
 		for (String value:values.values()) {
 			ws.addParameter(sw.convertSQL(value));
 		}
-		execute(ws);
+		queue(ws);
 	}
-	public void performUpdate(String table, HashMap<String, String> values, HashMap<String, String> conditions) {
+	public synchronized void queueUpdate(String table, HashMap<String, String> values, HashMap<String, String> conditions) {
 		String statement = "UPDATE " + table + " SET ";
 		Iterator<String> it = values.keySet().iterator();
 		while (it.hasNext()) {
@@ -111,10 +124,10 @@ public class SyncSQLWrite {
 			String field = it.next();
 			ws.addParameter(conditions.get(field));
 		}
-		execute(ws);
+		queue(ws);
 	}
 	
-	public void performDelete(String table, HashMap<String, String> conditions) {
+	public synchronized void queueDelete(String table, HashMap<String, String> conditions) {
 		String statement = "DELETE FROM " + table + " WHERE ";
 		Iterator<String> it = conditions.keySet().iterator();
 		while (it.hasNext()) {
@@ -129,7 +142,7 @@ public class SyncSQLWrite {
 			String field = it.next();
 			ws.addParameter(conditions.get(field));
 		}
-		execute(ws);
+		queue(ws);
 	}
 	
 	
