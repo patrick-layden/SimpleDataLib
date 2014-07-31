@@ -244,7 +244,9 @@ public class FileTools {
 		  			header = false;
 		  		} else {
 		  			for (int i=0; i < row.length; i++) {
-		  				qr.addData(i+1, row[i]);
+		  				String cData = row[i];
+		  				if (cData.equals("{{NULL}}")) {cData = null;}
+		  				qr.addData(i+1, cData);
 		  			}
 		  		}
 		    }
@@ -272,7 +274,9 @@ public class FileTools {
 			while (data.next()) {
 				String[] row = new String[colCount];
 				for (int i = 0; i < colCount; i++) {
-					row[i] = data.getString(i+1);
+					String cData = data.getString(i+1);
+					if (cData == null) {cData = "{{NULL}}";}
+					row[i] = cData;
 				}
 				writer.writeNext(row);
 			}
