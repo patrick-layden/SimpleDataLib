@@ -7,6 +7,7 @@ public enum FieldType {
 	TEXT(false, false), 
 	DATETIME(false, false), 
 	TINYTEXT(false, false), 
+	LONGTEXT(false, false), 
 	DOUBLE(false, true);
 
 

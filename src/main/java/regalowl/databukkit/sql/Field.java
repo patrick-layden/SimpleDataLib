@@ -55,7 +55,14 @@ public class Field {
 		useMySQL = true;
 	}
 	
+	private void checkTypeCompatibility() {
+		if (type.equals(FieldType.LONGTEXT) && !useMySQL) {
+			type = FieldType.TEXT;
+		}
+	}
+	
 	public String getString() {
+		checkTypeCompatibility();
 		String fieldString = name + " " + type.toString();
 		if (hasFieldSize) {
 			fieldString += "(" + fieldSize + ")";
