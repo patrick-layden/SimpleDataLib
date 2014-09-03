@@ -6,6 +6,7 @@ import java.net.URLDecoder;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.logging.Logger;
 
 import org.bukkit.plugin.Plugin;
@@ -17,6 +18,7 @@ import regalowl.databukkit.sql.ConnectionPool;
 import regalowl.databukkit.sql.SQLRead;
 import regalowl.databukkit.sql.SQLWrite;
 import regalowl.databukkit.sql.SyncSQLWrite;
+import regalowl.databukkit.sql.Table;
 
 public class DataBukkit {
 
@@ -26,6 +28,7 @@ public class DataBukkit {
 	private SyncSQLWrite ssw;
 	private SQLRead sr;
 	private ConnectionPool pool;
+	private ArrayList<Table> tables = new ArrayList<Table>();
 	private Logger log;
 	private YamlHandler yh;
 	private CommonFunctions cf;
@@ -166,6 +169,28 @@ public class DataBukkit {
 			//e.printStackTrace();
 			return false;
 		}
+	}
+	
+	public Table addTable(String name) {
+		Table t = new Table(name, this);
+		tables.add(t);
+		return t;
+	}
+	
+	public Table getTable(String name) {
+		for (Table t:tables) {
+			if (name.equalsIgnoreCase(t.getName())) {
+				return t;
+			}
+		}
+		return null;
+	}
+	
+	public void saveTables() {
+		for (Table t:tables) {
+			t.save();
+		}
+		ssw.writeQueue();
 	}
 	
 	public SQLWrite getSQLWrite() {
