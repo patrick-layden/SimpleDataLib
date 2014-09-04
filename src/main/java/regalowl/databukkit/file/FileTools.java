@@ -104,6 +104,16 @@ public class FileTools {
 			e.printStackTrace();
 		}
 	}
+	public void deleteDirectory(String path) {
+		File file = new File(path);
+		wipeDirectory(file);
+	}
+	public void wipeDirectory(File dir) {
+	    for (File file: dir.listFiles()) {
+	        if (file.isDirectory()) wipeDirectory(file);
+	        file.delete();
+	    }
+	}
 	public void unZipFile(String zipFile, String outputFolder) {
 		try {
 			File folder = new File(outputFolder);

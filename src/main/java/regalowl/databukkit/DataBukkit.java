@@ -171,6 +171,10 @@ public class DataBukkit {
 		}
 	}
 	
+	public Table generateTable(String name) {
+		return new Table(name, this);
+	}
+	
 	public Table addTable(String name) {
 		Table t = new Table(name, this);
 		tables.add(t);

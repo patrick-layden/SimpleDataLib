@@ -13,6 +13,7 @@ public class Field {
 	private int fieldSize;
 	private boolean notNull;
 	private boolean useMySQL;
+	private boolean unique;
 	
 	public Field(String name, FieldType type) {
 		this.name = name;
@@ -23,15 +24,24 @@ public class Field {
 		this.hasFieldSize = false;
 		this.notNull = false;
 		this.useMySQL = false;
+		this.unique = false;
 	}
 	
 	public void setPrimaryKey() {
-		primaryKey = true;
+		if (!unique) {
+			primaryKey = true;
+		}
 	}
 	
 	public void setAutoIncrement() {
 		if (type.canAutoIncrement()) {
 			autoIncrement = true;
+		}
+	}
+	
+	public void setUnique() {
+		if (!primaryKey) {
+			unique = true;
 		}
 	}
 	
@@ -75,6 +85,9 @@ public class Field {
 		}
 		if (primaryKey) {
 			fieldString += " PRIMARY KEY";
+		}
+		if (unique) {
+			fieldString += " UNIQUE";
 		}
 		if (autoIncrement) {
 			if (useMySQL) {
