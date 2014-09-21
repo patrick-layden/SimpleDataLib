@@ -34,6 +34,7 @@ public class DataBukkit {
 	private CommonFunctions cf;
 	private FileTools ft;
 	private ErrorWriter ew;
+	private boolean debug;
 	
 	private boolean dataBaseExists;
 	private String host;
@@ -59,6 +60,11 @@ public class DataBukkit {
 		useMySql = false;
 		dataBaseExists = false;
 		shutdown = false;
+		debug = false;
+	}
+	
+	public void setDebug(boolean state) {
+		this.debug = state;
 	}
 	
 	public void enableMySQL(String host, String database, String username, String password, int port) {
@@ -150,7 +156,9 @@ public class DataBukkit {
 			connect.close();
 			return true;
 		} catch (Exception e) {
-			//e.printStackTrace();
+			if (debug) {
+				writeError(e, "[DataBukkit Debug Message] SQLite check failed.");
+			}
 			return false;
 		}
 	}
@@ -166,7 +174,9 @@ public class DataBukkit {
 			connect.close();
 			return true;
 		} catch (Exception e) {
-			//e.printStackTrace();
+			if (debug) {
+				writeError(e, "[DataBukkit Debug Message] MySQL check failed.");
+			}
 			return false;
 		}
 	}
