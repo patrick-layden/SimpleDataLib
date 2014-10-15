@@ -21,4 +21,24 @@ public enum FieldType {
     private final boolean canHaveDefault;
     public boolean canHaveDefault(){return canHaveDefault;}
     
+    public static FieldType fromString(String type) {
+    	type = type.toUpperCase();
+    	if (type.contains("VARCHAR")) {
+    		return VARCHAR;
+    	} else if (type.equals("INTEGER")) {
+    		return INTEGER;
+    	} else if (type.equals("TEXT")) {
+    		return TEXT;
+    	} else if (type.equals("DATETIME")) {
+    		return DATETIME;
+    	} else if (type.equals("TINYTEXT")) {
+    		return TINYTEXT;
+    	} else if (type.equals("LONGTEXT")) {
+    		return LONGTEXT;
+    	} else if (type.equals("VARCHAR")) {
+    		return VARCHAR;
+    	}
+    	return null;
+    }
+    
 }
