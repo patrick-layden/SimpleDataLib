@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import regalowl.databukkit.DataBukkit;
+import regalowl.databukkit.event.LogLevel;
 
 
 
@@ -140,26 +141,24 @@ public class DatabaseConnection {
 		closeConnection();
 		openConnection();
 		if (isValid()) {return;}
-		dab.getLogger().severe("-----------------------------------------------------");
 		if (readOnly.get()) {
-			dab.getLogger().severe("[" + dab.getPlugin().getName() + "]Fatal database connection error. " 
+			dab.getEventHandler().fireLogEvent("[" + dab.getName() + "]Fatal database connection error. " 
 		+ "Make sure your database is unlocked and readable in order to use this plugin." + " Disabling " 
-					+ dab.getPlugin().getName() + ".");
+					+ dab.getName() + ".", null, LogLevel.SEVERE);
 		} else {
-			dab.getLogger().severe("[" + dab.getPlugin().getName() + "]Fatal database connection error. " 
-		+ "Make sure your database is unlocked and writeable in order to use this plugin." + " Disabling " + dab.getPlugin().getName() + ".");
+			dab.getEventHandler().fireLogEvent("[" + dab.getName() + "]Fatal database connection error. " 
+		+ "Make sure your database is unlocked and writeable in order to use this plugin." + " Disabling " + dab.getName() + ".", null, LogLevel.SEVERE);
 		}
-		dab.getLogger().severe("-----------------------------------------------------");
-		dab.getPlugin().getPluginLoader().disablePlugin(dab.getPlugin());
+		dab.getEventHandler().fireDisableEvent();
 	}
 	public synchronized void openConnection() {
-		if (dab.useMySQL()) {
+		if (dab.getSQLManager().useMySQL()) {
 			try {
-				String username = dab.getUsername();
-				String password = dab.getPassword();
-				int port = dab.getPort();
-				String host = dab.getHost();
-				String database = dab.getDatabase();
+				String username = dab.getSQLManager().getUsername();
+				String password = dab.getSQLManager().getPassword();
+				int port = dab.getSQLManager().getPort();
+				String host = dab.getSQLManager().getHost();
+				String database = dab.getSQLManager().getDatabase();
 				connection = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + database, username, password);
 				connection.setReadOnly(readOnly.get());
 			} catch (Exception e) {
@@ -167,7 +166,7 @@ public class DatabaseConnection {
 			}
 		} else {
 			try {
-				String sqlitePath = dab.getSQLitePath();
+				String sqlitePath = dab.getSQLManager().getSQLitePath();
 				Class.forName("org.sqlite.JDBC");
 				connection = DriverManager.getConnection("jdbc:sqlite:" + sqlitePath);
 				connection.setReadOnly(readOnly.get());

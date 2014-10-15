@@ -26,7 +26,7 @@ public class Table {
 	
 	public Field addField(String name, FieldType type) {
 		Field newField = new Field(name, type);
-		if (dab.useMySQL()) {
+		if (dab.getSQLManager().useMySQL()) {
 			newField.setUseMySQL();
 		}
 		fields.add(newField);
@@ -35,7 +35,7 @@ public class Table {
 	
 	public Field generateField(String name, FieldType type) {
 		Field newField = new Field(name, type);
-		if (dab.useMySQL()) {
+		if (dab.getSQLManager().useMySQL()) {
 			newField.setUseMySQL();
 		}
 		return newField;
@@ -57,14 +57,14 @@ public class Table {
 	}
 	
 	public void saveAsync() {
-		dab.getSQLWrite().addToQueue(getCreateStatement(fields, false));
+		dab.getSQLManager().getSQLWrite().addToQueue(getCreateStatement(fields, false));
 	}
 	public void save() {
-		dab.getSyncSQLWrite().queue(getCreateStatement(fields, false));
+		dab.getSQLManager().getSyncSQLWrite().queue(getCreateStatement(fields, false));
 	}
 	public void saveNow() {
-		dab.getSyncSQLWrite().queue(getCreateStatement(fields, false));
-		dab.getSyncSQLWrite().writeQueue();
+		dab.getSQLManager().getSyncSQLWrite().queue(getCreateStatement(fields, false));
+		dab.getSQLManager().getSyncSQLWrite().writeQueue();
 	}
 
 	private String getCompositeKeyString() {
@@ -91,15 +91,15 @@ public class Table {
 				newFields.add(f);
 			}
 		}
-		dab.getSyncSQLWrite().queue(getCreateStatement(newFields, true));
-		dab.getSyncSQLWrite().writeQueue();
-		dab.getSyncSQLWrite().queue("INSERT INTO " + name + "_temp (" + getFieldNameString(fields) + ") SELECT " + getFieldNameString(fields) + " FROM " + name);
-		dab.getSyncSQLWrite().queue("DROP TABLE " + name );
-		dab.getSyncSQLWrite().queue(getCreateStatement(newFields, false));
-		dab.getSyncSQLWrite().writeQueue();
-		dab.getSyncSQLWrite().queue("INSERT INTO " + name + "(" + getFieldNameString(newFields) + ") SELECT " + getFieldNameString(newFields) + " FROM " + name + "_temp");
-		dab.getSyncSQLWrite().queue("DROP TABLE " + name + "_temp");
-		dab.getSyncSQLWrite().writeQueue();
+		dab.getSQLManager().getSyncSQLWrite().queue(getCreateStatement(newFields, true));
+		dab.getSQLManager().getSyncSQLWrite().writeQueue();
+		dab.getSQLManager().getSyncSQLWrite().queue("INSERT INTO " + name + "_temp (" + getFieldNameString(fields) + ") SELECT " + getFieldNameString(fields) + " FROM " + name);
+		dab.getSQLManager().getSyncSQLWrite().queue("DROP TABLE " + name );
+		dab.getSQLManager().getSyncSQLWrite().queue(getCreateStatement(newFields, false));
+		dab.getSQLManager().getSyncSQLWrite().writeQueue();
+		dab.getSQLManager().getSyncSQLWrite().queue("INSERT INTO " + name + "(" + getFieldNameString(newFields) + ") SELECT " + getFieldNameString(newFields) + " FROM " + name + "_temp");
+		dab.getSQLManager().getSyncSQLWrite().queue("DROP TABLE " + name + "_temp");
+		dab.getSQLManager().getSyncSQLWrite().writeQueue();
 		fields = newFields;
 	}
 	
@@ -109,15 +109,15 @@ public class Table {
 		if (newFields.contains(field)) {
 			newFields.remove(field);
 		}
-		dab.getSyncSQLWrite().queue(getCreateStatement(newFields, true));
-		dab.getSyncSQLWrite().writeQueue();
-		dab.getSyncSQLWrite().queue("INSERT INTO " + name + "_temp (" + getFieldNameString(newFields) + ") SELECT " + getFieldNameString(newFields) + " FROM " + name);
-		dab.getSyncSQLWrite().queue("DROP TABLE " + name );
-		dab.getSyncSQLWrite().queue(getCreateStatement(newFields, false));
-		dab.getSyncSQLWrite().writeQueue();
-		dab.getSyncSQLWrite().queue("INSERT INTO " + name + "(" + getFieldNameString(newFields) + ") SELECT " + getFieldNameString(newFields) + " FROM " + name + "_temp");
-		dab.getSyncSQLWrite().queue("DROP TABLE " + name + "_temp");
-		dab.getSyncSQLWrite().writeQueue();
+		dab.getSQLManager().getSyncSQLWrite().queue(getCreateStatement(newFields, true));
+		dab.getSQLManager().getSyncSQLWrite().writeQueue();
+		dab.getSQLManager().getSyncSQLWrite().queue("INSERT INTO " + name + "_temp (" + getFieldNameString(newFields) + ") SELECT " + getFieldNameString(newFields) + " FROM " + name);
+		dab.getSQLManager().getSyncSQLWrite().queue("DROP TABLE " + name );
+		dab.getSQLManager().getSyncSQLWrite().queue(getCreateStatement(newFields, false));
+		dab.getSQLManager().getSyncSQLWrite().writeQueue();
+		dab.getSQLManager().getSyncSQLWrite().queue("INSERT INTO " + name + "(" + getFieldNameString(newFields) + ") SELECT " + getFieldNameString(newFields) + " FROM " + name + "_temp");
+		dab.getSQLManager().getSyncSQLWrite().queue("DROP TABLE " + name + "_temp");
+		dab.getSQLManager().getSyncSQLWrite().writeQueue();
 		fields = newFields;
 	}
 	
@@ -131,15 +131,15 @@ public class Table {
 		} else {
 			return;
 		}
-		dab.getSyncSQLWrite().queue(getCreateStatement(newFields, true));
-		dab.getSyncSQLWrite().writeQueue();
-		dab.getSyncSQLWrite().queue("INSERT INTO " + name + "_temp (" + getFieldNameString(newFields) + ") SELECT " + getFieldNameString(fields) + " FROM " + name);
-		dab.getSyncSQLWrite().queue("DROP TABLE " + name );
-		dab.getSyncSQLWrite().queue(getCreateStatement(newFields, false));
-		dab.getSyncSQLWrite().writeQueue();
-		dab.getSyncSQLWrite().queue("INSERT INTO " + name + "(" + getFieldNameString(newFields) + ") SELECT " + getFieldNameString(newFields) + " FROM " + name + "_temp");
-		dab.getSyncSQLWrite().queue("DROP TABLE " + name + "_temp");
-		dab.getSyncSQLWrite().writeQueue();
+		dab.getSQLManager().getSyncSQLWrite().queue(getCreateStatement(newFields, true));
+		dab.getSQLManager().getSyncSQLWrite().writeQueue();
+		dab.getSQLManager().getSyncSQLWrite().queue("INSERT INTO " + name + "_temp (" + getFieldNameString(newFields) + ") SELECT " + getFieldNameString(fields) + " FROM " + name);
+		dab.getSQLManager().getSyncSQLWrite().queue("DROP TABLE " + name );
+		dab.getSQLManager().getSyncSQLWrite().queue(getCreateStatement(newFields, false));
+		dab.getSQLManager().getSyncSQLWrite().writeQueue();
+		dab.getSQLManager().getSyncSQLWrite().queue("INSERT INTO " + name + "(" + getFieldNameString(newFields) + ") SELECT " + getFieldNameString(newFields) + " FROM " + name + "_temp");
+		dab.getSQLManager().getSyncSQLWrite().queue("DROP TABLE " + name + "_temp");
+		dab.getSQLManager().getSyncSQLWrite().writeQueue();
 		fields = newFields;
 	}
 	

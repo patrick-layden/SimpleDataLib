@@ -5,13 +5,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.bukkit.scheduler.BukkitRunnable;
 
 import regalowl.databukkit.DataBukkit;
+import regalowl.databukkit.event.LogLevel;
 
 public class SQLWrite {
 
@@ -27,7 +29,9 @@ public class SQLWrite {
     
 	private AtomicBoolean writeActive = new AtomicBoolean();
     private WriteTask writeTask;
-    private final long writeTaskInterval = 600L;
+    private final long writeTaskInterval = 30000L;
+    
+    private Timer t = new Timer();
     
 	public SQLWrite(DataBukkit dab, ConnectionPool pool) {
 		this.dab = dab;
@@ -38,7 +42,7 @@ public class SQLWrite {
 		processNext.set(0);
 		writeActive.set(false);
 		writeTask = new WriteTask();
-		writeTask.runTaskTimerAsynchronously(dab.getPlugin(), writeTaskInterval, writeTaskInterval);
+		t.schedule(writeTask, writeTaskInterval, writeTaskInterval);
 	}
 	
 	
@@ -63,11 +67,6 @@ public class SQLWrite {
 			addToQueue(statement);
 		}
 	}
-	public synchronized void convertAddToQueue(String statement) {
-		if (statement == null) {return;}
-		addToQueue(convertSQL(statement));
-	}
-
 	public synchronized void addToQueue(String statement, ArrayList<Object> parameters) {
 		if (statement == null) {return;}
 		WriteStatement ws = new WriteStatement(statement, dab);
@@ -79,7 +78,7 @@ public class SQLWrite {
 
 
 	
-    private class WriteTask extends BukkitRunnable {
+    private class WriteTask extends TimerTask {
     	private boolean stop;
     	private ArrayList<WriteStatement> writeArray;
     	private DatabaseConnection database;
@@ -151,7 +150,7 @@ public class SQLWrite {
 	}
 	private void saveBuffer() {
 		if (buffer.size() == 0) {return;}
-		dab.getLogger().info("[" + dab.getPlugin().getName() + "]Saving the remaining SQL queue: [" + buffer.size() + " statements].  Please wait.");
+		dab.getEventHandler().fireLogEvent("[" + dab.getName() + "]Saving the remaining SQL queue: [" + buffer.size() + " statements].  Please wait.", null, LogLevel.INFO);
 		DatabaseConnection database = new DatabaseConnection(dab, false);
 		ArrayList<WriteStatement> writeArray = new ArrayList<WriteStatement>();
 		while (buffer.size() > 0) {
@@ -166,7 +165,7 @@ public class SQLWrite {
 				}
 			}
 		} else if (result.getStatus() == WriteResultType.ERROR) {
-			dab.getLogger().severe("[" + dab.getPlugin().getName() + "]A database error occurred while shutting down.  Attempting to save remaining data... This may take longer than usual.");
+			dab.getEventHandler().fireLogEvent("[" + dab.getName() + "]A database error occurred while shutting down.  Attempting to save remaining data... This may take longer than usual.", null, LogLevel.SEVERE);
 			if (logWriteErrors.get()) {
 				result.getFailedSQL().logError(result.getException());
 			}
@@ -188,44 +187,23 @@ public class SQLWrite {
 			}
 		}
 		buffer.clear();
-		dab.getLogger().info("[" + dab.getPlugin().getName() + "]SQL queue save complete.");
-
+		dab.getEventHandler().fireLogEvent("[" + dab.getName() + "]SQL queue save complete.", null, LogLevel.INFO);
 	}
 
 
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	public void createSqlTable(String name, ArrayList<String> fields) {
-		String statement = "CREATE TABLE IF NOT EXISTS " + name + " (";
-		for (int i=0; i < fields.size(); i++) {
-			String field = convertSQL(fields.get(i));
-			if (i < (fields.size() - 1)) {
-				statement += field + ", ";
-			} else {
-				statement += field + ")";
-			}
-		}
-		addToQueue(statement);
-	}
+
 	
 	public void performInsert(String table, HashMap<String, String> values) {
+		addToQueue(getInsertStatement(table, values));
+	}
+	public void performUpdate(String table, HashMap<String, String> values, HashMap<String, String> conditions) {
+		addToQueue(getUpdateStatement(table, values, conditions));
+	}
+	public void performDelete(String table, HashMap<String, String> conditions) {
+		addToQueue(getDeleteStatement(table, conditions));
+	}
+	
+	public WriteStatement getInsertStatement(String table, HashMap<String, String> values) {
 		String statement = "INSERT INTO " + table + " (";
 		for (String field:values.keySet()) {
 			statement += field + ", ";
@@ -239,12 +217,11 @@ public class SQLWrite {
 		statement += ")";
 		WriteStatement ws = new WriteStatement(statement, dab);
 		for (String value:values.values()) {
-			ws.addParameter(convertSQL(value));
+			ws.addParameter(value);
 		}
-		addToQueue(ws);
+		return ws;
 	}
-
-	public void performUpdate(String table, HashMap<String, String> values, HashMap<String, String> conditions) {
+	public WriteStatement getUpdateStatement(String table, HashMap<String, String> values, HashMap<String, String> conditions) {
 		String statement = "UPDATE " + table + " SET ";
 		Iterator<String> it = values.keySet().iterator();
 		while (it.hasNext()) {
@@ -269,10 +246,9 @@ public class SQLWrite {
 			String field = it.next();
 			ws.addParameter(conditions.get(field));
 		}
-		addToQueue(ws);
+		return ws;
 	}
-	
-	public void performDelete(String table, HashMap<String, String> conditions) {
+	public WriteStatement getDeleteStatement(String table, HashMap<String, String> conditions) {
 		String statement = "DELETE FROM " + table + " WHERE ";
 		Iterator<String> it = conditions.keySet().iterator();
 		while (it.hasNext()) {
@@ -287,34 +263,7 @@ public class SQLWrite {
 			String field = it.next();
 			ws.addParameter(conditions.get(field));
 		}
-		addToQueue(ws);
-	}
-	
-	
-	
-	
-	
-
-	public String convertSQL(String statement) {
-		if (statement == null) {return statement;}
-		if (dab.useMySQL()) {
-			statement = statement.replace("datetime('NOW', 'localtime')", "NOW()");
-			statement = statement.replace("AUTOINCREMENT", "AUTO_INCREMENT");
-			statement = statement.replace("autoincrement", "auto_increment");
-		} else {
-			statement = statement.replace("NOW()", "datetime('NOW', 'localtime')");
-			statement = statement.replace("AUTO_INCREMENT", "AUTOINCREMENT");
-			statement = statement.replace("auto_increment", "autoincrement");
-		}
-		return statement;
-	}
-	public String longText(String statement) {
-		if (dab.useMySQL()) {
-			statement = statement.replace(" TEXT ", " LONGTEXT ");
-		} else {
-			statement = statement.replace(" LONGTEXT ", " TEXT ");
-		}
-		return statement;
+		return ws;
 	}
 	
 	

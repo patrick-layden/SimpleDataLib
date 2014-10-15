@@ -22,8 +22,23 @@ public class BasicStatement {
 	}
 	
 	public void addParameter(Object param) {
+		if (param instanceof String) {
+			String s = (String) param;
+			if (dab.getSQLManager().useMySQL()) {
+				if (s.contains("datetime('NOW', 'localtime')")) {
+					s = s.replace("datetime('NOW', 'localtime')", "NOW()");
+				}
+			} else {
+				if (s.contains("NOW()")) {
+					s = s.replace("NOW()", "datetime('NOW', 'localtime')");
+				}
+			}
+			param = s;
+		}
 		parameters.add(param);
 	}
+
+	
 	
 	public ArrayList<Object> getParameters() {
 		return parameters;

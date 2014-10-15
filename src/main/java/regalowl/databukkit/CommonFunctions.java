@@ -16,41 +16,22 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.bukkit.ChatColor;
 import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
 
 public class CommonFunctions {
 
-	
-	public String fM(String message) {
-		message = message.replace("&0", ChatColor.BLACK+"");
-		message = message.replace("&1", ChatColor.DARK_BLUE+"");
-		message = message.replace("&2", ChatColor.DARK_GREEN+"");
-		message = message.replace("&3", ChatColor.DARK_AQUA+"");
-		message = message.replace("&4", ChatColor.DARK_RED+"");
-		message = message.replace("&5", ChatColor.DARK_PURPLE+"");
-		message = message.replace("&6", ChatColor.GOLD+"");
-		message = message.replace("&7", ChatColor.GRAY+"");
-		message = message.replace("&8", ChatColor.DARK_GRAY+"");
-		message = message.replace("&9", ChatColor.BLUE+"");
-		message = message.replace("&a", ChatColor.GREEN+"");
-		message = message.replace("&b", ChatColor.AQUA+"");
-		message = message.replace("&c", ChatColor.RED+"");
-		message = message.replace("&d", ChatColor.LIGHT_PURPLE+"");
-		message = message.replace("&e", ChatColor.YELLOW+"");
-		message = message.replace("&f", ChatColor.WHITE+"");
-		message = message.replace("&k", ChatColor.MAGIC+"");
-		message = message.replace("&l", ChatColor.BOLD+"");
-		message = message.replace("&m", ChatColor.STRIKETHROUGH+"");
-		message = message.replace("&n", ChatColor.UNDERLINE+"");
-		message = message.replace("&o", ChatColor.ITALIC+"");
-		message = message.replace("&r", ChatColor.RESET+"");
-		return message;
-	}
-	
+	/**
+	 * @param input A double value.
+	 * @return The input value rounded to two decimal places.
+	 */
 	public double twoDecimals(double input) {
 		return round(input, 2);
 	}
+	/**
+	 * @param input A double value.
+	 * @param decimals The number of decimal places to round to.
+	 * @return The rounded double value.
+	 */
 	public double round(double input, int decimals) {
 		try {
 			BigDecimal result = round(new BigDecimal(String.valueOf(input)), decimals);
@@ -59,6 +40,11 @@ public class CommonFunctions {
 			return input;
 		}
 	}
+	/**
+	 * @param input A BigDecimal value.
+	 * @param decimals The number of decimal places to round to.
+	 * @return The rounded BigDecimal value.
+	 */
 	public BigDecimal round(BigDecimal input, int decimals) {
 		try {
 			BigDecimal factor = new BigDecimal(String.valueOf(Math.pow(10, decimals)));
@@ -67,9 +53,19 @@ public class CommonFunctions {
 			return input;
 		}
 	}
+	/**
+	 * @param input A BigDecimal value.
+	 * @param decimals The number of decimal places to round to.
+	 * @return The rounded BigDecimal value in String form.
+	 */
 	public String roundString(BigDecimal input, int decimals) {
 		return round(input, decimals).toPlainString();
 	}
+	/**
+	 * @param input A double value.
+	 * @param decimals The number of decimal places to round to.
+	 * @return The rounded double value in String format.
+	 */
 	public String roundString(double input, int decimals) {
 		try {
 			return round(new BigDecimal(String.valueOf(input)), decimals).toPlainString();
@@ -77,21 +73,17 @@ public class CommonFunctions {
 			return input+"";
 		}
 	}
-	/*
-	public double round(double input, int decimals) {
-		Double factor = Math.pow(10, decimals);
-		long changedecimals = (long) Math.ceil((input * factor) - .5);
-		return (double) changedecimals / factor;
-	}
-	*/
-	
+	/**
+	 * @return A time stamp.
+	 */
 	public String getTimeStamp() {
 		 Date date = new Date();
 		return new Timestamp(date.getTime()).toString();
 	}
-	
-	
-	
+	/**
+	 * @param e An exception.
+	 * @return The exception converted to a String.
+	 */
 	public String getErrorString(Exception e) {
 		if (e == null) {return null;}
 		StringWriter error = new StringWriter();
@@ -102,6 +94,10 @@ public class CommonFunctions {
 	
 	
 
+	/**
+	 * @param commalist A comma separated value string string.
+	 * @return An ArrayList containing the double values from the CSV string.
+	 */
 	public ArrayList<Double> doubleToArray(String commalist) {
 		try {
 			ArrayList<Double> array = new ArrayList<Double>();
@@ -124,6 +120,10 @@ public class CommonFunctions {
 			return array;
 		}
 	}
+	/**
+	 * @param commalist A comma separated value string string.
+	 * @return An ArrayList containing the int values from the CSV string.
+	 */
 	public ArrayList<Integer> intToArray(String commalist) {
 		try {
 			ArrayList<Integer> array = new ArrayList<Integer>();
@@ -146,6 +146,10 @@ public class CommonFunctions {
 			return array;
 		}
 	}
+	/**
+	 * @param array An ArrayList of Double values.
+	 * @return A CSV string containing the double values.
+	 */
 	public String doubleArrayToString(ArrayList<Double> array) {
 		String string = "";
 		int c = 0;
@@ -155,6 +159,10 @@ public class CommonFunctions {
 		}
 		return string;
 	}
+	/**
+	 * @param array An ArrayList of Integer values.
+	 * @return A CSV string containing the Integer values.
+	 */
 	public String intArrayToString(ArrayList<Integer> array) {
 		String string = "";
 		int c = 0;
@@ -221,7 +229,6 @@ public class CommonFunctions {
 		return string;
 	}
 	
-	
 	public HashMap<String,Integer> explodeIntMap(String string) {
 		HashMap<String,Integer> map = new HashMap<String,Integer>();
 		try {
@@ -241,6 +248,7 @@ public class CommonFunctions {
 		}
 		
 	}
+	
 	public String implodeIntMap(HashMap<String,Integer> map) {
 		if (map == null) {return "";}
 		String string = "";
@@ -251,7 +259,6 @@ public class CommonFunctions {
 		}
 		return string;
 	}
-	
 	
 	public Object createObjectFromBase64(String base64String) throws IOException, ClassNotFoundException {
 		byte[] data = Base64Coder.decode(base64String);
@@ -269,6 +276,5 @@ public class CommonFunctions {
 		return new String(Base64Coder.encode(baos.toByteArray()));
 	}
 
-	
 	
 }

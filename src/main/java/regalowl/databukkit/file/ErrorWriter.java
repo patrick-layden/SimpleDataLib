@@ -5,8 +5,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
-import org.bukkit.Bukkit;
-import org.bukkit.plugin.Plugin;
 
 import regalowl.databukkit.DataBukkit;
 
@@ -16,22 +14,17 @@ public class ErrorWriter {
 	private String path;
 	private String text;
 	private String error;
-	private Plugin plugin;
 
 	public ErrorWriter(String path, DataBukkit dab) {
 		this.dab = dab;
 		this.path = path;
-		this.plugin = dab.getPlugin();
 	}
 	
 	public void writeError(Exception e, String text, boolean sync) {
-		if (!plugin.isEnabled() && e != null && sync == false) {
-			sync = true;
-		}
 		this.error = dab.getCommonFunctions().getErrorString(e);
 		this.text = text;
 		if (!sync) {
-			plugin.getServer().getScheduler().runTaskAsynchronously(plugin, new Runnable() {public void run() {write();}});
+			new Thread(new Writer()).start();
 		} else {
 			write();
 		}
@@ -47,8 +40,7 @@ public class ErrorWriter {
 			BufferedWriter bw = new BufferedWriter(fw);
 			bw.newLine();
 			bw.newLine();
-			bw.write(plugin.getName()+"["+plugin.getDescription().getVersion()+"], "+ Bukkit.getServer().getName()+
-					"["+Bukkit.getServer().getVersion()+"], ["+dab.getCommonFunctions().getTimeStamp()+"]");
+			bw.write(dab.getName()+ "["+dab.getCommonFunctions().getTimeStamp()+"]");
 			bw.newLine();
 			if (text != null) {
 				bw.write(String.format(text));
@@ -62,6 +54,12 @@ public class ErrorWriter {
 			e.printStackTrace();
 		}
 	}
-
+	
+	private class Writer implements Runnable {
+		@Override
+		public void run() {
+			write();
+		}
+	}
 	
 }

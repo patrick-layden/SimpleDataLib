@@ -18,12 +18,13 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
-import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import org.bukkit.plugin.Plugin;
 
+
+import regalowl.databukkit.DataBukkit;
+import regalowl.databukkit.event.LogLevel;
 import regalowl.databukkit.sql.QueryResult;
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
@@ -33,10 +34,10 @@ import au.com.bytecode.opencsv.CSVWriter;
 
 public class FileTools {
 	
-	private Plugin plugin;
+	private DataBukkit db;
 	
-	public FileTools(Plugin plugin) {
-		this.plugin = plugin;
+	public FileTools(DataBukkit db) {
+		this.db = db;
 	}
 	
 	public ArrayList<String> getFolderContents(String folderpath) {
@@ -54,25 +55,24 @@ public class FileTools {
 	}
 
 	public String getJarPath() {
-		String path = plugin.getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
-		String serverpath = "";
+		String path = db.getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
+		String decodedPath = "";
 		try {
-			String decodedPath = URLDecoder.decode(path, "UTF-8");
-			serverpath = decodedPath.substring(0, decodedPath.lastIndexOf("plugins"));
+			decodedPath = URLDecoder.decode(path, "UTF-8");
+			decodedPath = decodedPath.substring(0, decodedPath.lastIndexOf(File.separator));
 		} catch (UnsupportedEncodingException e1) {
 			e1.printStackTrace();
 		}
-		if (serverpath.startsWith("file:")) {
-			serverpath = serverpath.replace("file:", "");
+		if (decodedPath.startsWith("file:")) {
+			decodedPath = decodedPath.replace("file:", "");
 		}
-		return serverpath;
+		return decodedPath;
 	}
 
 	public void copyFileFromJar(String resource, String destination) {
-		InputStream resStreamIn = plugin.getClass().getClassLoader().getResourceAsStream(resource);
+		InputStream resStreamIn = this.getClass().getClassLoader().getResourceAsStream(resource);
 		if (resStreamIn == null) {
-			Logger log = Logger.getLogger("Minecraft");
-			log.severe("[DataBukkit["+plugin.getName()+"]]Failed to copy file.  Restart your server to fix this.  Do not use /reload.");
+			db.getEventHandler().fireLogEvent("[DataBukkit["+db.getName()+"]]Failed to copy file. [" + resource + "]", null, LogLevel.SEVERE);
 			return;
 		}
 		File newFile = new File(destination);

@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>regalowl.databukkit</groupId>
   <artifactId>databukkit</artifactId>
-  <version>0.0.69-SNAPSHOT</version>
+  <version>0.1.014-SNAPSHOT</version>
 	<build>
 		<plugins>
 			<plugin>
@@ -47,9 +47,10 @@
   <description>DataBukkit provides a fast and easy to use API for database access, YML access, CSV access, and error logging.  DataBukkit uses either SQLite or MySQL for database access, depending on which is available.  All database writes use asyncronous transactions which dramatically improves performance, especially for large write operations with hundreds of inserts.</description>
   	<repositories>
 		<repository>
-			<id>bukkit-repo</id>
-			<url>http://repo.bukkit.org/content/groups/public</url>
-		</repository>
+		<id>Sonatype-public</id>
+		<name>SnakeYAML repository</name>
+		<url>http://oss.sonatype.org/content/groups/public/</url>
+  		</repository>
 	</repositories>
   <dependencies>
   	<dependency>
@@ -59,15 +60,15 @@
   		<scope>provided</scope>
   	</dependency>
   	<dependency>
-  		<groupId>org.bukkit</groupId>
-  		<artifactId>bukkit</artifactId>
-  		<version>1.7.10-R0.1-SNAPSHOT</version>
-  		<scope>provided</scope>
-  	</dependency>
-  	<dependency>
   		<groupId>net.sf.opencsv</groupId>
   		<artifactId>opencsv</artifactId>
   		<version>2.0</version>
+  	</dependency>
+  	<dependency>
+  		<groupId>org.yaml</groupId>
+  		<artifactId>snakeyaml</artifactId>
+  		<version>1.15-SNAPSHOT</version>
+  		<scope>provided</scope>
   	</dependency>
   </dependencies>
 </project>

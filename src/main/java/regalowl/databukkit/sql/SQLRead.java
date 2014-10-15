@@ -1,7 +1,6 @@
 package regalowl.databukkit.sql;
 
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -118,59 +117,6 @@ public class SQLRead {
 	}
 
 	
-	/**
-	 * This method will perform a query asynchronously, and then synchronously call the method of your choice in the class of your choice with the QueryResult as the parameter.
-	 * This method does not need to be called asynchronously but the performance may be less than other methods due to reflection.
-	 * 
-	 * @param object The object that holds the method you want to call.
-	 * @param method The name of the method you want to call.
-	 * @param query The SQL select query to perform.
-	 */
-	public void syncRead(Object object, String method, BasicStatement query, Object args) {
-		new SyncRead(object, method, query, args);
-	}
-	/**
-	 * This method will perform a query asynchronously, and then synchronously call the method of your choice in the class of your choice with the QueryResult as the parameter.
-	 * This method does not need to be called asynchronously but the performance may be less than other methods due to reflection.
-	 * 
-	 * @param object The object that holds the method you want to call.
-	 * @param method The name of the method you want to call.
-	 * @param query The SQL select query to perform.
-	 */
-	public void syncRead(Object object, String method, String query, Object args) {
-		BasicStatement bs = new BasicStatement(query, dab);
-		new SyncRead(object, method, bs, args);
-	}
-	private class SyncRead {
-		private String m;
-		private BasicStatement q;
-		private Object o;
-		private QueryResult qr;
-		private Object args;
-		SyncRead(Object object, String method, BasicStatement query, Object arguments) {
-			this.o = object;
-			this.m = method;
-			this.q = query;
-			this.args = arguments;
-			dab.getPlugin().getServer().getScheduler().runTaskAsynchronously(dab.getPlugin(), new Runnable() {
-				public void run() {
-					qr = select(q);
-					qr.setAdditionalData(args);
-					dab.getPlugin().getServer().getScheduler().runTask(dab.getPlugin(), new Runnable() {
-						public void run() {
-							try {
-								Method meth = o.getClass().getMethod(m, QueryResult.class);
-								meth.invoke(o.getClass().newInstance(), qr);
-							} catch (Exception e) {
-								dab.writeError(e, null);
-							}
-						}
-					});
-				}
-			});
-		}
-	}
-    
 	/**
 	 * 
 	 * This method should be called asynchronously to prevent lag

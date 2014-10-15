@@ -13,16 +13,41 @@ public class WriteStatement extends BasicStatement {
 	public WriteStatement(String statement, DataBukkit dab) {
 		super(statement, dab);
 		this.writeFailures = 0;
+		convert();
 	}
-
+	
+	private void convert() {
+		if (statement == null) {return;}
+		if (dab.getSQLManager().useMySQL()) {
+			if (statement.contains("datetime('NOW', 'localtime')")) {
+				statement = statement.replace("datetime('NOW', 'localtime')", "NOW()");
+			}
+			if (statement.contains("AUTOINCREMENT")) {
+				statement = statement.replace("AUTOINCREMENT", "AUTO_INCREMENT");
+			}
+			if (statement.contains("autoincrement")) {
+				statement = statement.replace("autoincrement", "auto_increment");
+			}
+		} else {
+			if (statement.contains("NOW()")) {
+				statement = statement.replace("NOW()", "datetime('NOW', 'localtime')");
+			}
+			if (statement.contains("AUTO_INCREMENT")) {
+				statement = statement.replace("AUTO_INCREMENT", "AUTOINCREMENT");
+			}
+			if (statement.contains("auto_increment")) {
+				statement = statement.replace("auto_increment", "autoincrement");
+			}
+		}
+	}
 	
 	public void writeFailed(Exception e) {
 		try {
 			writeFailures++;
 			if (retry(e)) {
-				dab.getSQLWrite().addToQueue(statement);
+				dab.getSQLManager().getSQLWrite().addToQueue(statement);
 			} else {
-				if (dab.getSQLWrite().logWriteErrors()) {
+				if (dab.getSQLManager().getSQLWrite().logWriteErrors()) {
 					logError(e);
 				}
 			}
@@ -67,7 +92,7 @@ public class WriteStatement extends BasicStatement {
 	}
 	
 	public void logStatement() {
-		ErrorWriter ew = new ErrorWriter(dab.getPluginFolderPath() + "SQL.log", dab);
+		ErrorWriter ew = new ErrorWriter(dab.getStoragePath() + "SQL.log", dab);
 		ArrayList<Object> parameters = getParameters();
 		if (parameters != null && parameters.size() > 0) {
 			String paramList = "[";
