@@ -59,7 +59,9 @@ public class FileTools {
 		String decodedPath = "";
 		try {
 			decodedPath = URLDecoder.decode(path, "UTF-8");
-			decodedPath = decodedPath.substring(0, decodedPath.lastIndexOf(File.separator));
+			if (decodedPath.contains(File.separator)) {
+				decodedPath = decodedPath.substring(0, decodedPath.lastIndexOf(File.separator));
+			}
 		} catch (UnsupportedEncodingException e1) {
 			e1.printStackTrace();
 		}

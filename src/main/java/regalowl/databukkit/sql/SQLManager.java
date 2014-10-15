@@ -95,6 +95,7 @@ public class SQLManager {
 			return true;
 		} catch (Exception e) {
 			if (db.debugEnabled()) {
+				db.getEventHandler().fireLogEvent("[DataBukkit["+db.getName()+"]] SQLite check failed.", e, LogLevel.ERROR);
 				db.writeError(e, "[DataBukkit Debug Message] SQLite check failed.");
 			}
 			return false;
@@ -112,6 +113,7 @@ public class SQLManager {
 			return true;
 		} catch (Exception e) {
 			if (db.debugEnabled()) {
+				db.getEventHandler().fireLogEvent("[DataBukkit["+db.getName()+"]] MySQL check failed.", e, LogLevel.ERROR);
 				db.writeError(e, "[DataBukkit Debug Message] MySQL check failed.");
 			}
 			return false;
