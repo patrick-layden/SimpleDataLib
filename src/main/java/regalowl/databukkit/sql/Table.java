@@ -23,19 +23,11 @@ public class Table {
 	 * Loads the table structure from the database if it exists.
 	 */
 	public void loadTable() {
-		String createString;
-		if (dab.getSQLManager().useMySQL()) {
-			QueryResult qr = dab.getSQLManager().getSQLRead().select("SHOW CREATE TABLE " + name);
-			qr.next();
-			createString = qr.getString(2);
-			createString = createString.substring(createString.indexOf("(") + 1, createString.lastIndexOf(")")).trim();
-			createString = createString.replace("`", "");
-		} else {
-			QueryResult qr = dab.getSQLManager().getSQLRead().select("SELECT sql FROM sqlite_master WHERE tbl_name = '"+name+"'");
-			qr.next();
-			createString = qr.getString(1);
-			createString = createString.substring(createString.indexOf("(") + 1, createString.lastIndexOf(")")).trim();
-		}
+		String createString = getCreateStatementFromDB();
+		loadTableString(createString);
+	}
+	
+	private void loadTableString(String createString) {
 		ArrayList<String> fieldStrings = dab.getCommonFunctions().explode(createString, ", ");
 		ArrayList<String> primaryKey = new ArrayList<String>();
 		for (String fString:fieldStrings) {
@@ -78,8 +70,31 @@ public class Table {
 				String defaultValue = fString.substring(defaultValueIndex, fString.indexOf("'", defaultValueIndex));
 				f.setDefault(defaultValue);
 			}
+			fields.add(f);
 		}
-		
+		if (primaryKey.size() > 1) {
+			for (String n:primaryKey) {
+				Field f = getField(n);
+				compositeKey.add(f);
+			}
+		}
+	}
+	
+	private String getCreateStatementFromDB() {
+		String createString;
+		if (dab.getSQLManager().useMySQL()) {
+			QueryResult qr = dab.getSQLManager().getSQLRead().select("SHOW CREATE TABLE " + name);
+			qr.next();
+			createString = qr.getString(2);
+			createString = createString.substring(createString.indexOf("(") + 1, createString.lastIndexOf(")")).trim();
+			createString = createString.replace("`", "");
+		} else {
+			QueryResult qr = dab.getSQLManager().getSQLRead().select("SELECT sql FROM sqlite_master WHERE tbl_name = '"+name+"'");
+			qr.next();
+			createString = qr.getString(1);
+			createString = createString.substring(createString.indexOf("(") + 1, createString.lastIndexOf(")")).trim();
+		}
+		return createString;
 	}
 	
 	/**
