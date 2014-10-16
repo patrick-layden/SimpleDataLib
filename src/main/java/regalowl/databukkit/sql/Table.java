@@ -23,30 +23,50 @@ public class Table {
 	 * Loads the table structure from the database if it exists.
 	 */
 	public void loadTable() {
-		String createString = getCreateStatementFromDB();
-		loadTableString(createString);
+		loadTableFromString(getCreateStatementFromDB());
 	}
 	
-	private void loadTableString(String createString) {
+	public void loadTableFromString(String createString) {
+		createString = createString.substring(createString.indexOf("(") + 1, createString.lastIndexOf(")")).trim();
+		createString = createString.replaceAll("[\n\r]", "");
+		createString = createString.replace("`", "");
+		if (createString.contains("PRIMARY KEY(") || createString.contains("PRIMARY KEY (")) {//if composite key section has spaces, remove them.
+			int pKeyIndex = createString.indexOf("PRIMARY KEY");
+			String pKeyString = createString.substring(pKeyIndex, createString.indexOf(")", pKeyIndex) + 1);
+			String newPKeyString = pKeyString.replace(", ", ",");
+			createString = createString.replace(pKeyString, newPKeyString);
+		}
 		ArrayList<String> fieldStrings = dab.getCommonFunctions().explode(createString, ", ");
 		ArrayList<String> primaryKey = new ArrayList<String>();
 		for (String fString:fieldStrings) {
+			fString = fString.trim();
 			if (fString.toUpperCase().startsWith("PRIMARY KEY")) {
+				//dab.getEventHandler().fireLogEvent("[DataBukkit["+dab.getName()+"]]"+fString, null, LogLevel.ERROR);
 				String keyList = fString.substring(fString.indexOf("(") + 1, fString.lastIndexOf(")")).replace(" ", "");
 				primaryKey = dab.getCommonFunctions().explode(keyList, ",");
 				continue;
 			}
 			String fName = fString.substring(0, fString.indexOf(" "));
 			fString = fString.substring(fString.indexOf(" ") + 1, fString.length());
-			String fType = fString.substring(0, fString.indexOf(" "));
+			String fType = "";
+			if (fString.contains(" ")) {
+				fType = fString.substring(0, fString.indexOf(" "));
+			} else {
+				fType = fString;
+			}
 			boolean hasFieldSize = false;
 			int fieldSize = 0;
+			FieldType ft = null;
 			if (fType.contains("(")) {
-				hasFieldSize = true;
-				fieldSize = Integer.parseInt(fType.substring(fType.indexOf("(" + 1), fType.indexOf(")")));
-				fType = fType.substring(0, fType.indexOf("("));
+				ft = FieldType.fromString(fType.substring(0, fType.indexOf("(")));
+				if (!ft.equals(FieldType.INTEGER)) {
+					hasFieldSize = true;
+					fieldSize = Integer.parseInt(fType.substring(fType.indexOf("(") + 1, fType.lastIndexOf(")")));
+				}
+			} else {
+				ft = FieldType.fromString(fType);
 			}
-			FieldType ft = FieldType.fromString(fType);
+
 			Field f = new Field(fName, ft);
 			if (hasFieldSize) {
 				f.setFieldSize(fieldSize);
@@ -77,24 +97,20 @@ public class Table {
 				Field f = getField(n);
 				compositeKey.add(f);
 			}
+			hasCompositeKey = true;
 		}
 	}
 	
 	private String getCreateStatementFromDB() {
-		String createString;
 		if (dab.getSQLManager().useMySQL()) {
 			QueryResult qr = dab.getSQLManager().getSQLRead().select("SHOW CREATE TABLE " + name);
 			qr.next();
-			createString = qr.getString(2);
-			createString = createString.substring(createString.indexOf("(") + 1, createString.lastIndexOf(")")).trim();
-			createString = createString.replace("`", "");
+			return qr.getString(2);
 		} else {
 			QueryResult qr = dab.getSQLManager().getSQLRead().select("SELECT sql FROM sqlite_master WHERE tbl_name = '"+name+"'");
 			qr.next();
-			createString = qr.getString(1);
-			createString = createString.substring(createString.indexOf("(") + 1, createString.lastIndexOf(")")).trim();
+			return qr.getString(1);
 		}
-		return createString;
 	}
 	
 	/**
@@ -146,6 +162,13 @@ public class Table {
 		return null;
 	}
 	
+	/**
+	 * @return All of the Field objects in this table.
+	 */
+	public ArrayList<Field> getFields() {
+		return fields;
+	}
+	
 	
 	/**
 	 * Sets the composite key for this table.
@@ -177,6 +200,12 @@ public class Table {
 	}
 
 	
+	/**
+	 * @return The table creation String for this Table.
+	 */
+	public String getCreateStatement() {
+		return getCreateStatement(fields, false);
+	}
 	/**
 	 * @param fieldArrayList An ArrayList of the Fields which are a part of this table.
 	 * @param temp True if this is a temporary table, false if not.
@@ -233,7 +262,7 @@ public class Table {
 		    if (!it.hasNext()) {
 		    	key += f.getName() + ")";
 		    } else {
-		    	key += f.getName() + ", ";
+		    	key += f.getName() + ",";
 		    }
 		}
 		return key;
@@ -315,6 +344,43 @@ public class Table {
 		dab.getSQLManager().getSyncSQLWrite().queue("DROP TABLE " + name + "_temp");
 		dab.getSQLManager().getSyncSQLWrite().writeQueue();
 		fields = newFields;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((compositeKey == null) ? 0 : compositeKey.hashCode());
+		result = prime * result + ((fields == null) ? 0 : fields.hashCode());
+		result = prime * result + (hasCompositeKey ? 1231 : 1237);
+		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) return true;
+		if (obj == null) return false;
+		if (getClass() != obj.getClass()) return false;
+		Table other = (Table) obj;
+		if (compositeKey == null) {
+			if (other.compositeKey != null) return false;
+		} else if (!compositeKey.equals(other.compositeKey)) {
+			return false;
+		}
+		if (fields == null) {
+			if (other.fields != null) return false;
+		} else if (!fields.equals(other.fields)) {
+			return false;
+		}
+		if (hasCompositeKey != other.hasCompositeKey)
+			return false;
+		if (name == null) {
+			if (other.name != null) return false;
+		} else if (!name.equals(other.name)) {
+			return false;
+		}
+		return true;
 	}
 	
 	

@@ -25,7 +25,7 @@ public enum FieldType {
     	type = type.toUpperCase();
     	if (type.contains("VARCHAR")) {
     		return VARCHAR;
-    	} else if (type.equals("INTEGER")) {
+    	} else if (type.equals("INTEGER") || type.equals("INT")) {
     		return INTEGER;
     	} else if (type.equals("TEXT")) {
     		return TEXT;
@@ -37,6 +37,8 @@ public enum FieldType {
     		return LONGTEXT;
     	} else if (type.equals("VARCHAR")) {
     		return VARCHAR;
+    	} else if (type.equals("DOUBLE")) {
+    		return DOUBLE;
     	}
     	return null;
     }
