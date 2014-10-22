@@ -3,8 +3,6 @@ package regalowl.databukkit.event;
 import java.lang.reflect.Method;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import regalowl.databukkit.events.LogEvent;
-import regalowl.databukkit.events.LogLevel;
 
 public class EventPublisher {
 
@@ -38,11 +36,7 @@ public class EventPublisher {
 					m.invoke(listener, event);
 					event.setFiredSuccessfully();
 				} catch (Exception e) {
-					try {
-						fireEvent(new LogEvent("fireEvent() error", e, LogLevel.ERROR));
-					} catch (Exception e2) {
-						e2.printStackTrace();
-					}
+					e.printStackTrace();
 				}
             }
         }
