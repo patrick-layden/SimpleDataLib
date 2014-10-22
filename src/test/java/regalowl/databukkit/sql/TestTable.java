@@ -44,7 +44,7 @@ public class TestTable {
 		f = t.addField("HASH", FieldType.VARCHAR);f.setFieldSize(255);f.setNotNull();f.setDefault("");
 		f = t.addField("SALT", FieldType.VARCHAR);f.setFieldSize(255);f.setNotNull();f.setDefault("");
 		assertTrue(fs.equals(t));
-		
+
 		fs = sm.generateTable("test2");
 		createStatement = "CREATE TABLE `test2` ("
 				+ "`SHOP` varchar(100) NOT NULL, "
@@ -137,7 +137,7 @@ public class TestTable {
 		assertTrue(fs.equals(t));
 		
 		
-		//db.getEventHandler().fireLogEvent("[DataBukkit["+db.getName()+"]]"+fs.getCreateStatement(), null, LogLevel.ERROR);
+		//db.getEventHandler().fireEvent(new LogEvent("[DataBukkit["+db.getName()+"]]"+fs.getCreateStatement(), null, LogLevel.ERROR));
 		
 	}
 }

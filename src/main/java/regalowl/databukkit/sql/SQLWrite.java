@@ -12,8 +12,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 
+
+
+
 import regalowl.databukkit.DataBukkit;
-import regalowl.databukkit.event.LogLevel;
+import regalowl.databukkit.events.LogEvent;
+import regalowl.databukkit.events.LogLevel;
 
 public class SQLWrite {
 
@@ -150,7 +154,7 @@ public class SQLWrite {
 	}
 	private void saveBuffer() {
 		if (buffer.size() == 0) {return;}
-		dab.getEventHandler().fireLogEvent("[" + dab.getName() + "]Saving the remaining SQL queue: [" + buffer.size() + " statements].  Please wait.", null, LogLevel.INFO);
+		dab.getEventPublisher().fireEvent(new LogEvent("[" + dab.getName() + "]Saving the remaining SQL queue: [" + buffer.size() + " statements].  Please wait.", null, LogLevel.INFO));
 		DatabaseConnection database = new DatabaseConnection(dab, false);
 		ArrayList<WriteStatement> writeArray = new ArrayList<WriteStatement>();
 		while (buffer.size() > 0) {
@@ -165,7 +169,7 @@ public class SQLWrite {
 				}
 			}
 		} else if (result.getStatus() == WriteResultType.ERROR) {
-			dab.getEventHandler().fireLogEvent("[" + dab.getName() + "]A database error occurred while shutting down.  Attempting to save remaining data... This may take longer than usual.", null, LogLevel.SEVERE);
+			dab.getEventPublisher().fireEvent(new LogEvent("[" + dab.getName() + "]A database error occurred while shutting down.  Attempting to save remaining data... This may take longer than usual.", null, LogLevel.SEVERE));
 			if (logWriteErrors.get()) {
 				result.getFailedSQL().logError(result.getException());
 			}
@@ -187,7 +191,7 @@ public class SQLWrite {
 			}
 		}
 		buffer.clear();
-		dab.getEventHandler().fireLogEvent("[" + dab.getName() + "]SQL queue save complete.", null, LogLevel.INFO);
+		dab.getEventPublisher().fireEvent(new LogEvent("[" + dab.getName() + "]SQL queue save complete.", null, LogLevel.INFO));
 	}
 
 

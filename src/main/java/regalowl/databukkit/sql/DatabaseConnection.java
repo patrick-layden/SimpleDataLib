@@ -12,7 +12,9 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import regalowl.databukkit.DataBukkit;
-import regalowl.databukkit.event.LogLevel;
+import regalowl.databukkit.events.LogEvent;
+import regalowl.databukkit.events.LogLevel;
+import regalowl.databukkit.events.ShutdownEvent;
 
 
 
@@ -142,14 +144,14 @@ public class DatabaseConnection {
 		openConnection();
 		if (isValid()) {return;}
 		if (readOnly.get()) {
-			dab.getEventHandler().fireLogEvent("[" + dab.getName() + "]Fatal database connection error. " 
+			dab.getEventPublisher().fireEvent(new LogEvent("[" + dab.getName() + "]Fatal database connection error. " 
 		+ "Make sure your database is unlocked and readable in order to use this plugin." + " Disabling " 
-					+ dab.getName() + ".", null, LogLevel.SEVERE);
+					+ dab.getName() + ".", null, LogLevel.SEVERE));
 		} else {
-			dab.getEventHandler().fireLogEvent("[" + dab.getName() + "]Fatal database connection error. " 
-		+ "Make sure your database is unlocked and writeable in order to use this plugin." + " Disabling " + dab.getName() + ".", null, LogLevel.SEVERE);
+			dab.getEventPublisher().fireEvent(new LogEvent("[" + dab.getName() + "]Fatal database connection error. " 
+		+ "Make sure your database is unlocked and writeable in order to use this plugin." + " Disabling " + dab.getName() + ".", null, LogLevel.SEVERE));
 		}
-		dab.getEventHandler().fireDisableEvent();
+		dab.getEventPublisher().fireEvent(new ShutdownEvent());
 	}
 	public synchronized void openConnection() {
 		if (dab.getSQLManager().useMySQL()) {

@@ -1,17 +1,18 @@
 package regalowl.databukkit;
 
-import regalowl.databukkit.event.LogLevel;
-import regalowl.databukkit.event.LogListener;
+import regalowl.databukkit.event.EventHandler;
+import regalowl.databukkit.events.LogEvent;
 
-public class TestLogger implements LogListener {
+public class TestLogger {
 	private DataBukkit db;
 	public TestLogger(DataBukkit db) {
 		this.db = db;
 		db.registerListener(this);
 	}
-	@Override
-	public void onLogMessage(String entry, Exception e, LogLevel level) {
-		if (entry != null) System.out.println(entry);
-		if (e != null) System.out.println(db.getCommonFunctions().getErrorString(e));
+	
+	@EventHandler
+	public void onLogMessage(LogEvent event) {
+		if (event.getMessage() != null) System.out.println(event.getMessage());
+		if (event.getException() != null) System.out.println(db.getCommonFunctions().getErrorString(event.getException()));
 	}
 }

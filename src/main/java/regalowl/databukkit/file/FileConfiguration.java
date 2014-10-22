@@ -17,7 +17,8 @@ import org.yaml.snakeyaml.reader.UnicodeReader;
 import org.yaml.snakeyaml.representer.Representer;
 
 import regalowl.databukkit.DataBukkit;
-import regalowl.databukkit.event.LogLevel;
+import regalowl.databukkit.events.LogEvent;
+import regalowl.databukkit.events.LogLevel;
 
 public class FileConfiguration {
 	
@@ -50,7 +51,7 @@ public class FileConfiguration {
 			}
 		} catch (Exception e) {
 			broken = true;
-			db.getEventHandler().fireLogEvent("", e, LogLevel.ERROR);
+			db.getEventPublisher().fireEvent(new LogEvent("", e, LogLevel.ERROR));
 		} finally {
 			try {
 				if (stream != null) {
@@ -74,7 +75,7 @@ public class FileConfiguration {
 			oData.putAll(data);
 			yaml.dump(oData, writer);
 		} catch (Exception e) {
-			db.getEventHandler().fireLogEvent("", e, LogLevel.ERROR);
+			db.getEventPublisher().fireEvent(new LogEvent("", e, LogLevel.ERROR));
 		} finally {
 			try {
 				if (stream != null) {

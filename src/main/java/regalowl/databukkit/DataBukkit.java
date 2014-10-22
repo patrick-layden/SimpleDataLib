@@ -2,8 +2,7 @@ package regalowl.databukkit;
 
 import java.io.File;
 
-import regalowl.databukkit.event.EventHandler;
-import regalowl.databukkit.event.Listener;
+import regalowl.databukkit.event.EventPublisher;
 import regalowl.databukkit.file.ErrorWriter;
 import regalowl.databukkit.file.FileTools;
 import regalowl.databukkit.file.YamlHandler;
@@ -13,7 +12,7 @@ public class DataBukkit {
 
 	private String name;
 	private String storagePath;
-	private EventHandler eh;
+	private EventPublisher ep;
 	private YamlHandler yh;
 	private CommonFunctions cf;
 	private FileTools ft;
@@ -30,7 +29,7 @@ public class DataBukkit {
 	public void initialize() {
 		ft = new FileTools(this);
 		this.storagePath = ft.getJarPath() + File.separator + name;
-		eh = new EventHandler();
+		ep = new EventPublisher();
 		yh = new YamlHandler(this);
 		cf = new CommonFunctions();
 		ew = new ErrorWriter(getErrorFilePath(), this);
@@ -69,8 +68,8 @@ public class DataBukkit {
 	}
 
 	
-	public void registerListener(Listener l) {
-		eh.registerListener(l);
+	public void registerListener(Object l) {
+		ep.registerListener(l);
 	}
 	public void setDebug(boolean state) {
 		this.debug = state;
@@ -92,8 +91,8 @@ public class DataBukkit {
 	public ErrorWriter getErrorWriter() {
 		return ew;
 	}
-	public EventHandler getEventHandler() {
-		return eh;
+	public EventPublisher getEventPublisher() {
+		return ep;
 	}
 	
 	//TODO move to errorwriter

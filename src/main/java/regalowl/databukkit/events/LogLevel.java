@@ -1,4 +1,4 @@
-package regalowl.databukkit.event;
+package regalowl.databukkit.events;
 
 public enum LogLevel {
 	DEBUG,INFO,SEVERE,ERROR

@@ -23,8 +23,12 @@ import java.util.zip.ZipInputStream;
 
 
 
+
+
+
 import regalowl.databukkit.DataBukkit;
-import regalowl.databukkit.event.LogLevel;
+import regalowl.databukkit.events.LogEvent;
+import regalowl.databukkit.events.LogLevel;
 import regalowl.databukkit.sql.QueryResult;
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
@@ -74,7 +78,7 @@ public class FileTools {
 	public void copyFileFromJar(String resource, String destination) {
 		InputStream resStreamIn = this.getClass().getClassLoader().getResourceAsStream(resource);
 		if (resStreamIn == null) {
-			db.getEventHandler().fireLogEvent("[DataBukkit["+db.getName()+"]]Failed to copy file. [" + resource + "]", null, LogLevel.SEVERE);
+			db.getEventPublisher().fireEvent(new LogEvent("[DataBukkit["+db.getName()+"]]Failed to copy file. [" + resource + "]", null, LogLevel.SEVERE));
 			return;
 		}
 		File newFile = new File(destination);

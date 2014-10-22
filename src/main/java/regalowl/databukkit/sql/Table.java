@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 import regalowl.databukkit.DataBukkit;
+import regalowl.databukkit.events.LogEvent;
+import regalowl.databukkit.events.LogLevel;
 
 public class Table {
 	
@@ -20,12 +22,26 @@ public class Table {
 	}
 	
 	/**
-	 * Loads the table structure from the database if it exists.
+	 * Loads the table structure from the database if it exists.  Returns true if successful.
 	 */
-	public void loadTable() {
-		loadTableFromString(getCreateStatementFromDB());
+	public boolean loadTable() {
+		String createStatement = getCreateStatementFromDB();
+		if (createStatement != null) {
+			try {
+				loadTableFromString(createStatement);
+				return true;
+			} catch (Exception e) {
+				dab.getEventPublisher().fireEvent(new LogEvent("[DataBukkit["+dab.getName()+"]]Failed to load table from database: ["+name+"]", e, LogLevel.ERROR));
+				return false;
+			}
+		}
+		dab.getEventPublisher().fireEvent(new LogEvent("[DataBukkit["+dab.getName()+"]]Table doesn't exist in database: ["+name+"]", null, LogLevel.ERROR));
+		return false;
 	}
 	
+	/**
+	 * Loads all Table data from the given SQL create statement.
+	 */
 	public void loadTableFromString(String createString) {
 		createString = createString.substring(createString.indexOf("(") + 1, createString.lastIndexOf(")")).trim();
 		createString = createString.replaceAll("[\n\r]", "");
@@ -101,16 +117,18 @@ public class Table {
 		}
 	}
 	
+	/**
+	 * Returns a SQL create statement for this table from the database.
+	 */
 	private String getCreateStatementFromDB() {
 		if (dab.getSQLManager().useMySQL()) {
 			QueryResult qr = dab.getSQLManager().getSQLRead().select("SHOW CREATE TABLE " + name);
-			qr.next();
-			return qr.getString(2);
+			if (qr.next()) return qr.getString(2);
 		} else {
 			QueryResult qr = dab.getSQLManager().getSQLRead().select("SELECT sql FROM sqlite_master WHERE tbl_name = '"+name+"'");
-			qr.next();
-			return qr.getString(1);
+			if (qr.next()) return qr.getString(1);
 		}
+		return null;
 	}
 	
 	/**

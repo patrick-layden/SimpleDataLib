@@ -7,7 +7,9 @@ import java.sql.Statement;
 import java.util.ArrayList;
 
 import regalowl.databukkit.DataBukkit;
-import regalowl.databukkit.event.LogLevel;
+import regalowl.databukkit.events.LogEvent;
+import regalowl.databukkit.events.LogLevel;
+import regalowl.databukkit.events.ShutdownEvent;
 
 public class SQLManager {
 	
@@ -64,7 +66,7 @@ public class SQLManager {
 			databaseOk = checkMySQL();
 			if (!databaseOk) {
 				databaseOk = checkSQLLite();
-				db.getEventHandler().fireLogEvent("[DataBukkit["+db.getName()+"]]MySQL connection failed, defaulting to SQLite.", null, LogLevel.ERROR);
+				db.getEventPublisher().fireEvent(new LogEvent("[DataBukkit["+db.getName()+"]]MySQL connection failed, defaulting to SQLite.", null, LogLevel.ERROR));
 				useMySql = false;
 			}
 		} else {
@@ -77,8 +79,8 @@ public class SQLManager {
 			sr = new SQLRead(db, pool);
 			dataBaseExists = true;
 		} else {
-			db.getEventHandler().fireLogEvent("[DataBukkit["+db.getName()+"]]Database connection failed. Attempting to disable "+db.getName()+".", null, LogLevel.ERROR);
-			db.getEventHandler().fireDisableEvent();
+			db.getEventPublisher().fireEvent(new LogEvent("[DataBukkit["+db.getName()+"]]Database connection failed. Attempting to disable "+db.getName()+".", null, LogLevel.ERROR));
+			db.getEventPublisher().fireEvent(new ShutdownEvent());
 		}
 	}
 	private boolean checkSQLLite() {
@@ -95,7 +97,7 @@ public class SQLManager {
 			return true;
 		} catch (Exception e) {
 			if (db.debugEnabled()) {
-				db.getEventHandler().fireLogEvent("[DataBukkit["+db.getName()+"]] SQLite check failed.", e, LogLevel.ERROR);
+				db.getEventPublisher().fireEvent(new LogEvent("[DataBukkit["+db.getName()+"]] SQLite check failed.", e, LogLevel.ERROR));
 				db.writeError(e, "[DataBukkit Debug Message] SQLite check failed.");
 			}
 			return false;
@@ -113,7 +115,7 @@ public class SQLManager {
 			return true;
 		} catch (Exception e) {
 			if (db.debugEnabled()) {
-				db.getEventHandler().fireLogEvent("[DataBukkit["+db.getName()+"]] MySQL check failed.", e, LogLevel.ERROR);
+				db.getEventPublisher().fireEvent(new LogEvent("[DataBukkit["+db.getName()+"]] MySQL check failed.", e, LogLevel.ERROR));
 				db.writeError(e, "[DataBukkit Debug Message] MySQL check failed.");
 			}
 			return false;
@@ -188,6 +190,14 @@ public class SQLManager {
 			t.save();
 		}
 		ssw.writeQueue();
+	}
+	/**
+	 * Attempts to load all table data from the database.
+	 */
+	public void loadTables() {
+		for (Table t:tables) {
+			t.loadTable();
+		}
 	}
 	
 	
