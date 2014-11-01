@@ -6,6 +6,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 
+
+import regalowl.databukkit.CommonFunctions;
 import regalowl.databukkit.DataBukkit;
 
 public class ErrorWriter {
@@ -21,7 +23,7 @@ public class ErrorWriter {
 	}
 	
 	public void writeError(Exception e, String text, boolean sync) {
-		this.error = dab.getCommonFunctions().getErrorString(e);
+		this.error = CommonFunctions.getErrorString(e);
 		this.text = text;
 		if (!sync) {
 			new Thread(new Writer()).start();
@@ -40,7 +42,7 @@ public class ErrorWriter {
 			BufferedWriter bw = new BufferedWriter(fw);
 			bw.newLine();
 			bw.newLine();
-			bw.write(dab.getName()+ "["+dab.getCommonFunctions().getTimeStamp()+"]");
+			bw.write(dab.getName()+ "["+CommonFunctions.getTimeStamp()+"]");
 			bw.newLine();
 			if (text != null) {
 				bw.write(String.format(text));

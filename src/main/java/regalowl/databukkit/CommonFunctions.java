@@ -24,7 +24,7 @@ public class CommonFunctions {
 	 * @param input A double value.
 	 * @return The input value rounded to two decimal places.
 	 */
-	public double twoDecimals(double input) {
+	public static double twoDecimals(double input) {
 		return round(input, 2);
 	}
 	/**
@@ -32,7 +32,7 @@ public class CommonFunctions {
 	 * @param decimals The number of decimal places to round to.
 	 * @return The rounded double value.
 	 */
-	public double round(double input, int decimals) {
+	public static double round(double input, int decimals) {
 		try {
 			BigDecimal result = round(new BigDecimal(String.valueOf(input)), decimals);
 			return result.doubleValue();
@@ -45,7 +45,7 @@ public class CommonFunctions {
 	 * @param decimals The number of decimal places to round to.
 	 * @return The rounded BigDecimal value.
 	 */
-	public BigDecimal round(BigDecimal input, int decimals) {
+	public static BigDecimal round(BigDecimal input, int decimals) {
 		try {
 			BigDecimal factor = new BigDecimal(String.valueOf(Math.pow(10, decimals)));
 			return new BigDecimal(input.multiply(factor).toBigInteger()).divide(factor);
@@ -58,7 +58,7 @@ public class CommonFunctions {
 	 * @param decimals The number of decimal places to round to.
 	 * @return The rounded BigDecimal value in String form.
 	 */
-	public String roundString(BigDecimal input, int decimals) {
+	public static String roundString(BigDecimal input, int decimals) {
 		return round(input, decimals).toPlainString();
 	}
 	/**
@@ -66,7 +66,7 @@ public class CommonFunctions {
 	 * @param decimals The number of decimal places to round to.
 	 * @return The rounded double value in String format.
 	 */
-	public String roundString(double input, int decimals) {
+	public static String roundString(double input, int decimals) {
 		try {
 			return round(new BigDecimal(String.valueOf(input)), decimals).toPlainString();
 		} catch (Exception e) {
@@ -76,7 +76,7 @@ public class CommonFunctions {
 	/**
 	 * @return A time stamp.
 	 */
-	public String getTimeStamp() {
+	public static String getTimeStamp() {
 		 Date date = new Date();
 		return new Timestamp(date.getTime()).toString();
 	}
@@ -84,7 +84,7 @@ public class CommonFunctions {
 	 * @param e An exception.
 	 * @return The exception converted to a String.
 	 */
-	public String getErrorString(Exception e) {
+	public static String getErrorString(Exception e) {
 		if (e == null) {return null;}
 		StringWriter error = new StringWriter();
 		e.printStackTrace(new PrintWriter(error));
@@ -98,7 +98,7 @@ public class CommonFunctions {
 	 * @param commalist A comma separated value string string.
 	 * @return An ArrayList containing the double values from the CSV string.
 	 */
-	public ArrayList<Double> doubleToArray(String commalist) {
+	public static ArrayList<Double> doubleToArray(String commalist) {
 		try {
 			ArrayList<Double> array = new ArrayList<Double>();
 			if (commalist.indexOf(",") == 0) {
@@ -124,7 +124,7 @@ public class CommonFunctions {
 	 * @param commalist A comma separated value string string.
 	 * @return An ArrayList containing the int values from the CSV string.
 	 */
-	public ArrayList<Integer> intToArray(String commalist) {
+	public static ArrayList<Integer> intToArray(String commalist) {
 		try {
 			ArrayList<Integer> array = new ArrayList<Integer>();
 			if (commalist.indexOf(",") == 0) {
@@ -150,7 +150,7 @@ public class CommonFunctions {
 	 * @param array An ArrayList of Double values.
 	 * @return A CSV string containing the double values.
 	 */
-	public String doubleArrayToString(ArrayList<Double> array) {
+	public static String doubleArrayToString(ArrayList<Double> array) {
 		String string = "";
 		int c = 0;
 		while (c < array.size()) {
@@ -163,7 +163,7 @@ public class CommonFunctions {
 	 * @param array An ArrayList of Integer values.
 	 * @return A CSV string containing the Integer values.
 	 */
-	public String intArrayToString(ArrayList<Integer> array) {
+	public static String intArrayToString(ArrayList<Integer> array) {
 		String string = "";
 		int c = 0;
 		while (c < array.size()) {
@@ -176,7 +176,7 @@ public class CommonFunctions {
 	
 	
 	
-	public ArrayList<String> explode(String string, String delimiter) {
+	public static ArrayList<String> explode(String string, String delimiter) {
 		ArrayList<String> array = new ArrayList<String>();
 		if (string == null || delimiter == null || !string.contains(delimiter)) {return array;}
 		if (string.indexOf(delimiter) == 0) {string = string.substring(1, string.length());}
@@ -188,7 +188,7 @@ public class CommonFunctions {
 		}
 		return array;
 	}
-	public String implode(List<String> array, String delimiter) {
+	public static String implode(List<String> array, String delimiter) {
 		if (array == null || delimiter == null) {return "";}
 		String string = "";
 		for (String cs:array) {
@@ -204,7 +204,7 @@ public class CommonFunctions {
 	
 	
 	
-	public HashMap<String,String> explodeMap(String string) {
+	public static HashMap<String,String> explodeMap(String string) {
 		HashMap<String,String> map = new HashMap<String,String>();
 		if (string == null || !string.contains(",")) {return map;}
 		if (!string.substring(string.length() - 1, string.length()).equalsIgnoreCase(";")) {string += ";";}
@@ -218,7 +218,7 @@ public class CommonFunctions {
 		}
 		return map;
 	}
-	public String implodeMap(HashMap<String,String> map) {
+	public static String implodeMap(HashMap<String,String> map) {
 		if (map == null) {return "";}
 		String string = "";
 		for (Map.Entry<String,String> entry : map.entrySet()) {
@@ -229,7 +229,7 @@ public class CommonFunctions {
 		return string;
 	}
 	
-	public HashMap<String,Integer> explodeIntMap(String string) {
+	public static HashMap<String,Integer> explodeIntMap(String string) {
 		HashMap<String,Integer> map = new HashMap<String,Integer>();
 		try {
 			if (string == null || !string.contains(",")) {return map;}
@@ -249,7 +249,7 @@ public class CommonFunctions {
 		
 	}
 	
-	public String implodeIntMap(HashMap<String,Integer> map) {
+	public static String implodeIntMap(HashMap<String,Integer> map) {
 		if (map == null) {return "";}
 		String string = "";
 		for (Map.Entry<String,Integer> entry : map.entrySet()) {
@@ -260,7 +260,7 @@ public class CommonFunctions {
 		return string;
 	}
 	
-	public Object createObjectFromBase64(String base64String) throws IOException, ClassNotFoundException {
+	public static Object createObjectFromBase64(String base64String) throws IOException, ClassNotFoundException {
 		byte[] data = Base64Coder.decode(base64String);
 		ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data));
 		Object o = ois.readObject();
@@ -268,7 +268,7 @@ public class CommonFunctions {
 		return o;
 	}
 
-	public String convertObjectToBase64(Serializable o) throws IOException {
+	public static String convertObjectToBase64(Serializable o) throws IOException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		ObjectOutputStream oos = new ObjectOutputStream(baos);
 		oos.writeObject(o);

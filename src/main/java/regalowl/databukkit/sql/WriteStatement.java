@@ -2,6 +2,7 @@ package regalowl.databukkit.sql;
 
 import java.util.ArrayList;
 
+import regalowl.databukkit.CommonFunctions;
 import regalowl.databukkit.DataBukkit;
 import regalowl.databukkit.file.ErrorWriter;
 
@@ -77,7 +78,7 @@ public class WriteStatement extends BasicStatement {
 	
 	public boolean retry(Exception e) {
 		try {
-			String message = dab.getCommonFunctions().getErrorString(e).toLowerCase();
+			String message = CommonFunctions.getErrorString(e).toLowerCase();
 			if (writeFailures > 1) {
 				return false;
 			}

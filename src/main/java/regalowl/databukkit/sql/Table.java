@@ -3,6 +3,7 @@ package regalowl.databukkit.sql;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import regalowl.databukkit.CommonFunctions;
 import regalowl.databukkit.DataBukkit;
 import regalowl.databukkit.events.LogEvent;
 import regalowl.databukkit.events.LogLevel;
@@ -52,14 +53,14 @@ public class Table {
 			String newPKeyString = pKeyString.replace(", ", ",");
 			createString = createString.replace(pKeyString, newPKeyString);
 		}
-		ArrayList<String> fieldStrings = dab.getCommonFunctions().explode(createString, ", ");
+		ArrayList<String> fieldStrings = CommonFunctions.explode(createString, ", ");
 		ArrayList<String> primaryKey = new ArrayList<String>();
 		for (String fString:fieldStrings) {
 			fString = fString.trim();
 			if (fString.toUpperCase().startsWith("PRIMARY KEY")) {
 				//dab.getEventHandler().fireLogEvent("[DataBukkit["+dab.getName()+"]]"+fString, null, LogLevel.ERROR);
 				String keyList = fString.substring(fString.indexOf("(") + 1, fString.lastIndexOf(")")).replace(" ", "");
-				primaryKey = dab.getCommonFunctions().explode(keyList, ",");
+				primaryKey = CommonFunctions.explode(keyList, ",");
 				continue;
 			}
 			String fName = fString.substring(0, fString.indexOf(" "));
