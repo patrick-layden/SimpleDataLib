@@ -176,42 +176,98 @@ public class CommonFunctions {
 	
 	
 	
+	
 	public static ArrayList<String> explode(String string, String delimiter) {
 		ArrayList<String> array = new ArrayList<String>();
-		if (string == null || delimiter == null || !string.contains(delimiter)) {return array;}
-		if (string.indexOf(delimiter) == 0) {string = string.substring(1, string.length());}
-		if (!string.substring(string.length() - 1, string.length()).equalsIgnoreCase(delimiter)) {string += delimiter;}
+		if (string == null || delimiter == null || !string.contains(delimiter)) {
+			return array;
+		}
+		if (string.indexOf(delimiter) == 0) {
+			string = string.substring(1, string.length());
+		}
+		if (!string.substring(string.length() - 1, string.length()).equalsIgnoreCase(delimiter)) {
+			string += delimiter;
+		}
 		while (string.contains(delimiter)) {
 			array.add(string.substring(0, string.indexOf(delimiter)));
-			if (string.indexOf(delimiter) == string.lastIndexOf(delimiter)) {break;}
+			if (string.indexOf(delimiter) == string.lastIndexOf(delimiter)) {
+				break;
+			}
 			string = string.substring(string.indexOf(delimiter) + 1, string.length());
 		}
 		return array;
 	}
+
 	public static String implode(List<String> array, String delimiter) {
-		if (array == null || delimiter == null) {return "";}
+		if (array == null || delimiter == null) {
+			return "";
+		}
 		String string = "";
-		for (String cs:array) {
+		for (String cs : array) {
 			string += cs + delimiter;
 		}
 		return string;
 	}
-	
-	
-	
 
 	
 	
 	
 	
+	
+	
+	
+	
+	public static ArrayList<String> explode(String string) {
+		ArrayList<String> array = new ArrayList<String>();
+		if (string == null || !string.contains(",")) {return array;}
+		int nestLevel = getNestLevel(string) - 1;
+		String comma = "[C]";
+		while (nestLevel > 0) {
+			comma = "["+comma+"]";
+			nestLevel--;
+		}
+		if (string.indexOf(",") == 0) {string = string.substring(1, string.length());}
+		if (!string.substring(string.length() - 1, string.length()).equalsIgnoreCase(",")) {string += ",";}
+		while (string.contains(",")) {
+			array.add(string.substring(0, string.indexOf(",")).replace(comma, ","));
+			if (string.indexOf(",") == string.lastIndexOf(",")) {break;}
+			string = string.substring(string.indexOf(",") + 1, string.length());
+		}
+		return array;
+	}
+	public static String implode(List<String> array) {
+		if (array == null) {return "";}
+		int nestLevel = getNestLevel(array.toString());
+		String comma = "[C]";
+		while (nestLevel > 0) {
+			comma = "["+comma+"]";
+			nestLevel--;
+		}
+		String string = "";
+		for (String cs:array) {
+			string += cs.replace(",", comma) + ",";
+		}
+		return string;
+	}
+
+	
+	
 	public static HashMap<String,String> explodeMap(String string) {
 		HashMap<String,String> map = new HashMap<String,String>();
 		if (string == null || !string.contains(",")) {return map;}
+		int nestLevel = getNestLevel(string) - 1;
+		String comma = "[C]";
+		String semicolon = "[S]";
+		while (nestLevel > 0) {
+			semicolon = "["+semicolon+"]";
+			comma = "["+comma+"]";
+			nestLevel--;
+		}
 		if (!string.substring(string.length() - 1, string.length()).equalsIgnoreCase(";")) {string += ";";}
 		while (string.contains(";")) {
 			String mapEntry = string.substring(0, string.indexOf(";"));
-			String mapKey = mapEntry.substring(0, mapEntry.indexOf(","));
-			String mapValue = mapEntry.substring(mapEntry.indexOf(",") + 1, mapEntry.length());
+			String mapKey = mapEntry.substring(0, mapEntry.indexOf(",")).replace(comma, ",").replace(semicolon, ";");
+			String mapValue = mapEntry.substring(mapEntry.indexOf(",") + 1, mapEntry.length()).replace(comma, ",").replace(semicolon, ";");
 			map.put(mapKey, mapValue);
 			if (string.indexOf(";") == string.lastIndexOf(";")) {break;}
 			string = string.substring(string.indexOf(";") + 1, string.length());
@@ -220,14 +276,37 @@ public class CommonFunctions {
 	}
 	public static String implodeMap(HashMap<String,String> map) {
 		if (map == null) {return "";}
+		int nestLevel = getNestLevel(map.toString());
+		String comma = "[C]";
+		String semicolon = "[S]";
+		while (nestLevel > 0) {
+			semicolon = "["+semicolon+"]";
+			comma = "["+comma+"]";
+			nestLevel--;
+		}
 		String string = "";
 		for (Map.Entry<String,String> entry : map.entrySet()) {
-		    String key = entry.getKey();
-		    String value = entry.getValue();
+		    String key = entry.getKey().replace(",", comma).replace(";", semicolon);
+		    String value = entry.getValue().replace(",", comma).replace(";", semicolon);
 		    string += (key + "," + value + ";");
 		}
 		return string;
 	}
+	private static int getNestLevel(String string) {
+		String comma = "[C]";
+		String semicolon = "[S]";
+		int nestLevel = 0;
+		while (string.contains(comma) || string.contains(semicolon)) {
+			semicolon = "["+semicolon+"]";
+			comma = "["+comma+"]";
+			nestLevel++;
+		}
+		return nestLevel;
+	}
+
+	
+	
+	
 	
 	public static HashMap<String,Integer> explodeIntMap(String string) {
 		HashMap<String,Integer> map = new HashMap<String,Integer>();

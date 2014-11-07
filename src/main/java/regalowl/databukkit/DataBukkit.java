@@ -14,7 +14,6 @@ public class DataBukkit {
 	private String storagePath;
 	private EventPublisher ep;
 	private YamlHandler yh;
-	private CommonFunctions cf;
 	private FileTools ft;
 	private ErrorWriter ew;
 	private boolean debug;
@@ -31,7 +30,6 @@ public class DataBukkit {
 		this.storagePath = ft.getJarPath() + File.separator + name;
 		ep = new EventPublisher();
 		yh = new YamlHandler(this);
-		cf = new CommonFunctions();
 		ew = new ErrorWriter(getErrorFilePath(), this);
 		sm = new SQLManager(this);
 		shutdown = false;
@@ -81,9 +79,6 @@ public class DataBukkit {
 	}
 	public YamlHandler getYamlHandler() {
 		return yh;
-	}
-	public CommonFunctions getCommonFunctions() {
-		return cf;
 	}
 	public FileTools getFileTools() {
 		return ft;
