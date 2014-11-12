@@ -44,7 +44,7 @@
   	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
   <name>SimpleDataLib</name>
-  <description>SimpleDataLib provides fast and easy to use database access, YML access, CSV access, serialization, and error logging.  SimpleDataLib supports SQLite and MySQL for database access.  Database writes can be queued and written asynchronously in transactions to prevent slowing of the main thread.  Fields can be added, removed, and changed easily for both MySQL and SQLite.</description>
+  <description>SimpleDataLib provides fast and easy to use database access, YAML access, CSV access, serialization, and error logging.  SimpleDataLib supports SQLite and MySQL for database access.  Database writes can be queued and written asynchronously in transactions to prevent slowing of the main thread.  Fields can be added, removed, and changed easily for both MySQL and SQLite.</description>
   	<repositories>
 		<repository>
 		<id>Sonatype-public</id>
