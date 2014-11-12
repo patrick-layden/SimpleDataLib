@@ -28,6 +28,7 @@ public class SimpleDataLib {
 	public void initialize() {
 		ft = new FileTools(this);
 		this.storagePath = ft.getJarPath() + File.separator + name;
+		ft.makeFolder(storagePath);
 		ep = new EventPublisher();
 		yh = new YamlHandler(this);
 		ew = new ErrorWriter(getErrorFilePath(), this);
