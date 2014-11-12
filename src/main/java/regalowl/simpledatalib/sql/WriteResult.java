@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class WriteResult {
+	
 	private WriteResultType type;
 	private WriteStatement failedSQL;
 	private Exception exception;

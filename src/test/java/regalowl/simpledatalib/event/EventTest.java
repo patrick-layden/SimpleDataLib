@@ -7,7 +7,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import regalowl.simpledatalib.DataBukkit;
+import regalowl.simpledatalib.SimpleDataLib;
 import regalowl.simpledatalib.event.Event;
 import regalowl.simpledatalib.event.EventHandler;
 import regalowl.simpledatalib.events.LogEvent;
@@ -15,12 +15,12 @@ import regalowl.simpledatalib.events.LogLevel;
 
 public class EventTest {
 	
-	private DataBukkit db;
+	private SimpleDataLib db;
 	private String errorMessage;
 	
 	@Before
 	public void init() {
-		db = new DataBukkit("test");
+		db = new SimpleDataLib("test");
 		db.initialize();
 		db.setDebug(true);
 		db.getEventPublisher().registerListener(this);

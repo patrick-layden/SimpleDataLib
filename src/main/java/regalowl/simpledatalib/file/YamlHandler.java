@@ -8,24 +8,24 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 
-import regalowl.simpledatalib.DataBukkit;
+import regalowl.simpledatalib.SimpleDataLib;
 
 
 public class YamlHandler {
-    private DataBukkit db;
-    private Timer t;
+    private SimpleDataLib sdl;
+    private Timer timer;
     private Long saveInterval;
     private ArrayList<String> brokenFiles = new ArrayList<String>();
     private ConcurrentHashMap<String, FileConfiguration> configs = new ConcurrentHashMap<String, FileConfiguration>();
     
-    public YamlHandler(DataBukkit db) {
-    	this.db = db;
+    public YamlHandler(SimpleDataLib sdl) {
+    	this.sdl = sdl;
     }
 
     public void registerFileConfiguration(String file) {
-    	File configFile = new File(db.getStoragePath(), file + ".yml");
+    	File configFile = new File(sdl.getStoragePath(), file + ".yml");
     	checkFile(configFile);
-    	FileConfiguration fileConfiguration = new FileConfiguration(db, configFile);
+    	FileConfiguration fileConfiguration = new FileConfiguration(sdl, configFile);
     	fileConfiguration.load();
     	configs.put(file, fileConfiguration);
     }
@@ -74,12 +74,12 @@ public class YamlHandler {
 	 */
 	public void startSaveTask(long interval) {
 		this.saveInterval = interval;
-		if (t != null) {t.cancel();}
-		t = new Timer();
-		t.schedule(new SaveTask(), saveInterval, saveInterval);
+		if (timer != null) {timer.cancel();}
+		timer = new Timer();
+		timer.schedule(new SaveTask(), saveInterval, saveInterval);
 	}
 	public void stopSaveTask() {
-		if (t != null) {t.cancel();}
+		if (timer != null) {timer.cancel();}
 	}
 	private class SaveTask extends TimerTask {
 		@Override
@@ -98,10 +98,10 @@ public class YamlHandler {
 	}
 
 	public void copyFromJar(String name) {
-		File configFile = new File(db.getStoragePath(), name + ".yml");
+		File configFile = new File(sdl.getStoragePath(), name + ".yml");
 	    if(!configFile.exists()){
 	    	configFile.getParentFile().mkdirs();
-	        db.getFileTools().copyFileFromJar(name+".yml", db.getStoragePath() + File.separator + name + ".yml");
+	        sdl.getFileTools().copyFileFromJar(name+".yml", sdl.getStoragePath() + File.separator + name + ".yml");
 	    }
 	}
 

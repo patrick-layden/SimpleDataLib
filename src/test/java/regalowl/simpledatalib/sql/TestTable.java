@@ -6,7 +6,7 @@ import java.util.ArrayList;
 
 import org.junit.Test;
 
-import regalowl.simpledatalib.DataBukkit;
+import regalowl.simpledatalib.SimpleDataLib;
 import regalowl.simpledatalib.TestLogger;
 import regalowl.simpledatalib.sql.Field;
 import regalowl.simpledatalib.sql.FieldType;
@@ -16,7 +16,7 @@ import regalowl.simpledatalib.sql.Table;
 public class TestTable {
 	@Test
 	public void testLoadTableFromString() {
-		DataBukkit db = new DataBukkit("test");
+		SimpleDataLib db = new SimpleDataLib("test");
 		db.initialize();
 		db.setDebug(true);
 		new TestLogger(db);
@@ -141,7 +141,7 @@ public class TestTable {
 		assertTrue(fs.equals(t));
 		
 		
-		//db.getEventHandler().fireEvent(new LogEvent("[DataBukkit["+db.getName()+"]]"+fs.getCreateStatement(), null, LogLevel.ERROR));
+		//db.getEventHandler().fireEvent(new LogEvent("[SimpleDataLib["+db.getName()+"]]"+fs.getCreateStatement(), null, LogLevel.ERROR));
 		
 	}
 }

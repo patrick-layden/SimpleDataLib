@@ -8,20 +8,20 @@ import regalowl.simpledatalib.file.FileTools;
 import regalowl.simpledatalib.file.YamlHandler;
 import regalowl.simpledatalib.sql.SQLManager;
 
-public class DataBukkit {
+public class SimpleDataLib {
 
-	private String name;
-	private String storagePath;
 	private EventPublisher ep;
 	private YamlHandler yh;
 	private FileTools ft;
 	private ErrorWriter ew;
-	private boolean debug;
 	private SQLManager sm;
-	private boolean shutdown;
-
 	
-	public DataBukkit(String name) {
+	private String name;
+	private String storagePath;
+	private boolean shutdown;
+	private boolean debug;
+	
+	public SimpleDataLib(String name) {
 		this.name = name;
 	}
 	
@@ -89,17 +89,6 @@ public class DataBukkit {
 	public EventPublisher getEventPublisher() {
 		return ep;
 	}
-	
-	//TODO move to errorwriter
-	public void writeError(Exception e, String info) {
-		ew.writeError(e, info, false);
-	}
-	public void writeError(Exception e) {
-		ew.writeError(e, null, false);
-	}
-	public void writeError(String info) {
-		ew.writeError(null, info, false);
-	}
-	
+
 
 }

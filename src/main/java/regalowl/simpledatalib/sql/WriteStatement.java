@@ -3,7 +3,7 @@ package regalowl.simpledatalib.sql;
 import java.util.ArrayList;
 
 import regalowl.simpledatalib.CommonFunctions;
-import regalowl.simpledatalib.DataBukkit;
+import regalowl.simpledatalib.SimpleDataLib;
 import regalowl.simpledatalib.file.ErrorWriter;
 
 
@@ -11,15 +11,15 @@ public class WriteStatement extends BasicStatement {
 
 	private int writeFailures;
 	
-	public WriteStatement(String statement, DataBukkit dab) {
-		super(statement, dab);
+	public WriteStatement(String statement, SimpleDataLib sdl) {
+		super(statement, sdl);
 		this.writeFailures = 0;
 		convert();
 	}
 	
 	private void convert() {
 		if (statement == null) {return;}
-		if (dab.getSQLManager().useMySQL()) {
+		if (sdl.getSQLManager().useMySQL()) {
 			if (statement.contains("datetime('NOW', 'localtime')")) {
 				statement = statement.replace("datetime('NOW', 'localtime')", "NOW()");
 			}
@@ -46,19 +46,19 @@ public class WriteStatement extends BasicStatement {
 		try {
 			writeFailures++;
 			if (retry(e)) {
-				dab.getSQLManager().getSQLWrite().addToQueue(statement);
+				sdl.getSQLManager().getSQLWrite().addToQueue(statement);
 			} else {
-				if (dab.getSQLManager().getSQLWrite().logWriteErrors()) {
+				if (sdl.getSQLManager().getSQLWrite().logWriteErrors()) {
 					logError(e);
 				}
 			}
 		} catch (Exception e2) {
-			dab.writeError(e2);
+			sdl.getErrorWriter().writeError(e2);
 		}
 	}
 	
 	public void logError(Exception e) {
-		ErrorWriter ew = dab.getErrorWriter();
+		ErrorWriter ew = sdl.getErrorWriter();
 		String writeString = "SQL write failed " + writeFailures + " time(s). The failing SQL statement is in the following brackets: %n[" + statement + "]";
 		if (parameters != null && parameters.size() > 0) {
 			String paramList = "[";
@@ -87,13 +87,13 @@ public class WriteStatement extends BasicStatement {
 			}
 			return false;
 		} catch (Exception e2) {
-			dab.writeError(e2);
+			sdl.getErrorWriter().writeError(e2);
 			return false;
 		}
 	}
 	
 	public void logStatement() {
-		ErrorWriter ew = new ErrorWriter(dab.getStoragePath() + "SQL.log", dab);
+		ErrorWriter ew = new ErrorWriter(sdl.getStoragePath() + "SQL.log", sdl);
 		ArrayList<Object> parameters = getParameters();
 		if (parameters != null && parameters.size() > 0) {
 			String paramList = "[";

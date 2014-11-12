@@ -6,14 +6,14 @@ import java.sql.DriverManager;
 import java.sql.Statement;
 import java.util.ArrayList;
 
-import regalowl.simpledatalib.DataBukkit;
+import regalowl.simpledatalib.SimpleDataLib;
 import regalowl.simpledatalib.events.LogEvent;
 import regalowl.simpledatalib.events.LogLevel;
 import regalowl.simpledatalib.events.ShutdownEvent;
 
 public class SQLManager {
 	
-	private DataBukkit db;
+	private SimpleDataLib sdl;
 	
 	private boolean dataBaseExists;
 	private String host;
@@ -31,8 +31,8 @@ public class SQLManager {
 	private ArrayList<Table> tables = new ArrayList<Table>();
 	
 	
-	public SQLManager(DataBukkit db) {
-		this.db = db;
+	public SQLManager(SimpleDataLib sdl) {
+		this.sdl = sdl;
 		useMySql = false;
 		dataBaseExists = false;
 	}
@@ -40,7 +40,7 @@ public class SQLManager {
 	 * Shuts down the database and writes any remaining SQL statements.
 	 */
 	public void shutDown() {
-		if (!db.isDisabled()) {
+		if (!sdl.isDisabled()) {
 			if (sw != null) {sw.shutDown();}
 			if (sr != null) {sr.shutDown();}
 		}
@@ -60,27 +60,27 @@ public class SQLManager {
 	 * Sets up a MySQL or SQLite database.  The database can be read via SQLRead, and written via SQLWrite or SyncSQLWrite.
 	 */
 	public void createDatabase() {
-		if (db.isDisabled()) {return;}
+		if (sdl.isDisabled()) {return;}
 		boolean databaseOk = false;
 		if (useMySql) {
 			databaseOk = checkMySQL();
 			if (!databaseOk) {
 				databaseOk = checkSQLLite();
-				db.getEventPublisher().fireEvent(new LogEvent("[DataBukkit["+db.getName()+"]]MySQL connection failed, defaulting to SQLite.", null, LogLevel.ERROR));
+				sdl.getEventPublisher().fireEvent(new LogEvent("[SimpleDataLib["+sdl.getName()+"]]MySQL connection failed, defaulting to SQLite.", null, LogLevel.ERROR));
 				useMySql = false;
 			}
 		} else {
 			databaseOk = checkSQLLite();
 		}
 		if (databaseOk) {
-			pool = new ConnectionPool(db, connectionPoolSize);
-			sw = new SQLWrite(db, pool);
-			ssw = new SyncSQLWrite(db, pool);
-			sr = new SQLRead(db, pool);
+			pool = new ConnectionPool(sdl, connectionPoolSize);
+			sw = new SQLWrite(sdl, pool);
+			ssw = new SyncSQLWrite(sdl, pool);
+			sr = new SQLRead(sdl, pool);
 			dataBaseExists = true;
 		} else {
-			db.getEventPublisher().fireEvent(new LogEvent("[DataBukkit["+db.getName()+"]]Database connection failed. Attempting to disable "+db.getName()+".", null, LogLevel.ERROR));
-			db.getEventPublisher().fireEvent(new ShutdownEvent());
+			sdl.getEventPublisher().fireEvent(new LogEvent("[SimpleDataLib["+sdl.getName()+"]]Database connection failed. Attempting to disable "+sdl.getName()+".", null, LogLevel.ERROR));
+			sdl.getEventPublisher().fireEvent(new ShutdownEvent());
 		}
 	}
 	private boolean checkSQLLite() {
@@ -96,9 +96,9 @@ public class SQLManager {
 			connect.close();
 			return true;
 		} catch (Exception e) {
-			if (db.debugEnabled()) {
-				db.getEventPublisher().fireEvent(new LogEvent("[DataBukkit["+db.getName()+"]] SQLite check failed.", e, LogLevel.ERROR));
-				db.writeError(e, "[DataBukkit Debug Message] SQLite check failed.");
+			if (sdl.debugEnabled()) {
+				sdl.getEventPublisher().fireEvent(new LogEvent("[SimpleDataLib["+sdl.getName()+"]] SQLite check failed.", e, LogLevel.ERROR));
+				sdl.getErrorWriter().writeError(e, "[SimpleDataLib Debug Message] SQLite check failed.");
 			}
 			return false;
 		}
@@ -114,9 +114,9 @@ public class SQLManager {
 			connect.close();
 			return true;
 		} catch (Exception e) {
-			if (db.debugEnabled()) {
-				db.getEventPublisher().fireEvent(new LogEvent("[DataBukkit["+db.getName()+"]] MySQL check failed.", e, LogLevel.ERROR));
-				db.writeError(e, "[DataBukkit Debug Message] MySQL check failed.");
+			if (sdl.debugEnabled()) {
+				sdl.getEventPublisher().fireEvent(new LogEvent("[SimpleDataLib["+sdl.getName()+"]] MySQL check failed.", e, LogLevel.ERROR));
+				sdl.getErrorWriter().writeError(e, "[SimpleDataLib Debug Message] MySQL check failed.");
 			}
 			return false;
 		}
@@ -161,13 +161,13 @@ public class SQLManager {
 	 * Generates a new Table object which represents a SQL table.
 	 */
 	public Table generateTable(String name) {
-		return new Table(name, db);
+		return new Table(name, sdl);
 	}
 	/**
 	 * Generates a new Table object and adds it to the stored list of tables.
 	 */
 	public Table addTable(String name) {
-		Table t = new Table(name, db);
+		Table t = new Table(name, sdl);
 		tables.add(t);
 		return t;
 	}
@@ -215,6 +215,6 @@ public class SQLManager {
 	 * Returns the path to the SQLite database file.
 	 */
 	public String getSQLitePath() {
-		return db.getStoragePath() + File.separator + db.getName() + ".db";
+		return sdl.getStoragePath() + File.separator + sdl.getName() + ".db";
 	}
 }

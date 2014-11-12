@@ -16,20 +16,20 @@ import org.yaml.snakeyaml.constructor.SafeConstructor;
 import org.yaml.snakeyaml.reader.UnicodeReader;
 import org.yaml.snakeyaml.representer.Representer;
 
-import regalowl.simpledatalib.DataBukkit;
+import regalowl.simpledatalib.SimpleDataLib;
 import regalowl.simpledatalib.events.LogEvent;
 import regalowl.simpledatalib.events.LogLevel;
 
 public class FileConfiguration {
 	
-	private DataBukkit db;
+	private SimpleDataLib sdl;
 	private ConcurrentHashMap<String, Object> data = new ConcurrentHashMap<String, Object>();
 	private Yaml yaml;
 	private File file;
 	private boolean broken;
 	
-    public FileConfiguration(DataBukkit db, File file) {
-    	this.db = db;
+    public FileConfiguration(SimpleDataLib sdl, File file) {
+    	this.sdl = sdl;
         DumperOptions options = new DumperOptions();
         options.setIndent(2);
         options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
@@ -51,7 +51,7 @@ public class FileConfiguration {
 			}
 		} catch (Exception e) {
 			broken = true;
-			db.getEventPublisher().fireEvent(new LogEvent("", e, LogLevel.ERROR));
+			sdl.getEventPublisher().fireEvent(new LogEvent("", e, LogLevel.ERROR));
 		} finally {
 			try {
 				if (stream != null) {
@@ -75,7 +75,7 @@ public class FileConfiguration {
 			oData.putAll(data);
 			yaml.dump(oData, writer);
 		} catch (Exception e) {
-			db.getEventPublisher().fireEvent(new LogEvent("", e, LogLevel.ERROR));
+			sdl.getEventPublisher().fireEvent(new LogEvent("", e, LogLevel.ERROR));
 		} finally {
 			try {
 				if (stream != null) {

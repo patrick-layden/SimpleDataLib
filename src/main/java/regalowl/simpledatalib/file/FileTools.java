@@ -27,7 +27,7 @@ import java.util.zip.ZipInputStream;
 
 
 
-import regalowl.simpledatalib.DataBukkit;
+import regalowl.simpledatalib.SimpleDataLib;
 import regalowl.simpledatalib.events.LogEvent;
 import regalowl.simpledatalib.events.LogLevel;
 import regalowl.simpledatalib.sql.QueryResult;
@@ -39,10 +39,10 @@ import au.com.bytecode.opencsv.CSVWriter;
 
 public class FileTools {
 	
-	private DataBukkit db;
+	private SimpleDataLib sdl;
 	
-	public FileTools(DataBukkit db) {
-		this.db = db;
+	public FileTools(SimpleDataLib sdl) {
+		this.sdl = sdl;
 	}
 	
 	public ArrayList<String> getFolderContents(String folderpath) {
@@ -60,7 +60,7 @@ public class FileTools {
 	}
 
 	public String getJarPath() {
-		String path = db.getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
+		String path = sdl.getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
 		String decodedPath = "";
 		try {
 			decodedPath = URLDecoder.decode(path, "UTF-8");
@@ -79,7 +79,7 @@ public class FileTools {
 	public void copyFileFromJar(String resource, String destination) {
 		InputStream resStreamIn = this.getClass().getClassLoader().getResourceAsStream(resource);
 		if (resStreamIn == null) {
-			db.getEventPublisher().fireEvent(new LogEvent("[DataBukkit["+db.getName()+"]]Failed to copy file. [" + resource + "]", null, LogLevel.SEVERE));
+			sdl.getEventPublisher().fireEvent(new LogEvent("[SimpleDataLib["+sdl.getName()+"]]Failed to copy file. [" + resource + "]", null, LogLevel.SEVERE));
 			return;
 		}
 		File newFile = new File(destination);

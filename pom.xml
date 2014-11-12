@@ -1,8 +1,8 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>regalowl.databukkit</groupId>
-  <artifactId>databukkit</artifactId>
-  <version>0.1.023-SNAPSHOT</version>
+  <groupId>regalowl.simpledatalib</groupId>
+  <artifactId>simpledatalib</artifactId>
+  <version>0.1.024-SNAPSHOT</version>
 	<build>
 		<plugins>
 			<plugin>
@@ -43,8 +43,8 @@
   	<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
   	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
-  <name>DataBukkit</name>
-  <description>DataBukkit provides a fast and easy to use API for database access, YML access, CSV access, and error logging.  DataBukkit uses either SQLite or MySQL for database access, depending on which is available.  All database writes use asyncronous transactions which dramatically improves performance, especially for large write operations with hundreds of inserts.</description>
+  <name>SimpleDataLib</name>
+  <description>SimpleDataLib provides fast and easy to use database access, YML access, CSV access, serialization, and error logging.  SimpleDataLib supports SQLite and MySQL for database access.  Database writes can be queued and written asynchronously in transactions to prevent slowing of the main thread.  Fields can be added, removed, and changed easily for both MySQL and SQLite.</description>
   	<repositories>
 		<repository>
 		<id>Sonatype-public</id>

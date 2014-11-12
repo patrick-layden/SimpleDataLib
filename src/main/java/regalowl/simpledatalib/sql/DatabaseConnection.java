@@ -11,7 +11,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import regalowl.simpledatalib.DataBukkit;
+import regalowl.simpledatalib.SimpleDataLib;
 import regalowl.simpledatalib.events.LogEvent;
 import regalowl.simpledatalib.events.LogLevel;
 import regalowl.simpledatalib.events.ShutdownEvent;
@@ -20,14 +20,14 @@ import regalowl.simpledatalib.events.ShutdownEvent;
 
 public class DatabaseConnection {
 
-	private DataBukkit dab;
+	private SimpleDataLib sdl;
 	private Connection connection;
     private AtomicBoolean readOnly = new AtomicBoolean();
     private AtomicBoolean lock = new AtomicBoolean();
     
-	public DatabaseConnection(DataBukkit dab, boolean readOnly) {
+	public DatabaseConnection(SimpleDataLib sdl, boolean readOnly) {
 		this.lock.set(false);
-		this.dab = dab;
+		this.sdl = sdl;
 		this.readOnly.set(readOnly);
 	}
 	
@@ -58,7 +58,7 @@ public class DatabaseConnection {
 				statements.remove(currentStatement);
 				return new WriteResult(WriteResultType.ERROR, null, currentStatement, e, statements);
 			} catch (SQLException e1) {
-				dab.writeError(e, "Rollback failed.");
+				sdl.getErrorWriter().writeError(e, "Rollback failed.");
 				return new WriteResult(WriteResultType.ERROR, null, null, null, statements);
 			}
 		} finally {
@@ -67,7 +67,7 @@ public class DatabaseConnection {
 					preparedStatement.close();
 				};
 			} catch (SQLException e) {
-				dab.writeError(e);
+				sdl.getErrorWriter().writeError(e);
 			}
 		}
 	}
@@ -104,7 +104,7 @@ public class DatabaseConnection {
 					resultSet.close();
 				}
 			} catch (SQLException e) {
-				dab.writeError(e);
+				sdl.getErrorWriter().writeError(e);
 			}
 		}
 	}
@@ -144,36 +144,36 @@ public class DatabaseConnection {
 		openConnection();
 		if (isValid()) {return;}
 		if (readOnly.get()) {
-			dab.getEventPublisher().fireEvent(new LogEvent("[" + dab.getName() + "]Fatal database connection error. " 
+			sdl.getEventPublisher().fireEvent(new LogEvent("[" + sdl.getName() + "]Fatal database connection error. " 
 		+ "Make sure your database is unlocked and readable in order to use this plugin." + " Disabling " 
-					+ dab.getName() + ".", null, LogLevel.SEVERE));
+					+ sdl.getName() + ".", null, LogLevel.SEVERE));
 		} else {
-			dab.getEventPublisher().fireEvent(new LogEvent("[" + dab.getName() + "]Fatal database connection error. " 
-		+ "Make sure your database is unlocked and writeable in order to use this plugin." + " Disabling " + dab.getName() + ".", null, LogLevel.SEVERE));
+			sdl.getEventPublisher().fireEvent(new LogEvent("[" + sdl.getName() + "]Fatal database connection error. " 
+		+ "Make sure your database is unlocked and writeable in order to use this plugin." + " Disabling " + sdl.getName() + ".", null, LogLevel.SEVERE));
 		}
-		dab.getEventPublisher().fireEvent(new ShutdownEvent());
+		sdl.getEventPublisher().fireEvent(new ShutdownEvent());
 	}
 	public synchronized void openConnection() {
-		if (dab.getSQLManager().useMySQL()) {
+		if (sdl.getSQLManager().useMySQL()) {
 			try {
-				String username = dab.getSQLManager().getUsername();
-				String password = dab.getSQLManager().getPassword();
-				int port = dab.getSQLManager().getPort();
-				String host = dab.getSQLManager().getHost();
-				String database = dab.getSQLManager().getDatabase();
+				String username = sdl.getSQLManager().getUsername();
+				String password = sdl.getSQLManager().getPassword();
+				int port = sdl.getSQLManager().getPort();
+				String host = sdl.getSQLManager().getHost();
+				String database = sdl.getSQLManager().getDatabase();
 				connection = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + database, username, password);
 				connection.setReadOnly(readOnly.get());
 			} catch (Exception e) {
-				dab.writeError(e, "Database connection error.");
+				sdl.getErrorWriter().writeError(e, "Database connection error.");
 			}
 		} else {
 			try {
-				String sqlitePath = dab.getSQLManager().getSQLitePath();
+				String sqlitePath = sdl.getSQLManager().getSQLitePath();
 				Class.forName("org.sqlite.JDBC");
 				connection = DriverManager.getConnection("jdbc:sqlite:" + sqlitePath);
 				connection.setReadOnly(readOnly.get());
 			} catch (Exception e) {
-				dab.writeError(e, "Database connection error.");
+				sdl.getErrorWriter().writeError(e, "Database connection error.");
 			}
 		}
 	}
@@ -184,7 +184,7 @@ public class DatabaseConnection {
 				connection.close();
 			}
 		} catch (Exception e) {
-			dab.writeError(e, "Connection failed to close.");
+			sdl.getErrorWriter().writeError(e, "Connection failed to close.");
 		}
 	}
 

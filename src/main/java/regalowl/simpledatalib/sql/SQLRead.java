@@ -6,17 +6,17 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import regalowl.simpledatalib.DataBukkit;
+import regalowl.simpledatalib.SimpleDataLib;
 
 
 public class SQLRead {
 
-	private DataBukkit dab;
+	private SimpleDataLib sdl;
 	private AtomicBoolean logReadErrors = new AtomicBoolean();
 	private ConnectionPool pool;
     
-	public SQLRead(DataBukkit dab, ConnectionPool pool) {
-		this.dab = dab;
+	public SQLRead(SimpleDataLib sdl, ConnectionPool pool) {
+		this.sdl = sdl;
 		logReadErrors.set(true);
 		this.pool = pool;
 	}
@@ -31,7 +31,7 @@ public class SQLRead {
 		DatabaseConnection dbc = pool.getDatabaseConnection();
 		QueryResult qr = dbc.read(select);
 		if (!qr.successful() && logReadErrors.get()) {
-			dab.writeError(qr.getException(), "The failed SQL statement is in the following brackets: [" + qr.getFailedSQL() + "]");
+			sdl.getErrorWriter().writeError(qr.getException(), "The failed SQL statement is in the following brackets: [" + qr.getFailedSQL() + "]");
 		}
 		pool.returnConnection(dbc);
 		return qr;
@@ -43,7 +43,7 @@ public class SQLRead {
 	 * @return QueryResult
 	 */
 	public QueryResult select(String statement, ArrayList<Object> parameters) {
-		BasicStatement bs = new BasicStatement(statement, dab);
+		BasicStatement bs = new BasicStatement(statement, sdl);
 		if (parameters != null) {
 			for (Object param:parameters) {
 				bs.addParameter(param);
@@ -59,7 +59,7 @@ public class SQLRead {
 	 * @return QueryResult
 	 */
 	public QueryResult select(String select) {
-		return select(new BasicStatement(select, dab));
+		return select(new BasicStatement(select, sdl));
 	}
 	
 	/**
@@ -83,7 +83,7 @@ public class SQLRead {
 			}
 			statement = statement.substring(0, statement.length() - 5);
 		}
-		BasicStatement bs = new BasicStatement(statement, dab);
+		BasicStatement bs = new BasicStatement(statement, sdl);
 		if (conditions != null && conditions.size() > 0) {
 			Iterator<String> it = conditions.keySet().iterator();
 			while (it.hasNext()) {
@@ -133,7 +133,7 @@ public class SQLRead {
 			}
 			statement = statement.substring(0, statement.length() - 5);
 		}
-		BasicStatement bs = new BasicStatement(statement, dab);
+		BasicStatement bs = new BasicStatement(statement, sdl);
 		if (conditions != null && conditions.size() > 0) {
 			Iterator<String> it = conditions.keySet().iterator();
 			while (it.hasNext()) {
@@ -155,7 +155,7 @@ public class SQLRead {
 	 * @return ArrayList<Double>
 	 */
 	public ArrayList<Double> getDoubleList(String statement) {
-		BasicStatement bs = new BasicStatement(statement, dab);
+		BasicStatement bs = new BasicStatement(statement, sdl);
 		ArrayList<Double> data = new ArrayList<Double>();
 		QueryResult result = select(bs);
 		while (result.next()) {
@@ -170,7 +170,7 @@ public class SQLRead {
 	 * @return ArrayList<Integer>
 	 */
 	public ArrayList<Integer> getIntList(String statement) {
-		BasicStatement bs = new BasicStatement(statement, dab);
+		BasicStatement bs = new BasicStatement(statement, sdl);
 		ArrayList<Integer> data = new ArrayList<Integer>();
 		QueryResult result = select(bs);
 		while (result.next()) {
@@ -185,7 +185,7 @@ public class SQLRead {
 	 * @return ArrayList<Long>
 	 */
 	public ArrayList<Long> getLongList(String statement) {
-		BasicStatement bs = new BasicStatement(statement, dab);
+		BasicStatement bs = new BasicStatement(statement, sdl);
 		ArrayList<Long> data = new ArrayList<Long>();
 		QueryResult result = select(bs);
 		while (result.next()) {
@@ -200,7 +200,7 @@ public class SQLRead {
 	 * @return ArrayList<Flost>
 	 */
 	public ArrayList<Float> getFloatList(String statement) {
-		BasicStatement bs = new BasicStatement(statement, dab);
+		BasicStatement bs = new BasicStatement(statement, sdl);
 		ArrayList<Float> data = new ArrayList<Float>();
 		QueryResult result = select(bs);
 		while (result.next()) {
@@ -215,7 +215,7 @@ public class SQLRead {
 	 * @return ArrayList<Boolean>
 	 */
 	public ArrayList<Boolean> getBooleanList(String statement) {
-		BasicStatement bs = new BasicStatement(statement, dab);
+		BasicStatement bs = new BasicStatement(statement, sdl);
 		ArrayList<Boolean> data = new ArrayList<Boolean>();
 		QueryResult result = select(bs);
 		while (result.next()) {
@@ -231,7 +231,7 @@ public class SQLRead {
 	 * @return Integer
 	 */
 	public Integer getInt(String statement) {
-		BasicStatement bs = new BasicStatement(statement, dab);
+		BasicStatement bs = new BasicStatement(statement, sdl);
 		QueryResult result = select(bs);
 		Integer data = null;
 		if (result.next()) {
@@ -246,7 +246,7 @@ public class SQLRead {
 	 * @return Boolean
 	 */
 	public Boolean getBoolean(String statement) {
-		BasicStatement bs = new BasicStatement(statement, dab);
+		BasicStatement bs = new BasicStatement(statement, sdl);
 		QueryResult result = select(bs);
 		Boolean data = null;
 		if (result.next()) {
@@ -271,7 +271,7 @@ public class SQLRead {
 			}
 			statement = statement.substring(0, statement.length() - 5);
 		}
-		BasicStatement bs = new BasicStatement(statement, dab);
+		BasicStatement bs = new BasicStatement(statement, sdl);
 		if (conditions != null && conditions.size() > 0) {
 			Iterator<String> it = conditions.keySet().iterator();
 			while (it.hasNext()) {
@@ -293,7 +293,7 @@ public class SQLRead {
 	 * @return Double
 	 */
 	public Double getDouble(String statement) {
-		BasicStatement bs = new BasicStatement(statement, dab);
+		BasicStatement bs = new BasicStatement(statement, sdl);
 		QueryResult result = select(bs);
 		Double data = null;
 		if (result.next()) {
@@ -308,7 +308,7 @@ public class SQLRead {
 	 * @return Long
 	 */
 	public Long getLong(String statement) {
-		BasicStatement bs = new BasicStatement(statement, dab);
+		BasicStatement bs = new BasicStatement(statement, sdl);
 		QueryResult result = select(bs);
 		Long data = null;
 		if (result.next()) {
@@ -323,7 +323,7 @@ public class SQLRead {
 	 * @return Float
 	 */
 	public Float getFloat(String statement) {
-		BasicStatement bs = new BasicStatement(statement, dab);
+		BasicStatement bs = new BasicStatement(statement, sdl);
 		QueryResult result = select(bs);
 		Float data = null;
 		if (result.next()) {
@@ -339,7 +339,7 @@ public class SQLRead {
 	 * @return Integer
 	 */
 	public int countTableEntries(String table) {
-		BasicStatement bs = new BasicStatement("SELECT COUNT(*) FROM " + table, dab);
+		BasicStatement bs = new BasicStatement("SELECT COUNT(*) FROM " + table, sdl);
 		QueryResult result = select(bs);
 		result.next();
 		int rowcount = result.getInt(1);

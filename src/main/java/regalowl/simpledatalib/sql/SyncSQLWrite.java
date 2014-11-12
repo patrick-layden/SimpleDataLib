@@ -4,19 +4,19 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import regalowl.simpledatalib.DataBukkit;
+import regalowl.simpledatalib.SimpleDataLib;
 
 public class SyncSQLWrite {
 	
-	private DataBukkit dab;
+	private SimpleDataLib sdl;
 	private SQLWrite sw;
 	private ConnectionPool pool;
 	private ArrayList<WriteStatement> queue = new ArrayList<WriteStatement>();
 	
-	public SyncSQLWrite(DataBukkit dab, ConnectionPool pool) {
-		this.dab = dab;
+	public SyncSQLWrite(SimpleDataLib sdl, ConnectionPool pool) {
+		this.sdl = sdl;
 		this.pool = pool;
-		this.sw = dab.getSQLManager().getSQLWrite();
+		this.sw = sdl.getSQLManager().getSQLWrite();
 	}
 	
 	public int getQueueSize() {
@@ -56,7 +56,7 @@ public class SyncSQLWrite {
 	}
 	public synchronized void queue(String statement) {
 		if (statement != null) {
-			queue(new WriteStatement(statement, dab));
+			queue(new WriteStatement(statement, sdl));
 		}
 	}
 	

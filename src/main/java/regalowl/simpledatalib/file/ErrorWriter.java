@@ -8,21 +8,32 @@ import java.io.IOException;
 
 
 
+
 import regalowl.simpledatalib.CommonFunctions;
-import regalowl.simpledatalib.DataBukkit;
+import regalowl.simpledatalib.SimpleDataLib;
 
 public class ErrorWriter {
 
-	private DataBukkit dab;
+	private SimpleDataLib sdl;
 	private String path;
 	private String text;
 	private String error;
 
-	public ErrorWriter(String path, DataBukkit dab) {
-		this.dab = dab;
+	public ErrorWriter(String path, SimpleDataLib sdl) {
+		this.sdl = sdl;
 		this.path = path;
 	}
 	
+	
+	public void writeError(Exception e, String info) {
+		writeError(e, info, false);
+	}
+	public void writeError(Exception e) {
+		writeError(e, null, false);
+	}
+	public void writeError(String info) {
+		writeError(null, info, false);
+	}	
 	public void writeError(Exception e, String text, boolean sync) {
 		this.error = CommonFunctions.getErrorString(e);
 		this.text = text;
@@ -43,7 +54,7 @@ public class ErrorWriter {
 			BufferedWriter bw = new BufferedWriter(fw);
 			bw.newLine();
 			bw.newLine();
-			bw.write(dab.getName()+ "["+CommonFunctions.getTimeStamp()+"]");
+			bw.write(sdl.getName()+ "["+CommonFunctions.getTimeStamp()+"]");
 			bw.newLine();
 			if (text != null) {
 				bw.write(String.format(text));

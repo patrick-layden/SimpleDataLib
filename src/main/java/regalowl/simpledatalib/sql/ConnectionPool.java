@@ -6,20 +6,20 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import regalowl.simpledatalib.DataBukkit;
+import regalowl.simpledatalib.SimpleDataLib;
 
 public class ConnectionPool {
-	private DataBukkit dab;
+	private SimpleDataLib sdl;
 	
     private Queue<DatabaseConnection> connections = new LinkedList<DatabaseConnection>();
     private Queue<DatabaseConnection> activeConnections = new LinkedList<DatabaseConnection>();
     private Lock connectionLock = new ReentrantLock();
     private Condition connectionAvailable = connectionLock.newCondition();
     
-    public ConnectionPool(DataBukkit dab, int connectionCount) {
-    	this.dab = dab;
+    public ConnectionPool(SimpleDataLib sdl, int connectionCount) {
+    	this.sdl = sdl;
     	for (int i = 0; i < connectionCount; i++) {
-    		returnConnection(new DatabaseConnection(dab, false));
+    		returnConnection(new DatabaseConnection(sdl, false));
     	}
     }
     
@@ -45,7 +45,7 @@ public class ConnectionPool {
 				try {
 					connectionAvailable.await();
 				} catch (InterruptedException e) {
-					dab.writeError(e, null);
+					sdl.getErrorWriter().writeError(e, null);
 				}
 			}
 			DatabaseConnection connect = connections.remove();

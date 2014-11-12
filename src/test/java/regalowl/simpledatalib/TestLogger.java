@@ -1,12 +1,12 @@
 package regalowl.simpledatalib;
 
 import regalowl.simpledatalib.CommonFunctions;
-import regalowl.simpledatalib.DataBukkit;
+import regalowl.simpledatalib.SimpleDataLib;
 import regalowl.simpledatalib.event.EventHandler;
 import regalowl.simpledatalib.events.LogEvent;
 
 public class TestLogger {
-	public TestLogger(DataBukkit db) {
+	public TestLogger(SimpleDataLib db) {
 		db.registerListener(this);
 	}
 	

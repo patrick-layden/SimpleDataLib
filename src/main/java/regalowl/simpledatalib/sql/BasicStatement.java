@@ -4,18 +4,18 @@ import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.util.ArrayList;
 
-import regalowl.simpledatalib.DataBukkit;
+import regalowl.simpledatalib.SimpleDataLib;
 
 
 public class BasicStatement {
 
 	protected String statement;
-	protected DataBukkit dab;
+	protected SimpleDataLib sdl;
 	protected ArrayList<Object> parameters = new ArrayList<Object>();
 	
-	public BasicStatement(String statement, DataBukkit dab) {
+	public BasicStatement(String statement, SimpleDataLib sdl) {
 		this.statement = statement;
-		this.dab = dab;
+		this.sdl = sdl;
 	}
 	public String getStatement() {
 		return statement;
@@ -24,7 +24,7 @@ public class BasicStatement {
 	public void addParameter(Object param) {
 		if (param instanceof String) {
 			String s = (String) param;
-			if (dab.getSQLManager().useMySQL()) {
+			if (sdl.getSQLManager().useMySQL()) {
 				if (s.contains("datetime('NOW', 'localtime')")) {
 					s = s.replace("datetime('NOW', 'localtime')", "NOW()");
 				}
@@ -87,7 +87,7 @@ public class BasicStatement {
 					preparedStatement.setObject(i+1, paramObject);
 				}
 			} catch (Exception e) {
-				dab.writeError(e);
+				sdl.getErrorWriter().writeError(e);
 			}
 		}
 	}

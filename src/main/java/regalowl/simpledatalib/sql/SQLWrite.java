@@ -16,13 +16,13 @@ import java.util.concurrent.atomic.AtomicLong;
 
 
 
-import regalowl.simpledatalib.DataBukkit;
+import regalowl.simpledatalib.SimpleDataLib;
 import regalowl.simpledatalib.events.LogEvent;
 import regalowl.simpledatalib.events.LogLevel;
 
 public class SQLWrite {
 
-	private DataBukkit dab;
+	private SimpleDataLib sdl;
 	private ConnectionPool pool;
 	
 	private ConcurrentHashMap<Long, WriteStatement> buffer = new ConcurrentHashMap<Long, WriteStatement>();
@@ -38,8 +38,8 @@ public class SQLWrite {
     
     private Timer t = new Timer();
     
-	public SQLWrite(DataBukkit dab, ConnectionPool pool) {
-		this.dab = dab;
+	public SQLWrite(SimpleDataLib sdl, ConnectionPool pool) {
+		this.sdl = sdl;
 		this.pool = pool;
 		logWriteErrors.set(true);
 		logSQL.set(false);
@@ -64,7 +64,7 @@ public class SQLWrite {
 	}
 	public synchronized void addToQueue(String statement) {
 		if (statement == null) {return;}
-		addToQueue(new WriteStatement(statement, dab));
+		addToQueue(new WriteStatement(statement, sdl));
 	}
 	public synchronized void addToQueue(List<String> statements) {
 		if (statements == null) {return;}
@@ -74,7 +74,7 @@ public class SQLWrite {
 	}
 	public synchronized void addToQueue(String statement, ArrayList<Object> parameters) {
 		if (statement == null) {return;}
-		WriteStatement ws = new WriteStatement(statement, dab);
+		WriteStatement ws = new WriteStatement(statement, sdl);
 		for (Object param:parameters) {
 			ws.addParameter(param);
 		}
@@ -155,8 +155,8 @@ public class SQLWrite {
 	}
 	private void saveBuffer() {
 		if (buffer.size() == 0) {return;}
-		dab.getEventPublisher().fireEvent(new LogEvent("[" + dab.getName() + "]Saving the remaining SQL queue: [" + buffer.size() + " statements].  Please wait.", null, LogLevel.INFO));
-		DatabaseConnection database = new DatabaseConnection(dab, false);
+		sdl.getEventPublisher().fireEvent(new LogEvent("[" + sdl.getName() + "]Saving the remaining SQL queue: [" + buffer.size() + " statements].  Please wait.", null, LogLevel.INFO));
+		DatabaseConnection database = new DatabaseConnection(sdl, false);
 		ArrayList<WriteStatement> writeArray = new ArrayList<WriteStatement>();
 		while (buffer.size() > 0) {
 			writeArray.add(buffer.get(processNext.get()));
@@ -170,7 +170,7 @@ public class SQLWrite {
 				}
 			}
 		} else if (result.getStatus() == WriteResultType.ERROR) {
-			dab.getEventPublisher().fireEvent(new LogEvent("[" + dab.getName() + "]A database error occurred while shutting down.  Attempting to save remaining data... This may take longer than usual.", null, LogLevel.SEVERE));
+			sdl.getEventPublisher().fireEvent(new LogEvent("[" + sdl.getName() + "]A database error occurred while shutting down.  Attempting to save remaining data... This may take longer than usual.", null, LogLevel.SEVERE));
 			if (logWriteErrors.get()) {
 				result.getFailedSQL().logError(result.getException());
 			}
@@ -192,7 +192,7 @@ public class SQLWrite {
 			}
 		}
 		buffer.clear();
-		dab.getEventPublisher().fireEvent(new LogEvent("[" + dab.getName() + "]SQL queue save complete.", null, LogLevel.INFO));
+		sdl.getEventPublisher().fireEvent(new LogEvent("[" + sdl.getName() + "]SQL queue save complete.", null, LogLevel.INFO));
 	}
 
 
@@ -220,7 +220,7 @@ public class SQLWrite {
 		}
 		statement = statement.substring(0, statement.length() - 1);
 		statement += ")";
-		WriteStatement ws = new WriteStatement(statement, dab);
+		WriteStatement ws = new WriteStatement(statement, sdl);
 		for (String value:values.values()) {
 			ws.addParameter(value);
 		}
@@ -240,7 +240,7 @@ public class SQLWrite {
 			statement += field + " = ? AND ";
 		}
 		statement = statement.substring(0, statement.length() - 5);
-		WriteStatement ws = new WriteStatement(statement, dab);
+		WriteStatement ws = new WriteStatement(statement, sdl);
 		it = values.keySet().iterator();
 		while (it.hasNext()) {
 			String field = it.next();
@@ -261,7 +261,7 @@ public class SQLWrite {
 			statement += field + " = ? AND ";
 		}
 		statement = statement.substring(0, statement.length() - 5);
-		WriteStatement ws = new WriteStatement(statement, dab);
+		WriteStatement ws = new WriteStatement(statement, sdl);
 		
 		it = conditions.keySet().iterator();
 		while (it.hasNext()) {
