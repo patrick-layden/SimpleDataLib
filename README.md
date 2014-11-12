@@ -35,8 +35,8 @@ An example database read:
 SQLRead sr = sdl.getSQLManager().getSQLRead();
 QueryResult data = sr.select("SELECT * FROM table_name");
 while (data.next()) {
-	double field1 = playerData.getDouble("FIELD1");
-	String field2 = playerData.getString("FIELD2");
+	double field1 = data.getDouble("FIELD1");
+	String field2 = data.getString("FIELD2");
 	{...do something here...}
 }
 data.close();
