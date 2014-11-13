@@ -286,6 +286,7 @@ public class CommonFunctions {
 		}
 		String string = "";
 		for (Map.Entry<String,String> entry : map.entrySet()) {
+			if (entry.getKey() == null || entry.getValue() == null) continue;
 		    String key = entry.getKey().replace(",", comma).replace(";", semicolon);
 		    String value = entry.getValue().replace(",", comma).replace(";", semicolon);
 		    string += (key + "," + value + ";");
