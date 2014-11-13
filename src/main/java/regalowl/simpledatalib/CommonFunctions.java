@@ -220,12 +220,8 @@ public class CommonFunctions {
 	public static ArrayList<String> explode(String string) {
 		ArrayList<String> array = new ArrayList<String>();
 		if (string == null || !string.contains(",")) {return array;}
-		int nestLevel = getNestLevel(string) - 1;
-		String comma = "[C]";
-		while (nestLevel > 0) {
-			comma = "["+comma+"]";
-			nestLevel--;
-		}
+		int nestLevel = getNestLevel(string);
+		String comma = "["+nestLevel+"]";
 		if (string.indexOf(",") == 0) {string = string.substring(1, string.length());}
 		if (!string.substring(string.length() - 1, string.length()).equalsIgnoreCase(",")) {string += ",";}
 		while (string.contains(",")) {
@@ -237,12 +233,8 @@ public class CommonFunctions {
 	}
 	public static String implode(List<String> array) {
 		if (array == null) {return "";}
-		int nestLevel = getNestLevel(array.toString());
-		String comma = "[C]";
-		while (nestLevel > 0) {
-			comma = "["+comma+"]";
-			nestLevel--;
-		}
+		int nestLevel = getNestLevel(array.toString()) + 1;
+		String comma = "["+nestLevel+"]";
 		String string = "";
 		for (String cs:array) {
 			string += cs.replace(",", comma) + ",";
@@ -252,17 +244,13 @@ public class CommonFunctions {
 
 	
 	
+	
 	public static HashMap<String,String> explodeMap(String string) {
 		HashMap<String,String> map = new HashMap<String,String>();
 		if (string == null || !string.contains(",")) {return map;}
-		int nestLevel = getNestLevel(string) - 1;
-		String comma = "[C]";
-		String semicolon = "[S]";
-		while (nestLevel > 0) {
-			semicolon = "["+semicolon+"]";
-			comma = "["+comma+"]";
-			nestLevel--;
-		}
+		int nestLevel = getNestLevel(string);
+		String comma = "["+nestLevel+"]";
+		String semicolon = "{"+nestLevel+"}";
 		if (!string.substring(string.length() - 1, string.length()).equalsIgnoreCase(";")) {string += ";";}
 		while (string.contains(";")) {
 			String mapEntry = string.substring(0, string.indexOf(";"));
@@ -276,14 +264,9 @@ public class CommonFunctions {
 	}
 	public static String implodeMap(HashMap<String,String> map) {
 		if (map == null) {return "";}
-		int nestLevel = getNestLevel(map.toString());
-		String comma = "[C]";
-		String semicolon = "[S]";
-		while (nestLevel > 0) {
-			semicolon = "["+semicolon+"]";
-			comma = "["+comma+"]";
-			nestLevel--;
-		}
+		int nestLevel = getNestLevel(map.toString()) + 1;
+		String comma = "["+nestLevel+"]";
+		String semicolon = "{"+nestLevel+"}";
 		String string = "";
 		for (Map.Entry<String,String> entry : map.entrySet()) {
 			if (entry.getKey() == null || entry.getValue() == null) continue;
@@ -293,18 +276,46 @@ public class CommonFunctions {
 		}
 		return string;
 	}
-	private static int getNestLevel(String string) {
-		String comma = "[C]";
-		String semicolon = "[S]";
-		int nestLevel = 0;
-		while (string.contains(comma) || string.contains(semicolon)) {
-			semicolon = "["+semicolon+"]";
-			comma = "["+comma+"]";
-			nestLevel++;
+
+	public static int getNestLevel(String string) {
+		int nestLevel = -1;
+		boolean inBracket = false;
+		String bString = "";
+		for (char c:string.toCharArray()) {
+			if (c == '{') {
+				bString = "";
+				inBracket = true;
+				continue;
+			} else if (c == '}') {
+				try {
+					int cLvl = Integer.parseInt(bString);
+					if (cLvl > nestLevel) nestLevel = cLvl;
+				} catch (NumberFormatException e) {}
+				bString = "";
+				inBracket = false;
+			}
+			if (inBracket) {
+				bString += c;
+			}
+		}
+		inBracket = false;
+		for (char c:string.toCharArray()) {
+			if (c == '[') {
+				bString = "";
+				inBracket = true;
+				continue;
+			} else if (c == ']') {
+				try {
+					int cLvl = Integer.parseInt(bString);
+					if (cLvl > nestLevel) nestLevel = cLvl;
+				} catch (NumberFormatException e) {}
+				bString = "";
+				inBracket = false;
+			}
+			if (inBracket) bString += c;
 		}
 		return nestLevel;
 	}
-
 	
 	
 	
