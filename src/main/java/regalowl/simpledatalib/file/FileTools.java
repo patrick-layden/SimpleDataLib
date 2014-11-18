@@ -11,15 +11,22 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Enumeration;
 import java.util.List;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+
+
+
 
 
 
@@ -58,22 +65,42 @@ public class FileTools {
 		}
 		return libContents;
 	}
+	
+	public void loadExternalJar(String path) {
+		try {
+			if (!fileExists(path)) return;
+			JarFile jarFile = new JarFile(path);
+			Enumeration<JarEntry> e = jarFile.entries();
+			URL[] urls = { new URL("jar:file:" + path + "!/") };
+			URLClassLoader cl = URLClassLoader.newInstance(urls);
+			while (e.hasMoreElements()) {
+				JarEntry je = (JarEntry) e.nextElement();
+				if (je.isDirectory() || !je.getName().endsWith(".class")) continue;
+				String className = je.getName().substring(0, je.getName().length() - 6);
+				className = className.replace('/', '.');
+				cl.loadClass(className);
+			}
+			jarFile.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 
 	public String getJarPath() {
-		String path = sdl.getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
-		String decodedPath = "";
+		URL url = sdl.getClass().getProtectionDomain().getCodeSource().getLocation();
+		File f = null;
 		try {
-			decodedPath = URLDecoder.decode(path, "UTF-8");
-			if (decodedPath.contains(File.separator)) {
-				decodedPath = decodedPath.substring(0, decodedPath.lastIndexOf(File.separator));
-			}
-		} catch (UnsupportedEncodingException e1) {
-			e1.printStackTrace();
+			f = new File(url.toURI());
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
 		}
-		if (decodedPath.startsWith("file:")) {
-			decodedPath = decodedPath.replace("file:", "");
+		String path = "";
+		if (!f.isDirectory()) {
+			path = f.getParent();
+		} else {
+			path = f.getAbsolutePath();
 		}
-		return decodedPath;
+		return path;
 	}
 
 	public void copyFileFromJar(String resource, String destination) {
