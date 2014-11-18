@@ -13,17 +13,14 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Enumeration;
 import java.util.List;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+
 
 
 
@@ -66,25 +63,6 @@ public class FileTools {
 		return libContents;
 	}
 	
-	public void loadExternalJar(String path) {
-		try {
-			if (!fileExists(path)) return;
-			JarFile jarFile = new JarFile(path);
-			Enumeration<JarEntry> e = jarFile.entries();
-			URL[] urls = { new URL("jar:file:" + path + "!/") };
-			URLClassLoader cl = URLClassLoader.newInstance(urls);
-			while (e.hasMoreElements()) {
-				JarEntry je = (JarEntry) e.nextElement();
-				if (je.isDirectory() || !je.getName().endsWith(".class")) continue;
-				String className = je.getName().substring(0, je.getName().length() - 6);
-				className = className.replace('/', '.');
-				cl.loadClass(className);
-			}
-			jarFile.close();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
 
 	public String getJarPath() {
 		URL url = sdl.getClass().getProtectionDomain().getCodeSource().getLocation();
