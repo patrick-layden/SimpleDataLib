@@ -31,9 +31,9 @@ public class CommonFunctionsTest {
 		data.put("key2", "data2");
 		data.put("k[9]ey,,,3", "d{{6}ata3");
 		String serialized = CommonFunctions.implodeMap(data);
-		System.out.println(serialized);
+		//System.out.println(serialized);
 		HashMap<String,String> data2 = CommonFunctions.explodeMap(serialized);
-		System.out.println(data2.toString());
+		//System.out.println(data2.toString());
 		assertTrue(data.equals(data2));
 	}
 	
@@ -44,9 +44,9 @@ public class CommonFunctionsTest {
 		data.add("string2");
 		data.add("string3");
 		String serialized = CommonFunctions.implode(data);
-		System.out.println(serialized);
+		//System.out.println(serialized);
 		ArrayList<String> data2 = CommonFunctions.explode(serialized);
-		System.out.println(data2.toString());
+		//System.out.println(data2.toString());
 		assertTrue(data.equals(data2));
 	}
 }

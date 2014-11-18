@@ -2,13 +2,13 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>regalowl.simpledatalib</groupId>
   <artifactId>simpledatalib</artifactId>
-  <version>0.1.025-SNAPSHOT</version>
+  <version>0.1.026-SNAPSHOT</version>
 	<build>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
-				<version>2.1</version>
+				<version>2.3</version>
 				<executions>
 					<execution>
 						<phase>package</phase>
@@ -30,7 +30,15 @@
 							<relocations>
 								<relocation>
 									<pattern>net.sf.opencsv</pattern>
-									<shadedPattern>regalowl.databukkit.opencsv</shadedPattern>
+									<shadedPattern>regalowl.simpledatalib.net.sf.opencsv</shadedPattern>
+								</relocation>
+								<relocation>
+									<pattern>org.yaml</pattern>
+									<shadedPattern>regalowl.simpledatalib.org.yaml</shadedPattern>
+								</relocation>
+								<relocation>
+									<pattern>org.xerial</pattern>
+									<shadedPattern>regalowl.simpledatalib.org.xerial.sqlite</shadedPattern>
 								</relocation>
 							</relocations>
 						</configuration>
@@ -57,7 +65,6 @@
   		<groupId>org.xerial</groupId>
   		<artifactId>sqlite-jdbc</artifactId>
   		<version>3.7.2</version>
-  		<scope>provided</scope>
   	</dependency>
   	<dependency>
   		<groupId>net.sf.opencsv</groupId>
@@ -68,12 +75,12 @@
   		<groupId>org.yaml</groupId>
   		<artifactId>snakeyaml</artifactId>
   		<version>1.15-SNAPSHOT</version>
-  		<scope>provided</scope>
   	</dependency>
 	<dependency>
 		<groupId>junit</groupId>
 		<artifactId>junit</artifactId>
 		<version>4.11</version>
+		<scope>test</scope>
 	</dependency>
   </dependencies>
 </project>

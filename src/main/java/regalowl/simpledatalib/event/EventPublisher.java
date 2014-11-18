@@ -27,18 +27,22 @@ public class EventPublisher {
     @SuppressWarnings("rawtypes")
 	public Event fireEvent(Event event) {
         for (Object listener:listeners) {
-            for (Method m:listener.getClass().getMethods()) {
-				if (m.getAnnotation(EventHandler.class) == null) continue;
-				Class[] params = m.getParameterTypes();
-				if (params.length != 1) continue;
-				if (!event.getClass().getSimpleName().equals(params[0].getSimpleName())) continue;
-				try {
-					m.invoke(listener, event);
-					event.setFiredSuccessfully();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-            }
+        	try {
+	            for (Method m:listener.getClass().getMethods()) {
+	            	try {
+						if (m.getAnnotation(EventHandler.class) == null) continue;
+						Class[] params = m.getParameterTypes();
+						if (params.length != 1) continue;
+						if (!event.getClass().getSimpleName().equals(params[0].getSimpleName())) continue;
+						m.invoke(listener, event);
+						event.setFiredSuccessfully();
+	            	} catch (Exception e) {
+	            		e.printStackTrace();
+					}
+	            }
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
         }
 		return event;
     }

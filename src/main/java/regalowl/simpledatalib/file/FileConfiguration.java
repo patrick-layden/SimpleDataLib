@@ -147,19 +147,26 @@ public class FileConfiguration {
 		}
 	}
 	
-	public boolean isSet(String path) {
-		if (getData(path) != null) return true;
+	public void setDefault(String key, Object value) {
+		if (!isSet(key)) set(key, value);
+	}
+	
+	public boolean isSet(String key) {
+		if (getData(key) != null) return true;
 		return false;
 	}
 	
+	
+	
 	public String getString(String path) {
-		if (getData(path) instanceof String) {
-			return (String) getData(path);
+		Object o = getData(path);
+		if (o instanceof String) {
+			return (String) o;
 		}
 		return null;
 	}
 	
-	public synchronized int getInt(String path) {
+	public int getInt(String path) {
 		return convertInteger(getData(path));
 	}
 	
