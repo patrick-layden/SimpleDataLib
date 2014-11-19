@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>regalowl.simpledatalib</groupId>
   <artifactId>simpledatalib</artifactId>
-  <version>0.1.035-SNAPSHOT</version>
+  <version>0.1.037-SNAPSHOT</version>
 	<build>
 		<plugins>
 			<plugin>
@@ -35,6 +35,14 @@
 									<pattern>org.yaml</pattern>
 									<shadedPattern>regalowl.simpledatalib.org.yaml</shadedPattern>
 								</relocation>
+								<relocation>
+									<pattern>mysql</pattern>
+									<shadedPattern>regalowl.simpledatalib.mysql</shadedPattern>
+								</relocation>
+								<relocation>
+									<pattern>org.xerial</pattern>
+									<shadedPattern>regalowl.simpledatalib.org.xerial</shadedPattern>
+								</relocation>
 							</relocations>
 						</configuration>
 					</execution>
@@ -61,6 +69,11 @@
   		<artifactId>sqlite-jdbc</artifactId>
   		<version>3.7.2</version>
   	</dependency>
+	<dependency>
+		<groupId>mysql</groupId>
+		<artifactId>mysql-connector-java</artifactId>
+		<version>5.1.34</version>
+	</dependency>
   	<dependency>
   		<groupId>net.sf.opencsv</groupId>
   		<artifactId>opencsv</artifactId>
