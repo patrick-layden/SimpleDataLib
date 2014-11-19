@@ -8,8 +8,8 @@ public enum FieldType {
 	DATETIME(false, false), 
 	TINYTEXT(false, false), 
 	LONGTEXT(false, false), 
-	DOUBLE(false, true);
-
+	DOUBLE(false, true),
+	BLOB(false, false);
 
     private FieldType(boolean canAutoIncrement, boolean canHaveDefault){
         this.canAutoIncrement = canAutoIncrement;
@@ -39,6 +39,8 @@ public enum FieldType {
     		return VARCHAR;
     	} else if (type.equals("DOUBLE")) {
     		return DOUBLE;
+    	} else if (type.equals("BLOB")) {
+    		return BLOB;
     	}
     	return null;
     }

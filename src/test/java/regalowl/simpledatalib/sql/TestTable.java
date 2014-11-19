@@ -140,6 +140,56 @@ public class TestTable {
 		t.setCompositeKey(compositeKey);
 		assertTrue(fs.equals(t));
 		
+		/*
+		fs = sm.generateTable("test5");
+		createStatement = "CREATE TABLE test5 (fa_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "
+				+ "fa_name TEXT  NOT NULL default '', "
+				+ "fa_archive_name TEXT  default '', "
+				+ "fa_storage_group BLOB,"
+				+ "fa_storage_key BLOB default '', "
+				+ "fa_deleted_user INTEGER,"
+				+ "fa_deleted_timestamp BLOB default '', "
+				+ "fa_deleted_reason text, "
+				+ "fa_size INTEGER  default 0, "
+				+ "fa_width INTEGER default 0, "
+				+ "fa_height INTEGER default 0, "
+				+ "fa_metadata BLOB, "
+				+ "fa_bits INTEGER default 0, "
+				+ "fa_media_type TEXT default NULL, "
+				+ "fa_major_mime TEXT default \"\"unknown\"\","
+				+ " fa_minor_mime BLOB default \"\"unknown\"\", "
+				+ "fa_description BLOB,"
+				+ "fa_user INTEGER  default 0, "
+				+ "fa_user_text TEXT ,"
+				+ "fa_timestamp BLOB default '',"
+				+ "fa_deleted INTEGER  NOT NULL default 0, "
+				+ "fa_sha1 BLOB NOT NULL default '')";
+		fs.loadTableFromString(createStatement);
+		t = sm.generateTable("test5");
+		f = t.addField("fa_id", FieldType.INTEGER);f.setNotNull();f.setPrimaryKey();f.setAutoIncrement();
+		f = t.addField("fa_name", FieldType.TEXT);f.setNotNull();f.setDefault("");
+		f = t.addField("fa_archive_name", FieldType.TEXT);f.setDefault("");
+		f = t.addField("fa_storage_group", FieldType.BLOB);
+		f = t.addField("fa_storage_key", FieldType.BLOB);f.setDefault("");
+		f = t.addField("fa_deleted_user", FieldType.INTEGER);
+		f = t.addField("fa_deleted_timestamp", FieldType.BLOB);f.setDefault("");
+		f = t.addField("fa_deleted_reason", FieldType.TEXT);
+		f = t.addField("fa_size", FieldType.INTEGER);f.setDefault("0");
+		f = t.addField("fa_width", FieldType.INTEGER);f.setDefault("0");
+		f = t.addField("fa_height", FieldType.INTEGER);f.setDefault("0");
+		f = t.addField("fa_metadata", FieldType.BLOB);
+		f = t.addField("fa_bits", FieldType.INTEGER);f.setDefault("0");
+		f = t.addField("fa_media_type", FieldType.TEXT);f.setDefault(null);
+		f = t.addField("fa_major_mime", FieldType.BLOB);f.setDefault("unknown");
+		f = t.addField("fa_minor_mime", FieldType.BLOB);f.setDefault("unknown");
+		f = t.addField("fa_description", FieldType.BLOB);
+		f = t.addField("fa_user", FieldType.INTEGER);f.setDefault("0");
+		f = t.addField("fa_user_text", FieldType.TEXT);
+		f = t.addField("fa_timestamp", FieldType.BLOB);f.setDefault("");
+		f = t.addField("fa_deleted", FieldType.INTEGER);f.setNotNull();f.setDefault("0");
+		f = t.addField("fa_sha1", FieldType.BLOB);f.setNotNull();f.setDefault("");
+		assertTrue(fs.equals(t));
+		*/
 		
 		//db.getEventHandler().fireEvent(new LogEvent("[SimpleDataLib["+db.getName()+"]]"+fs.getCreateStatement(), null, LogLevel.ERROR));
 		

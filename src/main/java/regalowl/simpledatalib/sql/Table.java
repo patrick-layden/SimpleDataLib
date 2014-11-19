@@ -46,6 +46,7 @@ public class Table {
 	public void loadTableFromString(String createString) {
 		createString = createString.substring(createString.indexOf("(") + 1, createString.lastIndexOf(")")).trim();
 		createString = createString.replaceAll("[\n\r]", "");
+		createString = createString.replaceAll(" +", " ");
 		createString = createString.replace("`", "");
 		if (createString.contains("PRIMARY KEY(") || createString.contains("PRIMARY KEY (")) {//if composite key section has spaces, remove them.
 			int pKeyIndex = createString.indexOf("PRIMARY KEY");
