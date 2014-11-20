@@ -10,6 +10,8 @@ import regalowl.simpledatalib.events.LogLevel;
 
 public class Table {
 	
+	private transient SQLWrite sw;
+	
 	private String name;
 	private SimpleDataLib sdl;
 	private ArrayList<Field> fields = new ArrayList<Field>();
@@ -20,6 +22,7 @@ public class Table {
 		this.name = name;
 		this.sdl = sdl;
 		this.hasCompositeKey = false;
+		this.sw = sdl.getSQLManager().getSQLWrite();
 	}
 	
 	/**
@@ -204,20 +207,26 @@ public class Table {
 	 * Saves this table to the database asynchronously
 	 */
 	public void saveAsync() {
-		sdl.getSQLManager().getSQLWrite().addToQueue(getCreateStatement(fields, false));
+		sw.addToQueue(getCreateStatement(fields, false));
 	}
 	/**
 	 * Adds the table creation statement to the synchronous SQL Write queue.  The table will be saved whenever the queue is written.
 	 */
 	public void save() {
-		sdl.getSQLManager().getSyncSQLWrite().queue(getCreateStatement(fields, false));
+		boolean state = sw.writeSync();
+		sw.writeSync(true);
+		sw.addToQueue(getCreateStatement(fields, false));
+		sw.writeSync(state);
 	}
 	/**
 	 * Synchronously saves the table to the database immediately.
 	 */
 	public void saveNow() {
-		sdl.getSQLManager().getSyncSQLWrite().queue(getCreateStatement(fields, false));
-		sdl.getSQLManager().getSyncSQLWrite().writeQueue();
+		boolean state = sw.writeSync();
+		sw.writeSync(true);
+		sw.addToQueue(getCreateStatement(fields, false));
+		sw.writeSyncQueue();
+		sw.writeSync(state);
 	}
 
 	
@@ -307,16 +316,19 @@ public class Table {
 				newFields.add(f);
 			}
 		}
-		sdl.getSQLManager().getSyncSQLWrite().queue(getCreateStatement(newFields, true));
-		sdl.getSQLManager().getSyncSQLWrite().writeQueue();
-		sdl.getSQLManager().getSyncSQLWrite().queue("INSERT INTO " + name + "_temp (" + getFieldNameString(fields) + ") SELECT " + getFieldNameString(fields) + " FROM " + name);
-		sdl.getSQLManager().getSyncSQLWrite().queue("DROP TABLE " + name );
-		sdl.getSQLManager().getSyncSQLWrite().queue(getCreateStatement(newFields, false));
-		sdl.getSQLManager().getSyncSQLWrite().writeQueue();
-		sdl.getSQLManager().getSyncSQLWrite().queue("INSERT INTO " + name + "(" + getFieldNameString(newFields) + ") SELECT " + getFieldNameString(newFields) + " FROM " + name + "_temp");
-		sdl.getSQLManager().getSyncSQLWrite().queue("DROP TABLE " + name + "_temp");
-		sdl.getSQLManager().getSyncSQLWrite().writeQueue();
+		boolean state = sw.writeSync();
+		sw.writeSync(true);
+		sw.addToQueue(getCreateStatement(newFields, true));
+		sw.writeSyncQueue();
+		sw.addToQueue("INSERT INTO " + name + "_temp (" + getFieldNameString(fields) + ") SELECT " + getFieldNameString(fields) + " FROM " + name);
+		sw.addToQueue("DROP TABLE " + name );
+		sw.addToQueue(getCreateStatement(newFields, false));
+		sw.writeSyncQueue();
+		sw.addToQueue("INSERT INTO " + name + "(" + getFieldNameString(newFields) + ") SELECT " + getFieldNameString(newFields) + " FROM " + name + "_temp");
+		sw.addToQueue("DROP TABLE " + name + "_temp");
+		sw.writeSyncQueue();
 		fields = newFields;
+		sw.writeSync(state);
 	}
 	
 	/**
@@ -328,16 +340,19 @@ public class Table {
 		if (newFields.contains(field)) {
 			newFields.remove(field);
 		}
-		sdl.getSQLManager().getSyncSQLWrite().queue(getCreateStatement(newFields, true));
-		sdl.getSQLManager().getSyncSQLWrite().writeQueue();
-		sdl.getSQLManager().getSyncSQLWrite().queue("INSERT INTO " + name + "_temp (" + getFieldNameString(newFields) + ") SELECT " + getFieldNameString(newFields) + " FROM " + name);
-		sdl.getSQLManager().getSyncSQLWrite().queue("DROP TABLE " + name );
-		sdl.getSQLManager().getSyncSQLWrite().queue(getCreateStatement(newFields, false));
-		sdl.getSQLManager().getSyncSQLWrite().writeQueue();
-		sdl.getSQLManager().getSyncSQLWrite().queue("INSERT INTO " + name + "(" + getFieldNameString(newFields) + ") SELECT " + getFieldNameString(newFields) + " FROM " + name + "_temp");
-		sdl.getSQLManager().getSyncSQLWrite().queue("DROP TABLE " + name + "_temp");
-		sdl.getSQLManager().getSyncSQLWrite().writeQueue();
+		boolean state = sw.writeSync();
+		sw.writeSync(true);
+		sw.addToQueue(getCreateStatement(newFields, true));
+		sw.writeSyncQueue();
+		sw.addToQueue("INSERT INTO " + name + "_temp (" + getFieldNameString(newFields) + ") SELECT " + getFieldNameString(newFields) + " FROM " + name);
+		sw.addToQueue("DROP TABLE " + name );
+		sw.addToQueue(getCreateStatement(newFields, false));
+		sw.writeSyncQueue();
+		sw.addToQueue("INSERT INTO " + name + "(" + getFieldNameString(newFields) + ") SELECT " + getFieldNameString(newFields) + " FROM " + name + "_temp");
+		sw.addToQueue("DROP TABLE " + name + "_temp");
+		sw.writeSyncQueue();
 		fields = newFields;
+		sw.writeSync(state);
 	}
 	
 	/**
@@ -355,16 +370,19 @@ public class Table {
 		} else {
 			return;
 		}
-		sdl.getSQLManager().getSyncSQLWrite().queue(getCreateStatement(newFields, true));
-		sdl.getSQLManager().getSyncSQLWrite().writeQueue();
-		sdl.getSQLManager().getSyncSQLWrite().queue("INSERT INTO " + name + "_temp (" + getFieldNameString(newFields) + ") SELECT " + getFieldNameString(fields) + " FROM " + name);
-		sdl.getSQLManager().getSyncSQLWrite().queue("DROP TABLE " + name );
-		sdl.getSQLManager().getSyncSQLWrite().queue(getCreateStatement(newFields, false));
-		sdl.getSQLManager().getSyncSQLWrite().writeQueue();
-		sdl.getSQLManager().getSyncSQLWrite().queue("INSERT INTO " + name + "(" + getFieldNameString(newFields) + ") SELECT " + getFieldNameString(newFields) + " FROM " + name + "_temp");
-		sdl.getSQLManager().getSyncSQLWrite().queue("DROP TABLE " + name + "_temp");
-		sdl.getSQLManager().getSyncSQLWrite().writeQueue();
+		boolean state = sw.writeSync();
+		sw.writeSync(true);
+		sw.addToQueue(getCreateStatement(newFields, true));
+		sw.writeSyncQueue();
+		sw.addToQueue("INSERT INTO " + name + "_temp (" + getFieldNameString(newFields) + ") SELECT " + getFieldNameString(fields) + " FROM " + name);
+		sw.addToQueue("DROP TABLE " + name );
+		sw.addToQueue(getCreateStatement(newFields, false));
+		sw.writeSyncQueue();
+		sw.addToQueue("INSERT INTO " + name + "(" + getFieldNameString(newFields) + ") SELECT " + getFieldNameString(newFields) + " FROM " + name + "_temp");
+		sw.addToQueue("DROP TABLE " + name + "_temp");
+		sw.writeSyncQueue();
 		fields = newFields;
+		sw.writeSync(state);
 	}
 
 	@Override

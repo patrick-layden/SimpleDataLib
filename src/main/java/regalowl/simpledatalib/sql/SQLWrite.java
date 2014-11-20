@@ -45,7 +45,7 @@ public class SQLWrite {
 	public SQLWrite(SimpleDataLib sdl, ConnectionPool pool) {
 		this.sdl = sdl;
 		this.pool = pool;
-		ssw = new SyncSQLWrite(sdl, pool, this);
+		ssw = new SyncSQLWrite(pool, this);
 		logWriteErrors.set(true);
 		logSQL.set(false);
 		queueCounter.set(0);
@@ -58,46 +58,30 @@ public class SQLWrite {
 	
 
 	public void addToQueue(WriteStatement statement) {
+		if (statement == null) {return;}
 		if (writeSync.get()) {
 			ssw.addToQueue(statement);
-			return;
+		} else {
+			writeQueue.put(queueCounter.getAndIncrement(), statement);
 		}
-		if (statement == null) {return;}
-		writeQueue.put(queueCounter.getAndIncrement(), statement);
 	}
 	public void addWriteStatementsToQueue(List<WriteStatement> statements) {
-		if (writeSync.get()) {
-			ssw.addWriteStatementsToQueue(statements);
-			return;
-		}
 		if (statements == null) {return;}
 		for (WriteStatement statement : statements) {
 			addToQueue(statement);
 		}
 	}
 	public void addToQueue(String statement) {
-		if (writeSync.get()) {
-			ssw.addToQueue(statement);
-			return;
-		}
 		if (statement == null) {return;}
 		addToQueue(new WriteStatement(statement, sdl));
 	}
 	public void addToQueue(List<String> statements) {
-		if (writeSync.get()) {
-			ssw.addToQueue(statements);
-			return;
-		}
 		if (statements == null) {return;}
 		for (String statement : statements) {
 			addToQueue(statement);
 		}
 	}
 	public void addToQueue(String statement, ArrayList<Object> parameters) {
-		if (writeSync.get()) {
-			ssw.addToQueue(statement, parameters);
-			return;
-		}
 		if (statement == null) {return;}
 		WriteStatement ws = new WriteStatement(statement, sdl);
 		for (Object param:parameters) {
@@ -329,5 +313,6 @@ public class SQLWrite {
 	public void writeSyncQueue() {
 		ssw.writeQueue();
 	}
+	
 
 }

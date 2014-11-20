@@ -1,22 +1,23 @@
 package regalowl.simpledatalib.sql;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 
-import regalowl.simpledatalib.SimpleDataLib;
 
 public class SyncSQLWrite {
 	
-	private SimpleDataLib sdl;
 	private SQLWrite sw;
 	private ConnectionPool pool;
 	private ArrayList<WriteStatement> queue = new ArrayList<WriteStatement>();
 	
-	public SyncSQLWrite(SimpleDataLib sdl, ConnectionPool pool, SQLWrite sw) {
-		this.sdl = sdl;
+	public SyncSQLWrite(ConnectionPool pool, SQLWrite sw) {
 		this.pool = pool;
 		this.sw = sw;
+	}
+	
+	public synchronized void addToQueue(WriteStatement statement) {
+		if (statement != null) {
+			queue.add(statement);
+		}
 	}
 	
 	public synchronized int getQueueSize() {
@@ -42,6 +43,7 @@ public class SyncSQLWrite {
 		queue.clear();
 	}
 	
+	/*
 	public synchronized void addWriteStatementsToQueue(List<WriteStatement> statements) {
 		for (WriteStatement statement:statements) {
 			if (statement != null) {
@@ -49,24 +51,17 @@ public class SyncSQLWrite {
 			}
 		}
 	}
-	public synchronized void addToQueue(WriteStatement statement) {
-		if (statement != null) {
-			queue.add(statement);
-		}
-	}
+	*/
+
+	
+	/*
 	public synchronized void addToQueue(String statement) {
 		if (statement != null) {
 			addToQueue(new WriteStatement(statement, sdl));
 		}
 	}
-	
-	public synchronized void addToQueue(List<String> statements) {
-		
-	}
-	
-	public void addToQueue(String statement, ArrayList<Object> parameters) {
-		
-	}
+	*/
+
 	
 /*
 	public synchronized void queueInsert(String table, HashMap<String, String> values) {
