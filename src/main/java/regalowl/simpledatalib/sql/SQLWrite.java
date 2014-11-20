@@ -16,6 +16,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 
 
+
 import regalowl.simpledatalib.SimpleDataLib;
 import regalowl.simpledatalib.events.LogEvent;
 import regalowl.simpledatalib.events.LogLevel;
@@ -37,12 +38,14 @@ public class SQLWrite {
     private final long writeTaskInterval = 30000L;
     
     private AtomicBoolean writeSync = new AtomicBoolean();
+    private SyncSQLWrite ssw;
     
     private Timer t = new Timer();
     
 	public SQLWrite(SimpleDataLib sdl, ConnectionPool pool) {
 		this.sdl = sdl;
 		this.pool = pool;
+		ssw = new SyncSQLWrite(sdl, pool, this);
 		logWriteErrors.set(true);
 		logSQL.set(false);
 		queueCounter.set(0);
@@ -56,7 +59,7 @@ public class SQLWrite {
 
 	public void addToQueue(WriteStatement statement) {
 		if (writeSync.get()) {
-			sdl.getSQLManager().getSyncSQLWrite().addToQueue(statement);
+			ssw.addToQueue(statement);
 			return;
 		}
 		if (statement == null) {return;}
@@ -64,7 +67,7 @@ public class SQLWrite {
 	}
 	public void addWriteStatementsToQueue(List<WriteStatement> statements) {
 		if (writeSync.get()) {
-			sdl.getSQLManager().getSyncSQLWrite().addWriteStatementsToQueue(statements);
+			ssw.addWriteStatementsToQueue(statements);
 			return;
 		}
 		if (statements == null) {return;}
@@ -74,7 +77,7 @@ public class SQLWrite {
 	}
 	public void addToQueue(String statement) {
 		if (writeSync.get()) {
-			sdl.getSQLManager().getSyncSQLWrite().addToQueue(statement);
+			ssw.addToQueue(statement);
 			return;
 		}
 		if (statement == null) {return;}
@@ -82,7 +85,7 @@ public class SQLWrite {
 	}
 	public void addToQueue(List<String> statements) {
 		if (writeSync.get()) {
-			sdl.getSQLManager().getSyncSQLWrite().addToQueue(statements);
+			ssw.addToQueue(statements);
 			return;
 		}
 		if (statements == null) {return;}
@@ -92,7 +95,7 @@ public class SQLWrite {
 	}
 	public void addToQueue(String statement, ArrayList<Object> parameters) {
 		if (writeSync.get()) {
-			sdl.getSQLManager().getSyncSQLWrite().addToQueue(statement, parameters);
+			ssw.addToQueue(statement, parameters);
 			return;
 		}
 		if (statement == null) {return;}
@@ -314,8 +317,17 @@ public class SQLWrite {
 		return logSQL.get();
 	}
 	
-	public void setWriteSync(boolean state) {
+	public boolean writeSync() {
+		return writeSync.get();
+	}
+	public void writeSync(boolean state) {
 		writeSync.set(state);
+	}
+	public int getSyncQueueSize() {
+		return ssw.getQueueSize();
+	}
+	public void writeSyncQueue() {
+		ssw.writeQueue();
 	}
 
 }

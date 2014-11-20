@@ -68,7 +68,7 @@ public class SyncSQLWrite {
 		
 	}
 	
-
+/*
 	public synchronized void queueInsert(String table, HashMap<String, String> values) {
 		addToQueue(sw.getInsertStatement(table, values));
 	}
@@ -78,6 +78,6 @@ public class SyncSQLWrite {
 	public synchronized void queueDelete(String table, HashMap<String, String> conditions) {
 		addToQueue(sw.getDeleteStatement(table, conditions));
 	}
-	
+	*/
 	
 }

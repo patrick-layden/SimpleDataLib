@@ -23,9 +23,7 @@ public class SQLManager {
 	private int port;
 	
 	private boolean useMySql;
-	private SQLWrite sw;
-	private SyncSQLWrite ssw;
-	private SQLRead sr;
+	private SQLWrite sw;	private SQLRead sr;
 	private ConnectionPool pool;
 	private int connectionPoolSize = 1;
 	private ArrayList<Table> tables = new ArrayList<Table>();
@@ -75,7 +73,6 @@ public class SQLManager {
 		if (databaseOk) {
 			pool = new ConnectionPool(sdl, connectionPoolSize);
 			sw = new SQLWrite(sdl, pool);
-			ssw = new SyncSQLWrite(sdl, pool);
 			sr = new SQLRead(sdl, pool);
 			dataBaseExists = true;
 		} else {
@@ -186,10 +183,13 @@ public class SQLManager {
 	 * Writes all stored tables to the database.
 	 */
 	public void saveTables() {
+		boolean writeState = sw.writeSync();
+		sw.writeSync(true);
 		for (Table t:tables) {
 			t.save();
 		}
-		ssw.writeQueue();
+		sw.writeSyncQueue();
+		sw.writeSync(writeState);
 	}
 	/**
 	 * Attempts to load all table data from the database.
@@ -203,9 +203,6 @@ public class SQLManager {
 	
 	public SQLWrite getSQLWrite() {
 		return sw;
-	}
-	public SyncSQLWrite getSyncSQLWrite() {
-		return ssw;
 	}
 	public SQLRead getSQLRead() {
 		return sr;
