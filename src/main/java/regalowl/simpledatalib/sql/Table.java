@@ -48,6 +48,7 @@ public class Table {
 		createString = createString.replaceAll("[\n\r]", "");
 		createString = createString.replaceAll(" +", " ");
 		createString = createString.replace("`", "");
+		createString = createString.replace("\"\"", "'");
 		if (createString.contains("PRIMARY KEY(") || createString.contains("PRIMARY KEY (")) {//if composite key section has spaces, remove them.
 			int pKeyIndex = createString.indexOf("PRIMARY KEY");
 			String pKeyString = createString.substring(pKeyIndex, createString.indexOf(")", pKeyIndex) + 1);
@@ -84,7 +85,7 @@ public class Table {
 			} else {
 				ft = FieldType.fromString(fType);
 			}
-
+			//System.out.println("[SimpleDataLib["+sdl.getName()+"]]"+fType);
 			Field f = new Field(fName, ft);
 			if (hasFieldSize) {
 				f.setFieldSize(fieldSize);
