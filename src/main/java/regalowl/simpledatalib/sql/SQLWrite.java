@@ -51,6 +51,7 @@ public class SQLWrite {
 		queueCounter.set(0);
 		processNext.set(0);
 		writeActive.set(false);
+		writeSync.set(false);
 		writeTask = new WriteTask();
 		t.schedule(writeTask, writeTaskInterval, writeTaskInterval);
 	}
