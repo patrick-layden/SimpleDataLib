@@ -25,8 +25,8 @@ public class SQLWrite {
 	private SimpleDataLib sdl;
 	private ConnectionPool pool;
 	
-	private ConcurrentHashMap<Long, WriteStatement> buffer = new ConcurrentHashMap<Long, WriteStatement>();
-	private AtomicLong bufferCounter = new AtomicLong();
+	private ConcurrentHashMap<Long, WriteStatement> writeQueue = new ConcurrentHashMap<Long, WriteStatement>();
+	private AtomicLong queueCounter = new AtomicLong();
 	private AtomicLong processNext = new AtomicLong();
 	
 	private AtomicBoolean logWriteErrors = new AtomicBoolean();;
@@ -36,6 +36,8 @@ public class SQLWrite {
     private WriteTask writeTask;
     private final long writeTaskInterval = 30000L;
     
+    private AtomicBoolean writeSync = new AtomicBoolean();
+    
     private Timer t = new Timer();
     
 	public SQLWrite(SimpleDataLib sdl, ConnectionPool pool) {
@@ -43,7 +45,7 @@ public class SQLWrite {
 		this.pool = pool;
 		logWriteErrors.set(true);
 		logSQL.set(false);
-		bufferCounter.set(0);
+		queueCounter.set(0);
 		processNext.set(0);
 		writeActive.set(false);
 		writeTask = new WriteTask();
@@ -52,27 +54,47 @@ public class SQLWrite {
 	
 	
 
-	public synchronized void addToQueue(WriteStatement statement) {
+	public void addToQueue(WriteStatement statement) {
+		if (writeSync.get()) {
+			sdl.getSQLManager().getSyncSQLWrite().addToQueue(statement);
+			return;
+		}
 		if (statement == null) {return;}
-		buffer.put(bufferCounter.getAndIncrement(), statement);
+		writeQueue.put(queueCounter.getAndIncrement(), statement);
 	}
-	public synchronized void addWriteStatementsToQueue(List<WriteStatement> statements) {
+	public void addWriteStatementsToQueue(List<WriteStatement> statements) {
+		if (writeSync.get()) {
+			sdl.getSQLManager().getSyncSQLWrite().addWriteStatementsToQueue(statements);
+			return;
+		}
 		if (statements == null) {return;}
 		for (WriteStatement statement : statements) {
 			addToQueue(statement);
 		}
 	}
-	public synchronized void addToQueue(String statement) {
+	public void addToQueue(String statement) {
+		if (writeSync.get()) {
+			sdl.getSQLManager().getSyncSQLWrite().addToQueue(statement);
+			return;
+		}
 		if (statement == null) {return;}
 		addToQueue(new WriteStatement(statement, sdl));
 	}
-	public synchronized void addToQueue(List<String> statements) {
+	public void addToQueue(List<String> statements) {
+		if (writeSync.get()) {
+			sdl.getSQLManager().getSyncSQLWrite().addToQueue(statements);
+			return;
+		}
 		if (statements == null) {return;}
 		for (String statement : statements) {
 			addToQueue(statement);
 		}
 	}
-	public synchronized void addToQueue(String statement, ArrayList<Object> parameters) {
+	public void addToQueue(String statement, ArrayList<Object> parameters) {
+		if (writeSync.get()) {
+			sdl.getSQLManager().getSyncSQLWrite().addToQueue(statement, parameters);
+			return;
+		}
 		if (statement == null) {return;}
 		WriteStatement ws = new WriteStatement(statement, sdl);
 		for (Object param:parameters) {
@@ -94,13 +116,13 @@ public class SQLWrite {
     	
 		public void run() {
 			if (stop) {return;}
-			if (buffer.size() == 0) {return;}
+			if (writeQueue.size() == 0) {return;}
 			writeActive.set(true);
 			database = pool.getDatabaseConnection();
 			writeArray = new ArrayList<WriteStatement>();
-			while (buffer.size() > 0) {
-				writeArray.add(buffer.get(processNext.get()));
-				buffer.remove(processNext.getAndIncrement());
+			while (writeQueue.size() > 0) {
+				writeArray.add(writeQueue.get(processNext.get()));
+				writeQueue.remove(processNext.getAndIncrement());
 			}
 			write();
 			pool.returnConnection(database);
@@ -141,7 +163,7 @@ public class SQLWrite {
 
 
 	public int getBufferSize() {
-		return buffer.size();
+		return writeQueue.size();
 	}
 
 
@@ -154,13 +176,13 @@ public class SQLWrite {
 		saveBuffer();
 	}
 	private void saveBuffer() {
-		if (buffer.size() == 0) {return;}
-		sdl.getEventPublisher().fireEvent(new LogEvent("[" + sdl.getName() + "]Saving the remaining SQL queue: [" + buffer.size() + " statements].  Please wait.", null, LogLevel.INFO));
+		if (writeQueue.size() == 0) {return;}
+		sdl.getEventPublisher().fireEvent(new LogEvent("[" + sdl.getName() + "]Saving the remaining SQL queue: [" + writeQueue.size() + " statements].  Please wait.", null, LogLevel.INFO));
 		DatabaseConnection database = new DatabaseConnection(sdl, false);
 		ArrayList<WriteStatement> writeArray = new ArrayList<WriteStatement>();
-		while (buffer.size() > 0) {
-			writeArray.add(buffer.get(processNext.get()));
-			buffer.remove(processNext.getAndIncrement());
+		while (writeQueue.size() > 0) {
+			writeArray.add(writeQueue.get(processNext.get()));
+			writeQueue.remove(processNext.getAndIncrement());
 		}
 		WriteResult result = database.write(writeArray);
 		if (result.getStatus() == WriteResultType.SUCCESS) {
@@ -191,7 +213,7 @@ public class SQLWrite {
 				}
 			}
 		}
-		buffer.clear();
+		writeQueue.clear();
 		sdl.getEventPublisher().fireEvent(new LogEvent("[" + sdl.getName() + "]SQL queue save complete.", null, LogLevel.INFO));
 	}
 
@@ -290,6 +312,10 @@ public class SQLWrite {
 	}
 	public boolean logSQL() {
 		return logSQL.get();
+	}
+	
+	public void setWriteSync(boolean state) {
+		writeSync.set(state);
 	}
 
 }

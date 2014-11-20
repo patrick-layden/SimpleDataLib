@@ -13,13 +13,13 @@ public class SyncSQLWrite {
 	private ConnectionPool pool;
 	private ArrayList<WriteStatement> queue = new ArrayList<WriteStatement>();
 	
-	public SyncSQLWrite(SimpleDataLib sdl, ConnectionPool pool) {
+	public SyncSQLWrite(SimpleDataLib sdl, ConnectionPool pool, SQLWrite sw) {
 		this.sdl = sdl;
 		this.pool = pool;
-		this.sw = sdl.getSQLManager().getSQLWrite();
+		this.sw = sw;
 	}
 	
-	public int getQueueSize() {
+	public synchronized int getQueueSize() {
 		return queue.size();
 	}
 	
@@ -42,33 +42,41 @@ public class SyncSQLWrite {
 		queue.clear();
 	}
 	
-	public synchronized void queue(List<WriteStatement> statements) {
+	public synchronized void addWriteStatementsToQueue(List<WriteStatement> statements) {
 		for (WriteStatement statement:statements) {
 			if (statement != null) {
 				queue.add(statement);
 			}
 		}
 	}
-	public synchronized void queue(WriteStatement statement) {
+	public synchronized void addToQueue(WriteStatement statement) {
 		if (statement != null) {
 			queue.add(statement);
 		}
 	}
-	public synchronized void queue(String statement) {
+	public synchronized void addToQueue(String statement) {
 		if (statement != null) {
-			queue(new WriteStatement(statement, sdl));
+			addToQueue(new WriteStatement(statement, sdl));
 		}
+	}
+	
+	public synchronized void addToQueue(List<String> statements) {
+		
+	}
+	
+	public void addToQueue(String statement, ArrayList<Object> parameters) {
+		
 	}
 	
 
 	public synchronized void queueInsert(String table, HashMap<String, String> values) {
-		queue(sw.getInsertStatement(table, values));
+		addToQueue(sw.getInsertStatement(table, values));
 	}
 	public synchronized void queueUpdate(String table, HashMap<String, String> values, HashMap<String, String> conditions) {
-		queue(sw.getUpdateStatement(table, values, conditions));
+		addToQueue(sw.getUpdateStatement(table, values, conditions));
 	}
 	public synchronized void queueDelete(String table, HashMap<String, String> conditions) {
-		queue(sw.getDeleteStatement(table, conditions));
+		addToQueue(sw.getDeleteStatement(table, conditions));
 	}
 	
 	
