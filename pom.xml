@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>regalowl.simpledatalib</groupId>
   <artifactId>simpledatalib</artifactId>
-  <version>0.1.040-SNAPSHOT</version>
+  <version>0.1.041-SNAPSHOT</version>
 	<build>
 		<plugins>
 			<plugin>

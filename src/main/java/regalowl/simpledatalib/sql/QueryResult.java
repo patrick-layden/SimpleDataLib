@@ -29,7 +29,9 @@ public class QueryResult {
 	public void addData(int columnIndex, String object) {
 		data.get(columnIndex - 1).add(object);
 	}
-	
+	public void reset() {
+		currentRow = -1;
+	}
 
 	public boolean next() {
 		currentRow++;
