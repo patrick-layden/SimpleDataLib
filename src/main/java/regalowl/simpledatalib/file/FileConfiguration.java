@@ -152,8 +152,8 @@ public class FileConfiguration {
 	}
 	
 	public boolean isSet(String key) {
-		if (getData(key) != null) return true;
-		return false;
+		if (getData(key) == null) return false;
+		return true;
 	}
 	
 	
