@@ -102,9 +102,9 @@ public class WriteStatement extends BasicStatement {
 				paramList += "["+p.toString() + "], ";
 			}
 			paramList = paramList.substring(0, paramList.length() - 2) + "]";
-			ew.writeError(null, statement.replace("%n", "[new line]") + "%nParameters: "+paramList.replace("%n", "[new line]"), true);
+			ew.writeError(null, statement + "%nParameters: "+paramList, true);
 		} else {
-			ew.writeError(null, statement.replace("%n", "[new line]"), true);
+			ew.writeError(null, statement, true);
 		}
 	}
 

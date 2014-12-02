@@ -57,10 +57,10 @@ public class ErrorWriter {
 			bw.write(sdl.getName()+ "["+CommonFunctions.getTimeStamp()+"]");
 			bw.newLine();
 			if (text != null) {
-				bw.write(String.format(text));
+				bw.write(text.replace("{{newline}}", System.getProperty("line.separator")));
 				bw.newLine();
 			}
-			if (error != null) {bw.write(String.format(error));}
+			if (error != null) {bw.write(error);}
 			bw.newLine();
 			bw.newLine();
 			bw.close();

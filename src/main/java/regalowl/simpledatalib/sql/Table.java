@@ -28,24 +28,38 @@ public class Table {
 	/**
 	 * Loads the table structure from the database if it exists.  Returns true if successful.
 	 */
-	public boolean loadTable() {
+	
+	public void loadTable() {
+		TableLoader tl = new TableLoader(name, sdl);
+		setFields(tl.getFields());
+		if (tl.hasCompositeKey()) setCompositeKey(tl.getCompositeKey());
+		/*
 		String createStatement = getCreateStatementFromDB();
 		if (createStatement != null) {
 			try {
 				loadTableFromString(createStatement);
 				return true;
 			} catch (Exception e) {
-				sdl.getEventPublisher().fireEvent(new LogEvent("[SimpleDataLib["+sdl.getName()+"]]Failed to load table from database: ["+name+"]", e, LogLevel.ERROR));
+				sdl.getEventPublisher().fireEvent(new LogEvent("[SimpleDataLib["+sdl.getName()+"]]Failed to load table from database: ["+name+"]" + ", "
+						+ "Create statement: + [" + createStatement + "]", e, LogLevel.ERROR));
 				return false;
 			}
 		}
 		sdl.getEventPublisher().fireEvent(new LogEvent("[SimpleDataLib["+sdl.getName()+"]]Table doesn't exist in database: ["+name+"]", null, LogLevel.ERROR));
 		return false;
+		*/
 	}
+	public void loadTableFromString(String createString) {
+		TableLoader tl = new TableLoader(name, sdl, createString);
+		setFields(tl.getFields());
+		if (tl.hasCompositeKey()) setCompositeKey(tl.getCompositeKey());
+	}
+
+
+
+
 	
-	/**
-	 * Loads all Table data from the given SQL create statement.
-	 */
+	/*
 	public void loadTableFromString(String createString) {
 		createString = createString.substring(createString.indexOf("(") + 1, createString.lastIndexOf(")")).trim();
 		createString = createString.replaceAll("[\n\r]", "");
@@ -122,20 +136,9 @@ public class Table {
 			hasCompositeKey = true;
 		}
 	}
+	*/
 	
-	/**
-	 * Returns a SQL create statement for this table from the database.
-	 */
-	private String getCreateStatementFromDB() {
-		if (sdl.getSQLManager().useMySQL()) {
-			QueryResult qr = sdl.getSQLManager().getSQLRead().select("SHOW CREATE TABLE " + name);
-			if (qr.next()) return qr.getString(2);
-		} else {
-			QueryResult qr = sdl.getSQLManager().getSQLRead().select("SELECT sql FROM sqlite_master WHERE tbl_name = '"+name+"'");
-			if (qr.next()) return qr.getString(1);
-		}
-		return null;
-	}
+
 	
 	/**
 	 * @return The name of this Table.
@@ -194,11 +197,17 @@ public class Table {
 	}
 	
 	
+	public void setFields(ArrayList<Field> fields) {
+		fields.clear();
+		this.fields.addAll(fields);
+	}
+	
 	/**
 	 * Sets the composite key for this table.
 	 * @param compositeKey An ArrayList of the Field objects that comprise the composite key.
 	 */
 	public void setCompositeKey(ArrayList<Field> compositeKey) {
+		compositeKey.clear();
 		this.compositeKey.addAll(compositeKey);
 		hasCompositeKey = true;
 	}

@@ -8,6 +8,8 @@ import org.junit.Test;
 
 import regalowl.simpledatalib.SimpleDataLib;
 import regalowl.simpledatalib.TestLogger;
+import regalowl.simpledatalib.events.LogEvent;
+import regalowl.simpledatalib.events.LogLevel;
 import regalowl.simpledatalib.sql.Field;
 import regalowl.simpledatalib.sql.FieldType;
 import regalowl.simpledatalib.sql.SQLManager;
@@ -140,6 +142,18 @@ public class TestTable {
 		t.setCompositeKey(compositeKey);
 		assertTrue(fs.equals(t));
 		
+		
+		fs = sm.generateTable("test5");
+		createStatement = "CREATE TABLE `test5` (`NAME` varchar(100) NOT NULL,`DISPLAY_NAME` varchar(255) DEFAULT NULL,"
+				+ "`COMPONENTS` varchar(1000) DEFAULT NULL,PRIMARY KEY (`NAME`)) ENGINE=InnoDB DEFAULT CHARSET=latin1";
+		fs.loadTableFromString(createStatement);
+		db.getEventPublisher().fireEvent(new LogEvent("[SimpleDataLib["+db.getName()+"]]"+fs.getCreateStatement(), null, LogLevel.ERROR));
+		t = sm.generateTable("test5");
+		f = t.addField("NAME", FieldType.VARCHAR);f.setFieldSize(100);f.setNotNull();f.setPrimaryKey();
+		f = t.addField("DISPLAY_NAME", FieldType.VARCHAR);f.setFieldSize(255);
+		f = t.addField("COMPONENTS", FieldType.VARCHAR);f.setFieldSize(1000);
+		db.getEventPublisher().fireEvent(new LogEvent("[SimpleDataLib["+db.getName()+"]]"+t.getCreateStatement(), null, LogLevel.ERROR));
+		assertTrue(fs.equals(t));
 		/*
 		fs = sm.generateTable("test5");
 		createStatement = "CREATE TABLE test5 (fa_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "
