@@ -179,10 +179,10 @@ public class CommonFunctions {
 	
 	public static ArrayList<String> explode(String string, String delimiter) {
 		ArrayList<String> array = new ArrayList<String>();
-		if (string == null || delimiter == null) {
+		if (string == null || delimiter == null || string == "") {
 			return array;
 		}
-		if (!string.contains(delimiter) && string.length() > 0) {
+		if (!string.contains(delimiter)) {
 			array.add(string);
 			return array;
 		}
@@ -223,8 +223,8 @@ public class CommonFunctions {
 	
 	public static ArrayList<String> explode(String string) {
 		ArrayList<String> array = new ArrayList<String>();
-		if (string == null) return array;
-		if (!string.contains(",") && string.length() > 0) {
+		if (string == null || string.length() == 0) return array;
+		if (!string.contains(",")) {
 			array.add(string);
 			return array;
 		}
