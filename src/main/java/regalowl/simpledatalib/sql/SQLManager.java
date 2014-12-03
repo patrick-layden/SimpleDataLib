@@ -102,6 +102,7 @@ public class SQLManager {
 	}
 	private boolean checkMySQL() {
 		try {
+			Class.forName("com.mysql.jdbc.Driver");
 			Connection connect = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + database, username, password);
 			Statement state = connect.createStatement();
 			state.execute("DROP TABLE IF EXISTS dbtest12343432");
