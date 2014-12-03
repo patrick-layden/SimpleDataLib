@@ -8,8 +8,6 @@ import org.junit.Test;
 
 import regalowl.simpledatalib.SimpleDataLib;
 import regalowl.simpledatalib.TestLogger;
-import regalowl.simpledatalib.events.LogEvent;
-import regalowl.simpledatalib.events.LogLevel;
 import regalowl.simpledatalib.sql.Field;
 import regalowl.simpledatalib.sql.FieldType;
 import regalowl.simpledatalib.sql.SQLManager;
@@ -49,6 +47,8 @@ public class TestTable {
 		f = t.addField("WORLD", FieldType.TINYTEXT);f.setNotNull();
 		f = t.addField("HASH", FieldType.VARCHAR);f.setFieldSize(255);f.setNotNull();f.setDefault("");
 		f = t.addField("SALT", FieldType.VARCHAR);f.setFieldSize(255);f.setNotNull();f.setDefault("");
+		//System.out.println(fs.getCreateStatement());
+		//System.out.println(t.getCreateStatement());
 		assertTrue(fs.equals(t));
 
 		fs = sm.generateTable("test2");
@@ -75,6 +75,8 @@ public class TestTable {
 		f = t.addField("MAX_STOCK", FieldType.INTEGER);f.setNotNull();f.setDefault("1000000");
 		f = t.addField("STATUS", FieldType.VARCHAR);f.setFieldSize(255);f.setNotNull();
 		t.setCompositeKey(compositeKey);
+		//System.out.println(fs.getCreateStatement());
+		//System.out.println(t.getCreateStatement());
 		assertTrue(fs.equals(t));
 		
 		fs = sm.generateTable("test3");
@@ -107,6 +109,8 @@ public class TestTable {
 		f = t.addField("ECONOMY", FieldType.VARCHAR);f.setFieldSize(255);f.setNotNull();
 		f = t.addField("ECLASS", FieldType.VARCHAR);f.setFieldSize(255);f.setNotNull();
 		t.setCompositeKey(compositeKey);
+		//System.out.println(fs.getCreateStatement());
+		//System.out.println(t.getCreateStatement());
 		assertTrue(fs.equals(t));
 		
 		
@@ -140,6 +144,8 @@ public class TestTable {
 		f = t.addField("ECONOMY", FieldType.VARCHAR);f.setFieldSize(255);f.setNotNull();
 		f = t.addField("ECLASS", FieldType.VARCHAR);f.setFieldSize(255);f.setNotNull();
 		t.setCompositeKey(compositeKey);
+		//System.out.println(fs.getCreateStatement());
+		//System.out.println(t.getCreateStatement());
 		assertTrue(fs.equals(t));
 		
 		
@@ -147,16 +153,19 @@ public class TestTable {
 		createStatement = "CREATE TABLE `test5` (`NAME` varchar(100) NOT NULL,`DISPLAY_NAME` varchar(255) DEFAULT NULL,"
 				+ "`COMPONENTS` varchar(1000) DEFAULT NULL,PRIMARY KEY (`NAME`)) ENGINE=InnoDB DEFAULT CHARSET=latin1";
 		fs.loadTableFromString(createStatement);
-		db.getEventPublisher().fireEvent(new LogEvent("[SimpleDataLib["+db.getName()+"]]"+fs.getCreateStatement(), null, LogLevel.ERROR));
+		//db.getEventPublisher().fireEvent(new LogEvent("[SimpleDataLib["+db.getName()+"]]"+fs.getCreateStatement(), null, LogLevel.ERROR));
 		t = sm.generateTable("test5");
 		f = t.addField("NAME", FieldType.VARCHAR);f.setFieldSize(100);f.setNotNull();f.setPrimaryKey();
 		f = t.addField("DISPLAY_NAME", FieldType.VARCHAR);f.setFieldSize(255);
 		f = t.addField("COMPONENTS", FieldType.VARCHAR);f.setFieldSize(1000);
-		db.getEventPublisher().fireEvent(new LogEvent("[SimpleDataLib["+db.getName()+"]]"+t.getCreateStatement(), null, LogLevel.ERROR));
+		//db.getEventPublisher().fireEvent(new LogEvent("[SimpleDataLib["+db.getName()+"]]"+t.getCreateStatement(), null, LogLevel.ERROR));
+		//System.out.println(fs.getCreateStatement());
+		//System.out.println(t.getCreateStatement());
 		assertTrue(fs.equals(t));
-		/*
-		fs = sm.generateTable("test5");
-		createStatement = "CREATE TABLE test5 (fa_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "
+		
+		
+		fs = sm.generateTable("test6");
+		createStatement = "CREATE TABLE test6 (fa_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "
 				+ "fa_name TEXT  NOT NULL default '', "
 				+ "fa_archive_name TEXT  default '', "
 				+ "fa_storage_group BLOB,"
@@ -179,7 +188,7 @@ public class TestTable {
 				+ "fa_deleted INTEGER  NOT NULL default 0, "
 				+ "fa_sha1 BLOB NOT NULL default '')";
 		fs.loadTableFromString(createStatement);
-		t = sm.generateTable("test5");
+		t = sm.generateTable("test6");
 		f = t.addField("fa_id", FieldType.INTEGER);f.setNotNull();f.setPrimaryKey();f.setAutoIncrement();
 		f = t.addField("fa_name", FieldType.TEXT);f.setNotNull();f.setDefault("");
 		f = t.addField("fa_archive_name", FieldType.TEXT);f.setDefault("");
@@ -194,7 +203,7 @@ public class TestTable {
 		f = t.addField("fa_metadata", FieldType.BLOB);
 		f = t.addField("fa_bits", FieldType.INTEGER);f.setDefault("0");
 		f = t.addField("fa_media_type", FieldType.TEXT);f.setDefault(null);
-		f = t.addField("fa_major_mime", FieldType.BLOB);f.setDefault("unknown");
+		f = t.addField("fa_major_mime", FieldType.TEXT);f.setDefault("unknown");
 		f = t.addField("fa_minor_mime", FieldType.BLOB);f.setDefault("unknown");
 		f = t.addField("fa_description", FieldType.BLOB);
 		f = t.addField("fa_user", FieldType.INTEGER);f.setDefault("0");
@@ -202,10 +211,32 @@ public class TestTable {
 		f = t.addField("fa_timestamp", FieldType.BLOB);f.setDefault("");
 		f = t.addField("fa_deleted", FieldType.INTEGER);f.setNotNull();f.setDefault("0");
 		f = t.addField("fa_sha1", FieldType.BLOB);f.setNotNull();f.setDefault("");
+		//System.out.println(fs.getCreateStatement());
+		//System.out.println(t.getCreateStatement());
 		assertTrue(fs.equals(t));
-		*/
 		
-		//db.getEventHandler().fireEvent(new LogEvent("[SimpleDataLib["+db.getName()+"]]"+fs.getCreateStatement(), null, LogLevel.ERROR));
-		
+		fs = sm.generateTable("test7");
+		createStatement = "CREATE TABLE `test7` (`ID` int(11) NOT NULL AUTO_INCREMENT,"
+				+ "`NAME` varchar(255) DEFAULT NULL,`UUID` varchar(255) DEFAULT NULL,`ECONOMY` tinytext,"
+				+ "`BALANCE` double NOT NULL DEFAULT '0',`X` double NOT NULL DEFAULT '0',`Y` double NOT NULL DEFAULT '0',"
+				+ "`Z` double NOT NULL DEFAULT '0',`WORLD` tinytext NOT NULL,`HASH` varchar(255) NOT NULL DEFAULT '',"
+				+ "`SALT` varchar(255) NOT NULL DEFAULT '',PRIMARY KEY (`ID`),UNIQUE KEY `NAME` (`NAME`), "
+				+ "UNIQUE KEY `UUID` (`UUID`)) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1";
+		fs.loadTableFromString(createStatement);
+		t = sm.generateTable("test7");
+		f = t.addField("ID", FieldType.INTEGER);f.setNotNull();f.setPrimaryKey();f.setAutoIncrement();
+		f = t.addField("NAME", FieldType.VARCHAR);f.setFieldSize(255);f.setUnique();
+		f = t.addField("UUID", FieldType.VARCHAR);f.setFieldSize(255);f.setUnique();
+		f = t.addField("ECONOMY", FieldType.TINYTEXT);
+		f = t.addField("BALANCE", FieldType.DOUBLE);f.setNotNull();f.setDefault("0");
+		f = t.addField("X", FieldType.DOUBLE);f.setNotNull();f.setDefault("0");
+		f = t.addField("Y", FieldType.DOUBLE);f.setNotNull();f.setDefault("0");
+		f = t.addField("Z", FieldType.DOUBLE);f.setNotNull();f.setDefault("0");
+		f = t.addField("WORLD", FieldType.TINYTEXT);f.setNotNull();
+		f = t.addField("HASH", FieldType.VARCHAR);f.setFieldSize(255);f.setNotNull();f.setDefault("");
+		f = t.addField("SALT", FieldType.VARCHAR);f.setFieldSize(255);f.setNotNull();f.setDefault("");
+		//System.out.println(fs.getCreateStatement());
+		//System.out.println(t.getCreateStatement());
+		assertTrue(fs.equals(t));
 	}
 }

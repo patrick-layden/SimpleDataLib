@@ -12,6 +12,7 @@ public class TableLoader {
 	private String createString;
 	private String s;
 	private Field f;
+	private String debugMessage = "";
 	
 	private ArrayList<Field> fields = new ArrayList<Field>();
 	private boolean hasCompositeKey;
@@ -21,14 +22,22 @@ public class TableLoader {
 		this.name = name;
 		this.sdl = sdl;
 		this.createString = getCreateStatementFromDB();
-		loadTableFromString();
+		try {
+			loadTableFromString();
+		} catch (Exception e) {
+			sdl.getErrorWriter().writeError(e, debugMessage);
+		}
 	}
 	
 	public TableLoader(String name, SimpleDataLib sdl, String createString) {
 		this.name = name;
 		this.sdl = sdl;
 		this.createString = createString;
-		loadTableFromString();
+		try {
+			loadTableFromString();
+		} catch (Exception e) {
+			sdl.getErrorWriter().writeError(e, debugMessage);
+		}
 	}
 	
 	public ArrayList<Field> getFields() {
@@ -69,22 +78,27 @@ public class TableLoader {
 	 */
 	private void loadTableFromString() {
 		this.s = createString;
+		appendDebug("Initial Input: " + createString);
+		s = s.replaceAll("DEFAULT NULL", "");
 		s = s.replaceAll("[\n\r]", "");
+		s = s.replace(",", ", ");
 		s = s.replaceAll(" +", " ");
 		s = s.replace("`", "");
 		s = s.replace("\"\"", "'");
 		s = s.substring(s.indexOf("(") + 1, s.lastIndexOf(")")).trim();
-		System.out.println("start: "+s);
+		appendDebug("Processed Input: " + s);
 		int counter = 0;
-		while (s.length() > 0) {
-			if (counter > 1000) {System.out.println("runaway: " + s);break;}
+		while (s.replace(" ", "").length() > 0) {
+			if (counter > 1000) break;
 			while (hasNextProperty());
+			if (s.replace(" ", "").length() == 0) break;
 			boolean hasFieldSize = false;
 			int fieldSize = 0;
 			String fieldName = getBefore(s, " ");
 			s = getAfter(s, " ");
-			System.out.println("field name: "+s);
+			appendDebug("[NAME]"+s);
 			String typeString = getBefore(s, " ");
+			if (typeString.contains(",")) typeString = getBefore(s, ",");
 			FieldType fieldType = null;
 			if (typeString.contains("(")) {
 				fieldType = FieldType.fromString(getBefore(typeString, "("));
@@ -95,11 +109,11 @@ public class TableLoader {
 			} else {
 				fieldType = FieldType.fromString(typeString);
 			}
+			if (fieldType == null) appendDebug("Field null from input: " + typeString);
 			f = new Field(fieldName, fieldType);
 			if (hasFieldSize) f.setFieldSize(fieldSize);
 			s = getAfter(s, " ");
-			System.out.println("field type: "+s);
-			f.setFieldSize(fieldSize);
+			appendDebug("[TYPE]"+s);
 			fields.add(f);
 			counter++;
 		}
@@ -108,87 +122,73 @@ public class TableLoader {
 	private boolean hasNextProperty() {
 		if (s.toUpperCase().startsWith(" ")) {
 			s = getAfter(s, 1);
-			System.out.println("space: " + s);
-		}
-		if (s.toUpperCase().startsWith(", ")) {
+			appendDebug("[SPACE]"+s);
+		} else if (s.toUpperCase().startsWith(", ")) {
 			s = getAfter(s, 2);
-			System.out.println("comma: " + s);
-			return false;
-		}
-		if (s.toUpperCase().startsWith(",")) {
+			appendDebug("[COMMA]"+s);
+		} else if (s.toUpperCase().startsWith(",")) {
 			s = getAfter(s, 1);
-			System.out.println("comma: " + s);
-			return false;
-		}
-		if (s.toUpperCase().startsWith("PRIMARY KEY(")) {
+			appendDebug("[COMMA]"+s);
+		} else if (s.toUpperCase().startsWith("PRIMARY KEY(")) {
 			s = getAfter(s, 12);
 			handleCompositeKey();
-			System.out.println("composite: " + s);
-		}
-		if (s.toUpperCase().startsWith("PRIMARY KEY (")) {
+			appendDebug("[COMPOSITE KEY]"+s);
+		} else if (s.toUpperCase().startsWith("PRIMARY KEY (")) {
 			s = getAfter(s, 13);
 			handleCompositeKey();
-			System.out.println("composite: " + s);
-		}
-		if (s.toUpperCase().startsWith("NOT NULL")) {
+			appendDebug("[COMPOSITE KEY]"+s);
+		} else if (s.toUpperCase().startsWith("UNIQUE KEY")) {
+			s = getAfter(s, "(");
+			handleUniqueKey();
+			appendDebug("[UNIQUE KEY]"+s);
+		} else if (s.toUpperCase().startsWith("NOT NULL")) {
 			f.setNotNull();
 			s = getAfter(s, 8);
-			System.out.println("not null: " + s);
-			return true;
-		}
-		if (s.toUpperCase().startsWith("PRIMARY KEY")) {
+			appendDebug("[NOT NULL]"+s);
+		} else if (s.toUpperCase().startsWith("PRIMARY KEY")) {
 			f.setPrimaryKey();
 			s = getAfter(s, 11);
-			System.out.println("primary: " + s);
-			return true;
-		}
-		if (s.toUpperCase().startsWith("UNIQUE")) {
+			appendDebug("[PRIMARY KEY]"+s);
+		} else if (s.toUpperCase().startsWith("UNIQUE")) {
 			f.setUnique();
 			s = getAfter(s, 6);
-			System.out.println("unique: " + s);
-			return true;
-		}
-		if (s.toUpperCase().startsWith("AUTO_INCREMENT")) {
+			appendDebug("[UNIQUE]"+s);
+		} else if (s.toUpperCase().startsWith("AUTO_INCREMENT")) {
 			f.setAutoIncrement();
 			s = getAfter(s, 14);
-			System.out.println("increment: " + s);
-			return true;
-		}
-		if (s.toUpperCase().startsWith("AUTOINCREMENT")) {
+			appendDebug("[AUTOINCREMENT]"+s);
+		} else if (s.toUpperCase().startsWith("AUTOINCREMENT")) {
 			f.setAutoIncrement();
 			s = getAfter(s, 13);
-			System.out.println("increment: " + s);
-			return true;
-		}
-		if (s.toUpperCase().startsWith("DEFAULT")) {
-			s = getAfter(s, 7);
+			appendDebug("[AUTOINCREMENT]"+s);
+		} else if (s.toUpperCase().startsWith("DEFAULT")) {
+			s = getAfter(s, 8);
 			String defaultValue = "";
-			if (s.startsWith("'")) {
+			if (s.startsWith("''")) {
+				s = getAfter(s, "''");
+			} else if (s.startsWith("'")) {
 				defaultValue = getBetween(s, "'", "'");
 				s = getAfter(s, defaultValue + "'");
-				System.out.println("default: " + s);
-			} else if (s.startsWith(" '")) {
-				defaultValue = getBetween(s, " '", "'");
-				s = getAfter(s, defaultValue + "'");
-				System.out.println("default: " + s);
 			} else {
 				defaultValue = getBefore(s, " ");
+				if (defaultValue.endsWith(",")) defaultValue = getBefore(s, ",");
 				s = getAfter(s, " ");
-				System.out.println("default: " + s);
 			}
+			appendDebug("[DEFAULT]"+s);
 			f.setDefault(defaultValue);
-			return true;
+		} else {
+			return false;
 		}
-
-		return false;
+		return true;
 	}
 	
 	private void handleCompositeKey() {
 		String keyString = getBefore(s, ")");
 		s = getAfter(s, keyString + ")");
-		System.out.println(s);
 		keyString = keyString.replace(", ", ",");
 		ArrayList<String> primaryKey = CommonFunctions.explode(keyString, ",");
+		appendDebug("Composite Key Explode Input: " + keyString);
+		appendDebug("Composite Key Array: " + primaryKey.toString());
 		if (primaryKey.size() > 1) {
 			for (String n:primaryKey) {
 				Field f = getField(n);
@@ -199,6 +199,14 @@ public class TableLoader {
 			Field f = getField(primaryKey.get(0));
 			f.setPrimaryKey();
 		}
+	}
+	
+	//TODO handle composite unique keys - just copy primary key
+	private void handleUniqueKey() {
+		String keyString = getBefore(s, ")");
+		s = getAfter(s, keyString + ")");
+		Field f = getField(keyString);
+		f.setUnique();
 	}
 	
 	
@@ -222,5 +230,9 @@ public class TableLoader {
 			}
 		}
 		return null;
+	}
+	
+	private void appendDebug(String message) {
+		debugMessage += message + "{{newline}}";
 	}
 }

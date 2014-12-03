@@ -179,7 +179,11 @@ public class CommonFunctions {
 	
 	public static ArrayList<String> explode(String string, String delimiter) {
 		ArrayList<String> array = new ArrayList<String>();
-		if (string == null || delimiter == null || !string.contains(delimiter)) {
+		if (string == null || delimiter == null) {
+			return array;
+		}
+		if (!string.contains(delimiter)) {
+			array.add(string);
 			return array;
 		}
 		if (string.indexOf(delimiter) == 0) {
@@ -219,7 +223,11 @@ public class CommonFunctions {
 	
 	public static ArrayList<String> explode(String string) {
 		ArrayList<String> array = new ArrayList<String>();
-		if (string == null || !string.contains(",")) {return array;}
+		if (string == null) return array;
+		if (!string.contains(",")) {
+			array.add(string);
+			return array;
+		}
 		int nestLevel = getNestLevel(string);
 		String comma = "["+nestLevel+"]";
 		if (string.indexOf(",") == 0) {string = string.substring(1, string.length());}

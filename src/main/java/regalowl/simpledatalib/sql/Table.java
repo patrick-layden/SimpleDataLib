@@ -3,10 +3,7 @@ package regalowl.simpledatalib.sql;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import regalowl.simpledatalib.CommonFunctions;
 import regalowl.simpledatalib.SimpleDataLib;
-import regalowl.simpledatalib.events.LogEvent;
-import regalowl.simpledatalib.events.LogLevel;
 
 public class Table {
 	
@@ -26,120 +23,20 @@ public class Table {
 	}
 	
 	/**
-	 * Loads the table structure from the database if it exists.  Returns true if successful.
+	 * Loads the table structure from the database if it exists.
 	 */
-	
 	public void loadTable() {
 		TableLoader tl = new TableLoader(name, sdl);
 		setFields(tl.getFields());
 		if (tl.hasCompositeKey()) setCompositeKey(tl.getCompositeKey());
-		/*
-		String createStatement = getCreateStatementFromDB();
-		if (createStatement != null) {
-			try {
-				loadTableFromString(createStatement);
-				return true;
-			} catch (Exception e) {
-				sdl.getEventPublisher().fireEvent(new LogEvent("[SimpleDataLib["+sdl.getName()+"]]Failed to load table from database: ["+name+"]" + ", "
-						+ "Create statement: + [" + createStatement + "]", e, LogLevel.ERROR));
-				return false;
-			}
-		}
-		sdl.getEventPublisher().fireEvent(new LogEvent("[SimpleDataLib["+sdl.getName()+"]]Table doesn't exist in database: ["+name+"]", null, LogLevel.ERROR));
-		return false;
-		*/
 	}
+	
 	public void loadTableFromString(String createString) {
 		TableLoader tl = new TableLoader(name, sdl, createString);
 		setFields(tl.getFields());
 		if (tl.hasCompositeKey()) setCompositeKey(tl.getCompositeKey());
 	}
 
-
-
-
-	
-	/*
-	public void loadTableFromString(String createString) {
-		createString = createString.substring(createString.indexOf("(") + 1, createString.lastIndexOf(")")).trim();
-		createString = createString.replaceAll("[\n\r]", "");
-		createString = createString.replaceAll(" +", " ");
-		createString = createString.replace("`", "");
-		createString = createString.replace("\"\"", "'");
-		if (createString.contains("PRIMARY KEY(") || createString.contains("PRIMARY KEY (")) {//if composite key section has spaces, remove them.
-			int pKeyIndex = createString.indexOf("PRIMARY KEY");
-			String pKeyString = createString.substring(pKeyIndex, createString.indexOf(")", pKeyIndex) + 1);
-			String newPKeyString = pKeyString.replace(", ", ",");
-			createString = createString.replace(pKeyString, newPKeyString);
-		}
-		ArrayList<String> fieldStrings = CommonFunctions.explode(createString, ", ");
-		ArrayList<String> primaryKey = new ArrayList<String>();
-		for (String fString:fieldStrings) {
-			fString = fString.trim();
-			if (fString.toUpperCase().startsWith("PRIMARY KEY")) {
-				//dab.getEventHandler().fireLogEvent("[SimpleDataLib["+dab.getName()+"]]"+fString, null, LogLevel.ERROR);
-				String keyList = fString.substring(fString.indexOf("(") + 1, fString.lastIndexOf(")")).replace(" ", "");
-				primaryKey = CommonFunctions.explode(keyList, ",");
-				continue;
-			}
-			String fName = fString.substring(0, fString.indexOf(" "));
-			fString = fString.substring(fString.indexOf(" ") + 1, fString.length());
-			String fType = "";
-			if (fString.contains(" ")) {
-				fType = fString.substring(0, fString.indexOf(" "));
-			} else {
-				fType = fString;
-			}
-			boolean hasFieldSize = false;
-			int fieldSize = 0;
-			FieldType ft = null;
-			if (fType.contains("(")) {
-				ft = FieldType.fromString(fType.substring(0, fType.indexOf("(")));
-				if (!ft.equals(FieldType.INTEGER)) {
-					hasFieldSize = true;
-					fieldSize = Integer.parseInt(fType.substring(fType.indexOf("(") + 1, fType.lastIndexOf(")")));
-				}
-			} else {
-				ft = FieldType.fromString(fType);
-			}
-			//System.out.println("[SimpleDataLib["+sdl.getName()+"]]"+fType);
-			Field f = new Field(fName, ft);
-			if (hasFieldSize) {
-				f.setFieldSize(fieldSize);
-			}
-			fString = fString.substring(fString.indexOf(" ") + 1, fString.length());
-			fString = fString.toUpperCase();
-			if (fString.contains("NOT NULL")) {
-				f.setNotNull();
-			}
-			if (fString.contains("PRIMARY KEY")) {
-				f.setPrimaryKey();
-			}
-			if (fString.contains("UNIQUE")) {
-				f.setUnique();
-			}
-			if (fString.contains("AUTO_INCREMENT") || fString.contains("AUTOINCREMENT")) {
-				f.setAutoIncrement();
-			}
-			if (fString.contains("DEFAULT")) {
-				int defaultValueIndex = fString.indexOf("DEFAULT '") + 9;
-				String defaultValue = fString.substring(defaultValueIndex, fString.indexOf("'", defaultValueIndex));
-				f.setDefault(defaultValue);
-			}
-			fields.add(f);
-		}
-		if (primaryKey.size() > 1) {
-			for (String n:primaryKey) {
-				Field f = getField(n);
-				compositeKey.add(f);
-			}
-			hasCompositeKey = true;
-		}
-	}
-	*/
-	
-
-	
 	/**
 	 * @return The name of this Table.
 	 */
@@ -198,7 +95,7 @@ public class Table {
 	
 	
 	public void setFields(ArrayList<Field> fields) {
-		fields.clear();
+		this.fields.clear();
 		this.fields.addAll(fields);
 	}
 	
@@ -207,7 +104,7 @@ public class Table {
 	 * @param compositeKey An ArrayList of the Field objects that comprise the composite key.
 	 */
 	public void setCompositeKey(ArrayList<Field> compositeKey) {
-		compositeKey.clear();
+		this.compositeKey.clear();
 		this.compositeKey.addAll(compositeKey);
 		hasCompositeKey = true;
 	}
