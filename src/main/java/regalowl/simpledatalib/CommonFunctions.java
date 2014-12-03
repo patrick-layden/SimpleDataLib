@@ -182,7 +182,7 @@ public class CommonFunctions {
 		if (string == null || delimiter == null) {
 			return array;
 		}
-		if (!string.contains(delimiter)) {
+		if (!string.contains(delimiter) && string.length() > 0) {
 			array.add(string);
 			return array;
 		}
@@ -224,7 +224,7 @@ public class CommonFunctions {
 	public static ArrayList<String> explode(String string) {
 		ArrayList<String> array = new ArrayList<String>();
 		if (string == null) return array;
-		if (!string.contains(",")) {
+		if (!string.contains(",") && string.length() > 0) {
 			array.add(string);
 			return array;
 		}
