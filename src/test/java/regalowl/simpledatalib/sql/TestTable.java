@@ -238,5 +238,21 @@ public class TestTable {
 		//System.out.println(fs.getCreateStatement());
 		//System.out.println(t.getCreateStatement());
 		assertTrue(fs.equals(t));
+		
+		
+		fs = sm.generateTable("test8");
+		createStatement = "CREATE TABLE test8 (NAME VARCHAR(100) NOT NULL PRIMARY KEY, BALANCE DOUBLE NOT NULL DEFAULT '0', OWNERS VARCHAR(255), MEMBERS VARCHAR(255))";
+		fs.loadTableFromString(createStatement);
+		t = sm.generateTable("test8");
+		f = t.addField("NAME", FieldType.VARCHAR);f.setFieldSize(100);f.setNotNull();f.setPrimaryKey();
+		f = t.addField("BALANCE", FieldType.DOUBLE);f.setNotNull();f.setDefault("0");
+		f = t.addField("OWNERS", FieldType.VARCHAR);f.setFieldSize(255);
+		f = t.addField("MEMBERS", FieldType.VARCHAR);f.setFieldSize(255);
+		assertTrue(fs.equals(t));
+		
+		
+		
+		//System.out.println(debug.replace("{{newline}}", System.getProperty("line.separator")));
+		
 	}
 }

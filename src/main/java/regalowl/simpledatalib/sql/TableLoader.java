@@ -26,6 +26,7 @@ public class TableLoader {
 			loadTableFromString();
 		} catch (Exception e) {
 			sdl.getErrorWriter().writeError(e, debugMessage);
+			//System.out.println(debugMessage.replace("{{newline}}", System.getProperty("line.separator")));	
 		}
 	}
 	
@@ -37,7 +38,12 @@ public class TableLoader {
 			loadTableFromString();
 		} catch (Exception e) {
 			sdl.getErrorWriter().writeError(e, debugMessage);
+			//System.out.println(debugMessage.replace("{{newline}}", System.getProperty("line.separator")));	
 		}
+	}
+	
+	public String getDebugMessage() {
+		return debugMessage;
 	}
 	
 	public ArrayList<Field> getFields() {
