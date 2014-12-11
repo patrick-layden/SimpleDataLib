@@ -1,5 +1,6 @@
 package regalowl.simpledatalib.sql;
 
+import java.io.File;
 import java.util.ArrayList;
 
 import regalowl.simpledatalib.CommonFunctions;
@@ -93,7 +94,7 @@ public class WriteStatement extends BasicStatement {
 	}
 	
 	public void logStatement() {
-		ErrorWriter ew = new ErrorWriter(sdl.getStoragePath() + "SQL.log", sdl);
+		ErrorWriter ew = new ErrorWriter(sdl.getStoragePath() + File.separator + "SQL.log", sdl);
 		ArrayList<Object> parameters = getParameters();
 		if (parameters != null && parameters.size() > 0) {
 			String paramList = "[";
