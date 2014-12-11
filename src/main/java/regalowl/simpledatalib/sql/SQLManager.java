@@ -215,4 +215,16 @@ public class SQLManager {
 	public String getSQLitePath() {
 		return sdl.getStoragePath() + File.separator + sdl.getName() + ".db";
 	}
+	
+	public void shrinkDatabase() {
+		sw.pauseWriteTask();
+		boolean wState = sw.writeSync();
+		sw.writeSync(true);
+		for (Table t:tables) {
+			t.shrink();
+		}
+		sw.writeSyncQueue();
+		sw.writeSync(wState);
+		sw.unPauseWriteTask();
+	}
 }

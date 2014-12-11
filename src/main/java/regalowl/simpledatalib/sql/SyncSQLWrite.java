@@ -43,36 +43,4 @@ public class SyncSQLWrite {
 		queue.clear();
 	}
 	
-	/*
-	public synchronized void addWriteStatementsToQueue(List<WriteStatement> statements) {
-		for (WriteStatement statement:statements) {
-			if (statement != null) {
-				queue.add(statement);
-			}
-		}
-	}
-	*/
-
-	
-	/*
-	public synchronized void addToQueue(String statement) {
-		if (statement != null) {
-			addToQueue(new WriteStatement(statement, sdl));
-		}
-	}
-	*/
-
-	
-/*
-	public synchronized void queueInsert(String table, HashMap<String, String> values) {
-		addToQueue(sw.getInsertStatement(table, values));
-	}
-	public synchronized void queueUpdate(String table, HashMap<String, String> values, HashMap<String, String> conditions) {
-		addToQueue(sw.getUpdateStatement(table, values, conditions));
-	}
-	public synchronized void queueDelete(String table, HashMap<String, String> conditions) {
-		addToQueue(sw.getDeleteStatement(table, conditions));
-	}
-	*/
-	
 }

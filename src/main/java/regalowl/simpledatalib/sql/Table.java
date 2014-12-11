@@ -290,6 +290,16 @@ public class Table {
 		fields = newFields;
 		sw.writeSync(state);
 	}
+	
+	
+	
+	public void shrink() {
+		if (sdl.getSQLManager().useMySQL()) {
+			sw.addToQueue("OPTIMIZE TABLE " + name);
+		} else {
+			sw.addToQueue("VACUUM " + name);
+		}
+	}
 
 	@Override
 	public int hashCode() {
@@ -327,6 +337,8 @@ public class Table {
 		}
 		return true;
 	}
+	
+	
 	
 	
 }

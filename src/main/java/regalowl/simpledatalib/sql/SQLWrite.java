@@ -161,12 +161,27 @@ public class SQLWrite {
 		addWriteStatementsToQueue(writeTask.getActiveStatements());
 		if (writeTask != null) {writeTask.cancel();}
 		pool.shutDown();
-		saveBuffer();
+		DatabaseConnection dbConnection = new DatabaseConnection(sdl, false);
+		saveQueue(dbConnection);
+		dbConnection.closeConnection();
 	}
-	private void saveBuffer() {
+	
+	public synchronized void pauseWriteTask() {
+		writeTask.stop();
+		addWriteStatementsToQueue(writeTask.getActiveStatements());
+		if (writeTask != null) {writeTask.cancel();}
+		DatabaseConnection dbConnection = pool.getDatabaseConnection();
+		saveQueue(dbConnection);
+		pool.returnConnection(dbConnection);
+	}
+	public synchronized void unPauseWriteTask() {
+		writeTask = new WriteTask();
+		t.schedule(writeTask, writeTaskInterval, writeTaskInterval);
+	}
+	
+	private void saveQueue(DatabaseConnection database) {
 		if (writeQueue.size() == 0) {return;}
 		sdl.getEventPublisher().fireEvent(new LogEvent("[" + sdl.getName() + "]Saving the remaining SQL queue: [" + writeQueue.size() + " statements].  Please wait.", null, LogLevel.INFO));
-		DatabaseConnection database = new DatabaseConnection(sdl, false);
 		ArrayList<WriteStatement> writeArray = new ArrayList<WriteStatement>();
 		while (writeQueue.size() > 0) {
 			writeArray.add(writeQueue.get(processNext.get()));
