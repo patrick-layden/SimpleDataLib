@@ -27,6 +27,7 @@ public class TableLoader {
 		} catch (Exception e) {
 			sdl.getErrorWriter().writeError(e, debugMessage);
 			//System.out.println(debugMessage.replace("{{newline}}", System.getProperty("line.separator")));	
+			//e.printStackTrace();
 		}
 	}
 	
@@ -39,6 +40,7 @@ public class TableLoader {
 		} catch (Exception e) {
 			sdl.getErrorWriter().writeError(e, debugMessage);
 			//System.out.println(debugMessage.replace("{{newline}}", System.getProperty("line.separator")));	
+			//e.printStackTrace();
 		}
 	}
 	
@@ -103,7 +105,12 @@ public class TableLoader {
 			String fieldName = getBefore(s, " ");
 			s = getAfter(s, " ");
 			appendDebug("[NAME]"+s);
-			String typeString = getBefore(s, " ");
+			String typeString = "";
+			if (s.contains(" ")) {
+				typeString = getBefore(s, " ");
+			} else {
+				typeString = s;
+			}
 			if (typeString.contains(",")) typeString = getBefore(s, ",");
 			FieldType fieldType = null;
 			if (typeString.contains("(")) {
