@@ -295,9 +295,9 @@ public class Table {
 	
 	public void shrink() {
 		if (sdl.getSQLManager().useMySQL()) {
-			sw.addToQueue("OPTIMIZE TABLE " + name);
+			sw.writeWithoutTransaction("OPTIMIZE TABLE " + name);
 		} else {
-			sw.addToQueue("VACUUM " + name);
+			sw.writeWithoutTransaction("VACUUM " + name);
 		}
 	}
 

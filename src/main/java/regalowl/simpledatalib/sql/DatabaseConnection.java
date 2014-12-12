@@ -8,6 +8,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -30,9 +31,7 @@ public class DatabaseConnection {
 		this.sdl = sdl;
 		this.readOnly.set(readOnly);
 	}
-	
-	
-	
+
 	public synchronized WriteResult write(List<WriteStatement> statements) {
 		WriteStatement currentStatement = null;
 		PreparedStatement preparedStatement = null;
@@ -71,7 +70,7 @@ public class DatabaseConnection {
 			}
 		}
 	}
-
+	
 	public synchronized QueryResult read(BasicStatement statement) {
 		QueryResult qr = new QueryResult();
 		PreparedStatement preparedStatement = null;
@@ -108,17 +107,28 @@ public class DatabaseConnection {
 			}
 		}
 	}
-
 	
+	public synchronized void writeWithoutTransaction(String statement) {
+		try {
+			if (lock.get()) return;
+			prepareConnection();
+			connection.setAutoCommit(true);
+			Statement state = connection.createStatement();
+			state.execute(statement);
+			state.close();
+		} catch (Exception e) {
+			sdl.getErrorWriter().writeError(e);
+		}
+	}
+
 	public void lock() {
 		this.lock.set(true);
 	}
 	
-	
-	
 	public synchronized void prepareConnection() {
 		if (!isValid()) {fixConnection();}
 	}
+	
 	private synchronized boolean isValid() {
 		try {
 			if (connection == null || connection.isClosed()) {
@@ -139,6 +149,7 @@ public class DatabaseConnection {
 		}
 		return true;
 	}
+	
 	private synchronized void fixConnection() {
 		closeConnection();
 		openConnection();
@@ -153,6 +164,7 @@ public class DatabaseConnection {
 		}
 		sdl.getEventPublisher().fireEvent(new ShutdownEvent());
 	}
+	
 	public synchronized void openConnection() {
 		if (sdl.getSQLManager().useMySQL()) {
 			try {
@@ -177,6 +189,7 @@ public class DatabaseConnection {
 			}
 		}
 	}
+	
 	public synchronized void closeConnection() {
 		try {
 			if (connection == null) {return;}
@@ -188,6 +201,4 @@ public class DatabaseConnection {
 		}
 	}
 
-
-	
 }

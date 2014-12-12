@@ -17,6 +17,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 
 
+
 import regalowl.simpledatalib.SimpleDataLib;
 import regalowl.simpledatalib.events.LogEvent;
 import regalowl.simpledatalib.events.LogLevel;
@@ -90,8 +91,13 @@ public class SQLWrite {
 		}
 		addToQueue(ws);
 	}
-
-
+	
+	public void writeWithoutTransaction(String statememt) {
+		if (statememt == null) {return;}
+		DatabaseConnection database = pool.getDatabaseConnection();
+		database.writeWithoutTransaction(statememt);
+		pool.returnConnection(database);
+	}
 	
     private class WriteTask extends TimerTask {
     	private boolean stop;

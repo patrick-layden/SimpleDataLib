@@ -218,13 +218,9 @@ public class SQLManager {
 	
 	public void shrinkDatabase() {
 		sw.pauseWriteTask();
-		boolean wState = sw.writeSync();
-		sw.writeSync(true);
 		for (Table t:tables) {
 			t.shrink();
 		}
-		sw.writeSyncQueue();
-		sw.writeSync(wState);
 		sw.unPauseWriteTask();
 	}
 }
