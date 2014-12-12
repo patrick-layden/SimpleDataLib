@@ -125,7 +125,11 @@ public class TableLoader {
 			if (fieldType == null) appendDebug("Field null from input: " + typeString);
 			f = new Field(fieldName, fieldType);
 			if (hasFieldSize) f.setFieldSize(fieldSize);
-			s = getAfter(s, " ");
+			if (s.contains(" ")) {
+				s = getAfter(s, " ");
+			} else {
+				s = "";
+			}
 			appendDebug("[TYPE]"+s);
 			fields.add(f);
 			counter++;

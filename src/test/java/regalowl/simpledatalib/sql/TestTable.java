@@ -251,6 +251,16 @@ public class TestTable {
 		assertTrue(fs.equals(t));
 		
 		
+		fs = sm.generateTable("test9");
+		createStatement = "CREATE TABLE test9 (ID INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, OBJECT TINYTEXT, ECONOMY TINYTEXT, TIME DATETIME, PRICE DOUBLE)";
+		fs.loadTableFromString(createStatement);
+		t = sm.generateTable("test9");
+		f = t.addField("ID", FieldType.INTEGER);f.setNotNull();f.setPrimaryKey();f.setAutoIncrement();
+		f = t.addField("OBJECT", FieldType.TINYTEXT);
+		f = t.addField("ECONOMY", FieldType.TINYTEXT);
+		f = t.addField("TIME", FieldType.DATETIME);
+		f = t.addField("PRICE", FieldType.DOUBLE);
+		assertTrue(fs.equals(t));
 		
 		//System.out.println(debug.replace("{{newline}}", System.getProperty("line.separator")));
 		
