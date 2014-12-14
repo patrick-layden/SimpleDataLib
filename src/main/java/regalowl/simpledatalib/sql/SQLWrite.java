@@ -18,9 +18,12 @@ import java.util.concurrent.atomic.AtomicLong;
 
 
 
+
+
 import regalowl.simpledatalib.SimpleDataLib;
 import regalowl.simpledatalib.events.LogEvent;
 import regalowl.simpledatalib.events.LogLevel;
+import regalowl.simpledatalib.sql.WriteResult.WriteResultType;
 
 public class SQLWrite {
 
@@ -91,65 +94,44 @@ public class SQLWrite {
 		}
 		addToQueue(ws);
 	}
-	
-	public void writeWithoutTransaction(String statememt) {
-		if (statememt == null) {return;}
-		DatabaseConnection database = pool.getDatabaseConnection();
-		database.writeWithoutTransaction(statememt);
-		pool.returnConnection(database);
-	}
+
 	
     private class WriteTask extends TimerTask {
-    	private boolean stop;
-    	private ArrayList<WriteStatement> writeArray;
+    	private ArrayList<WriteStatement> writeData = new ArrayList<WriteStatement>();
     	private DatabaseConnection database;
-    	
-    	public WriteTask() {
-    		this.stop = false;
-    	}
-    	
-		public void run() {
-			if (stop) {return;}
+    	@Override
+		public synchronized void run() {
 			if (writeQueue.size() == 0) {return;}
 			writeActive.set(true);
 			database = pool.getDatabaseConnection();
-			writeArray = new ArrayList<WriteStatement>();
+			writeData.clear();
 			while (writeQueue.size() > 0) {
-				writeArray.add(writeQueue.get(processNext.get()));
+				WriteStatement currentStatement = writeQueue.get(processNext.get());
+				writeData.add(currentStatement);
 				writeQueue.remove(processNext.getAndIncrement());
 			}
 			write();
 			pool.returnConnection(database);
 			writeActive.set(false);
 		}
-
-		private void write() {
-			WriteResult result = database.write(writeArray);
-			if (result.getStatus() == WriteResultType.DISABLED) {
-				return;
-			} else if (result.getStatus() == WriteResultType.SUCCESS) {
-					if (logSQL.get() && result.getSuccessfulSQL() != null && !result.getSuccessfulSQL().isEmpty()) {
-						for (WriteStatement ws:result.getSuccessfulSQL()) {
-							ws.logStatement();
-						}
-					}
-			} else if (result.getStatus() == WriteResultType.ERROR) {
-				if (logWriteErrors.get()) {
-					result.getFailedSQL().writeFailed(result.getException());
+		private synchronized void write() {
+			ArrayList<WriteStatement> writeDataCopy = new ArrayList<WriteStatement>();
+			writeDataCopy.addAll(writeData);
+			WriteResult result = database.write(writeDataCopy);
+			if (result.getStatus() == WriteResultType.SUCCESS && logSQL.get() && result.hasSuccessfulSQL()) {
+				for (WriteStatement ws:result.getSuccessfulSQL()) {
+					ws.logStatement();
 				}
-				if (result.getRemainingSQL() != null && !result.getRemainingSQL().isEmpty()) {
+			} else if (result.getStatus() == WriteResultType.ERROR && logWriteErrors.get()) {
+				result.getFailedStatement().writeFailed(result.getException());
+				if (result.hasRemainingSQL()) {
 					addWriteStatementsToQueue(result.getRemainingSQL());
 				}
 			}
-			writeArray.clear();
+			writeDataCopy.clear();
 		}
-		
-		public void stop() {
-			this.stop = true;
-		}
-		
-		public ArrayList<WriteStatement> getActiveStatements() {
-			return writeArray;
+		public synchronized ArrayList<WriteStatement> getActiveStatements() {
+			return writeData;
 		}
     }
 	
@@ -163,28 +145,13 @@ public class SQLWrite {
 
 
 	public synchronized void shutDown() {
-		writeTask.stop();
+		writeTask.cancel();
 		addWriteStatementsToQueue(writeTask.getActiveStatements());
-		if (writeTask != null) {writeTask.cancel();}
-		pool.shutDown();
 		DatabaseConnection dbConnection = new DatabaseConnection(sdl, false);
 		saveQueue(dbConnection);
 		dbConnection.closeConnection();
 	}
-	
-	public synchronized void pauseWriteTask() {
-		writeTask.stop();
-		addWriteStatementsToQueue(writeTask.getActiveStatements());
-		if (writeTask != null) {writeTask.cancel();}
-		DatabaseConnection dbConnection = pool.getDatabaseConnection();
-		saveQueue(dbConnection);
-		pool.returnConnection(dbConnection);
-	}
-	public synchronized void unPauseWriteTask() {
-		writeTask = new WriteTask();
-		t.schedule(writeTask, writeTaskInterval, writeTaskInterval);
-	}
-	
+
 	private void saveQueue(DatabaseConnection database) {
 		if (writeQueue.size() == 0) {return;}
 		sdl.getEventPublisher().fireEvent(new LogEvent("[" + sdl.getName() + "]Saving the remaining SQL queue: [" + writeQueue.size() + " statements].  Please wait.", null, LogLevel.INFO));
@@ -195,29 +162,23 @@ public class SQLWrite {
 		}
 		WriteResult result = database.write(writeArray);
 		if (result.getStatus() == WriteResultType.SUCCESS) {
-			if (logSQL.get() && result.getSuccessfulSQL() != null && !result.getSuccessfulSQL().isEmpty()) {
+			if (logSQL.get() && result.hasSuccessfulSQL()) {
 				for (WriteStatement ws : result.getSuccessfulSQL()) {
 					ws.logStatement();
 				}
 			}
 		} else if (result.getStatus() == WriteResultType.ERROR) {
 			sdl.getEventPublisher().fireEvent(new LogEvent("[" + sdl.getName() + "]A database error occurred while shutting down.  Attempting to save remaining data... This may take longer than usual.", null, LogLevel.SEVERE));
-			if (logWriteErrors.get()) {
-				result.getFailedSQL().logError(result.getException());
-			}
-			if (result.getRemainingSQL() != null && !result.getRemainingSQL().isEmpty()) {
+			if (logWriteErrors.get()) result.getFailedStatement().logError(result.getException());
+			if (result.hasRemainingSQL()) {
 				for (WriteStatement ws : result.getRemainingSQL()) {
 					ArrayList<WriteStatement> statement = new ArrayList<WriteStatement>();
 					statement.add(ws);
 					WriteResult r = database.write(statement);
 					if (r.getStatus() == WriteResultType.SUCCESS) {
-						if (logSQL.get() && r.getSuccessfulSQL() != null && !r.getSuccessfulSQL().isEmpty()) {
-							r.getSuccessfulSQL().get(0).logStatement();
-						}
+						if (logSQL.get() && r.hasSuccessfulSQL()) r.getSuccessfulSQL().get(0).logStatement();
 					} else if (r.getStatus() == WriteResultType.ERROR) {
-						if (logWriteErrors.get()) {
-							r.getFailedSQL().logError(r.getException());
-						}
+						if (logWriteErrors.get()) r.getFailedStatement().logError(r.getException());
 					}
 				}
 			}
@@ -311,18 +272,15 @@ public class SQLWrite {
 	public boolean logWriteErrors() {
 		return logWriteErrors.get();
 	}
-	
 	public boolean writeActive() {
 		return writeActive.get();
 	}
-	
 	public void setLogSQL(boolean state) {
 		logSQL.set(state);
 	}
 	public boolean logSQL() {
 		return logSQL.get();
 	}
-	
 	public boolean writeSync() {
 		return writeSync.get();
 	}

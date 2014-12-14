@@ -346,18 +346,12 @@ public class SQLRead {
 		result.close();
 		return rowcount;
 	}
-	
-	
 
 	
 	public int getActiveReadConnections() {
 		return pool.getActiveConnections();
 	}
 	
-	
-	public void shutDown() {
-		pool.shutDown();
-	}
 	
 	public void setErrorLogging(boolean state) {
 		logReadErrors.set(state);

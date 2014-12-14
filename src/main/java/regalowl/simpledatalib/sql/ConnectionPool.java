@@ -57,15 +57,16 @@ public class ConnectionPool {
 	}
 	
 	public void shutDown() {
-		while (!connections.isEmpty()){
-			DatabaseConnection dc = connections.remove();
-			dc.lock();
-			dc.closeConnection();
-		}
 		while (!activeConnections.isEmpty()){
 			DatabaseConnection dc = activeConnections.remove();
 			dc.lock();
 			dc.closeConnection();
 		}
+		while (!connections.isEmpty()){
+			DatabaseConnection dc = connections.remove();
+			dc.lock();
+			dc.closeConnection();
+		}
 	}
+
 }

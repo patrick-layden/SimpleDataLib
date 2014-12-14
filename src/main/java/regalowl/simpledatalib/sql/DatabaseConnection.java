@@ -16,6 +16,7 @@ import regalowl.simpledatalib.SimpleDataLib;
 import regalowl.simpledatalib.events.LogEvent;
 import regalowl.simpledatalib.events.LogLevel;
 import regalowl.simpledatalib.events.ShutdownEvent;
+import regalowl.simpledatalib.sql.WriteResult.WriteResultType;
 
 
 
@@ -33,11 +34,12 @@ public class DatabaseConnection {
 	}
 
 	public synchronized WriteResult write(List<WriteStatement> statements) {
+		if (statements == null || statements.size() == 0) return new WriteResult(WriteResultType.EMPTY);
+		if (lock.get()) return new WriteResult(WriteResultType.DISABLED);
 		WriteStatement currentStatement = null;
 		PreparedStatement preparedStatement = null;
 		try {
 			prepareConnection();
-			if (statements.size() == 0 || lock.get()) {return new WriteResult(WriteResultType.EMPTY, statements);}
 			for (WriteStatement statement : statements) {
 				currentStatement = statement;
 				preparedStatement = connection.prepareStatement(currentStatement.getStatement());
@@ -46,28 +48,57 @@ public class DatabaseConnection {
 			}
 			if (lock.get()) {
 				connection.rollback();
-				return new WriteResult(WriteResultType.DISABLED, null, null, null, statements);
+				return new WriteResult(WriteResultType.DISABLED);
 			} else {
 				connection.commit();
-				return new WriteResult(WriteResultType.SUCCESS, statements);
+				WriteResult result = new WriteResult(WriteResultType.SUCCESS);
+				result.setSuccessful(statements);
+				return result;
 			}
 		} catch (SQLException e) {
 			try {
 				connection.rollback();
 				statements.remove(currentStatement);
-				return new WriteResult(WriteResultType.ERROR, null, currentStatement, e, statements);
+				WriteResult result = new WriteResult(WriteResultType.ERROR);
+				result.setFailedStatement(currentStatement);
+				result.setRemaining(statements);
+				result.setException(e);
+				return result;
 			} catch (SQLException e1) {
-				sdl.getErrorWriter().writeError(e, "Rollback failed.");
-				return new WriteResult(WriteResultType.ERROR, null, null, null, statements);
+				sdl.getErrorWriter().writeError(e1, "Rollback failed.");
+				statements.remove(currentStatement);
+				WriteResult result = new WriteResult(WriteResultType.ERROR);
+				result.setRemaining(statements);
+				result.setException(e1);
+				return result;
 			}
 		} finally {
 			try {
-				if (preparedStatement != null) {
-					preparedStatement.close();
-				};
+				if (preparedStatement != null) preparedStatement.close();
 			} catch (SQLException e) {
 				sdl.getErrorWriter().writeError(e);
 			}
+		}
+	}
+	
+	
+	public synchronized WriteResult writeWithoutTransaction(WriteStatement statement) {
+		if (statement == null) return new WriteResult(WriteResultType.EMPTY);
+		if (lock.get()) return new WriteResult(WriteResultType.DISABLED);
+		try {
+			prepareConnection();
+			connection.setAutoCommit(true);
+			Statement state = connection.createStatement();
+			state.execute(statement.getStatement());
+			state.close();
+			WriteResult result = new WriteResult(WriteResultType.SUCCESS);
+			result.addSuccessful(statement);
+			return result;
+		} catch (SQLException e) {
+			WriteResult result = new WriteResult(WriteResultType.ERROR);
+			result.setFailedStatement(statement);
+			result.setException(e);
+			return result;
 		}
 	}
 	
@@ -96,33 +127,21 @@ public class DatabaseConnection {
 			return qr;
 		} finally {
 			try {
-				if (preparedStatement != null) {
-					preparedStatement.close();
-				}
-				if (resultSet != null) {
-					resultSet.close();
-				}
+				if (preparedStatement != null) preparedStatement.close();
+				if (resultSet != null) resultSet.close();
 			} catch (SQLException e) {
 				sdl.getErrorWriter().writeError(e);
 			}
 		}
 	}
 	
-	public synchronized void writeWithoutTransaction(String statement) {
-		try {
-			if (lock.get()) return;
-			prepareConnection();
-			connection.setAutoCommit(true);
-			Statement state = connection.createStatement();
-			state.execute(statement);
-			state.close();
-		} catch (Exception e) {
-			sdl.getErrorWriter().writeError(e);
-		}
-	}
+
 
 	public void lock() {
-		this.lock.set(true);
+		lock.set(true);
+	}
+	public void unlock() {
+		lock.set(false);
 	}
 	
 	public synchronized void prepareConnection() {
@@ -131,12 +150,8 @@ public class DatabaseConnection {
 	
 	private synchronized boolean isValid() {
 		try {
-			if (connection == null || connection.isClosed()) {
-				return false;
-			}
-			if (!readOnly.get() && connection.isReadOnly()) {
-				return false;
-			}
+			if (connection == null || connection.isClosed()) return false;
+			if (!readOnly.get() && connection.isReadOnly()) return false;
 			if (!readOnly.get()) {
 				try {
 					connection.setAutoCommit(false);
@@ -191,11 +206,12 @@ public class DatabaseConnection {
 	}
 	
 	public synchronized void closeConnection() {
+		if (connection == null) return;
 		try {
-			if (connection == null) {return;}
-			if (!connection.isClosed()) {
-				connection.close();
-			}
+			if (connection.getAutoCommit() == false) connection.rollback();
+		} catch (SQLException e) {}
+		try {
+			if (!connection.isClosed()) connection.close();
 		} catch (Exception e) {
 			sdl.getErrorWriter().writeError(e, "Connection failed to close.");
 		}

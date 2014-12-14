@@ -11,41 +11,66 @@ public class WriteResult {
 	private List<WriteStatement> remainingSQL = new ArrayList<WriteStatement>();
 	private List<WriteStatement> successfulSQL = new ArrayList<WriteStatement>();
 	
-	public WriteResult(WriteResultType type, List<WriteStatement> successful) {
+	public enum WriteResultType {SUCCESS, EMPTY, ERROR, DISABLED;}
+
+	public WriteResult() {}
+	public WriteResult(WriteResultType type) {
 		this.type = type;
-		this.successfulSQL.addAll(successful);
 	}
 	
-	public WriteResult(WriteResultType type, List<WriteStatement> successful, WriteStatement failedStatement, Exception error, List<WriteStatement> remaining) {
+	public void setType(WriteResultType type) {
 		this.type = type;
-		this.failedSQL = failedStatement;
-		this.exception = error;
-		if (remaining != null) {
-			for (WriteStatement ws:remaining) {
-				this.remainingSQL.add(ws);
-			}
-		}
-		if (successful != null) {
-			for (WriteStatement ws:successful) {
-				this.successfulSQL.add(ws);
-			}
-		}
 	}
-
 	public WriteResultType getStatus() {
 		return type;
 	}
-	public WriteStatement getFailedSQL() {
-		return failedSQL;
+	
+	public void setSuccessful(List<WriteStatement> successful) {
+		this.successfulSQL.clear();
+		this.successfulSQL.addAll(successful);
 	}
-	public Exception getException() {
-		return exception;
+	public void addSuccessful(WriteStatement statement) {
+		successfulSQL.add(statement);
+	}
+	public List<WriteStatement> getSuccessfulSQL() {
+		return successfulSQL;
+	}
+	public boolean hasSuccessfulSQL() {
+		return (successfulSQL != null && !successfulSQL.isEmpty()) ? true:false;
+	}
+	
+	public void setRemaining(List<WriteStatement> remaining) {
+		this.remainingSQL.clear();
+		this.remainingSQL.addAll(remaining);
+	}
+	public void addRemaining(WriteStatement statement) {
+		remainingSQL.add(statement);
 	}
 	public List<WriteStatement> getRemainingSQL() {
 		return remainingSQL;
 	}
-	public List<WriteStatement> getSuccessfulSQL() {
-		return successfulSQL;
+	public boolean hasRemainingSQL() {
+		return (remainingSQL != null && !remainingSQL.isEmpty()) ? true:false;
+	}
+	
+	public void setException(Exception e) {
+		this.exception = e;
+	}
+	public Exception getException() {
+		return exception;
+	}
+	public boolean hasException() {
+		return (exception != null) ? true:false;
+	}
+	
+	public void setFailedStatement(WriteStatement failed) {
+		this.failedSQL = failed;
+	}
+	public WriteStatement getFailedStatement() {
+		return failedSQL;
+	}
+	public boolean hasFailedStatement() {
+		return (failedSQL != null) ? true:false;
 	}
 	
 }

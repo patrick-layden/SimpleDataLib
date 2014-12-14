@@ -2,6 +2,8 @@ package regalowl.simpledatalib.sql;
 
 import java.util.ArrayList;
 
+import regalowl.simpledatalib.sql.WriteResult.WriteResultType;
+
 
 public class SyncSQLWrite {
 	
@@ -29,14 +31,14 @@ public class SyncSQLWrite {
 		DatabaseConnection database = pool.getDatabaseConnection();
 		WriteResult result = database.write(queue);
 		if (result.getStatus() == WriteResultType.SUCCESS) {
-			if (sw.logSQL() && result.getSuccessfulSQL() != null && !result.getSuccessfulSQL().isEmpty()) {
+			if (sw.logSQL() && result.hasSuccessfulSQL()) {
 				for (WriteStatement ws:result.getSuccessfulSQL()) {
 					ws.logStatement();
 				}
 			}
 		} else if (result.getStatus() == WriteResultType.ERROR) {
 			if (sw.logWriteErrors()) {
-				result.getFailedSQL().writeFailed(result.getException());
+				result.getFailedStatement().writeFailed(result.getException());
 			}
 		}
 		pool.returnConnection(database);

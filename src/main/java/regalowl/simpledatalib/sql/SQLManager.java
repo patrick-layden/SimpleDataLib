@@ -10,6 +10,7 @@ import regalowl.simpledatalib.SimpleDataLib;
 import regalowl.simpledatalib.events.LogEvent;
 import regalowl.simpledatalib.events.LogLevel;
 import regalowl.simpledatalib.events.ShutdownEvent;
+import regalowl.simpledatalib.sql.WriteResult.WriteResultType;
 
 public class SQLManager {
 	
@@ -38,10 +39,8 @@ public class SQLManager {
 	 * Shuts down the database and writes any remaining SQL statements.
 	 */
 	public void shutDown() {
-		if (!sdl.isDisabled()) {
-			if (sw != null) {sw.shutDown();}
-			if (sr != null) {sr.shutDown();}
-		}
+		if (pool != null) pool.shutDown();
+		if (sw != null) sw.shutDown();
 	}
 	/**
 	 * Sets the database type to MySQL and uses the provided connection data.
@@ -216,11 +215,36 @@ public class SQLManager {
 		return sdl.getStoragePath() + File.separator + sdl.getName() + ".db";
 	}
 	
+	/**
+	 * This method will shrink the size of the MySQL or SQLite database.  
+	 * SQLWrite, SQLRead, and ConnectionPool objects will be reset.
+	 */
 	public void shrinkDatabase() {
-		sw.pauseWriteTask();
+		boolean logSQL = sw.logSQL();
+		boolean logErrors = sw.logWriteErrors();
+		shutDown();
+		DatabaseConnection dbConnection = new DatabaseConnection(sdl, false);
 		for (Table t:tables) {
-			t.shrink();
+			String statement = "";
+			if (useMySQL()) {
+				statement = "OPTIMIZE TABLE " + t.getName();
+			} else {
+				statement = "VACUUM " + t.getName();
+			}
+			WriteStatement wStatement = new WriteStatement(statement, sdl);
+			WriteResult result = dbConnection.writeWithoutTransaction(wStatement);
+			if (result.getStatus() == WriteResultType.SUCCESS && logSQL && result.hasSuccessfulSQL()) {
+				for (WriteStatement ws:result.getSuccessfulSQL()) {
+					ws.logStatement();
+				}
+			} else if (result.getStatus() == WriteResultType.ERROR && logErrors) {
+				result.getFailedStatement().writeFailed(result.getException());
+			}
 		}
-		sw.unPauseWriteTask();
+		dbConnection.closeConnection();
+		createDatabase();
+		sw.setLogSQL(logSQL);
+		sw.setErrorLogging(logErrors);
 	}
+
 }
