@@ -203,7 +203,7 @@ public class TableLoader {
 		String keyString = getBefore(s, ")");
 		s = getAfter(s, keyString + ")");
 		keyString = keyString.replace(", ", ",");
-		ArrayList<String> primaryKey = CommonFunctions.explode(keyString, ",");
+		ArrayList<String> primaryKey = CommonFunctions.explode(keyString);
 		appendDebug("Composite Key Explode Input: " + keyString);
 		appendDebug("Composite Key Array: " + primaryKey.toString());
 		if (primaryKey.size() > 1) {

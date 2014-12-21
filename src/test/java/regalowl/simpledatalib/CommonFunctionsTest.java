@@ -38,7 +38,7 @@ public class CommonFunctionsTest {
 	}
 	
 	@Test
-	public void testListSerialization() {
+	public void testArrayListSerialization() {
 		ArrayList<String> data = new ArrayList<String>();
 		data.add("stri{{22}{}[7]ng1");
 		data.add("string2");
@@ -47,6 +47,40 @@ public class CommonFunctionsTest {
 		//System.out.println(serialized);
 		ArrayList<String> data2 = CommonFunctions.explode(serialized);
 		//System.out.println(data2.toString());
+		assertTrue(data.equals(data2));
+		
+		data = new ArrayList<String>();
+		data.add(",");
+		serialized = CommonFunctions.implode(data);
+		data2 = CommonFunctions.explode(serialized);
+		assertTrue(data.equals(data2));
+		
+		data = new ArrayList<String>();
+		data.add("");
+		serialized = CommonFunctions.implode(data);
+		data2 = CommonFunctions.explode(serialized);
+		assertTrue(data.equals(data2));
+	}
+	
+	@Test
+	public void testIntArrayListSerialization() {
+		ArrayList<Integer> data = new ArrayList<Integer>();
+		data.add(23);
+		data.add(1);
+		data.add(79797);
+		String serialized = CommonFunctions.implode(CommonFunctions.convertToStringArrayList(data));
+		ArrayList<Integer> data2 = CommonFunctions.convertToIntArrayList(CommonFunctions.explode(serialized));
+		assertTrue(data.equals(data2));
+	}
+	
+	@Test
+	public void testIntMapSerialization() {
+		HashMap<String,Integer> data = new HashMap<String,Integer>();
+		data.put("key1", 45);
+		data.put("key2", 9999);
+		data.put("k[9]ey,,,3", -999);
+		String serialized = CommonFunctions.implodeMap(CommonFunctions.convertToStringMap(data));
+		HashMap<String,Integer> data2 = CommonFunctions.convertToIntMap(CommonFunctions.explodeMap(serialized));
 		assertTrue(data.equals(data2));
 	}
 }

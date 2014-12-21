@@ -33,12 +33,8 @@ public class CommonFunctions {
 	 * @return The rounded double value.
 	 */
 	public static double round(double input, int decimals) {
-		try {
-			BigDecimal result = round(new BigDecimal(String.valueOf(input)), decimals);
-			return result.doubleValue();
-		} catch (Exception e) {
-			return input;
-		}
+		BigDecimal result = round(new BigDecimal(String.valueOf(input)), decimals);
+		return result.doubleValue();
 	}
 	/**
 	 * @param input A BigDecimal value.
@@ -46,12 +42,8 @@ public class CommonFunctions {
 	 * @return The rounded BigDecimal value.
 	 */
 	public static BigDecimal round(BigDecimal input, int decimals) {
-		try {
-			BigDecimal factor = new BigDecimal(String.valueOf(Math.pow(10, decimals)));
-			return new BigDecimal(input.multiply(factor).toBigInteger()).divide(factor);
-		} catch (Exception e) {
-			return input;
-		}
+		BigDecimal factor = new BigDecimal(String.valueOf(Math.pow(10, decimals)));
+		return new BigDecimal(input.multiply(factor).toBigInteger()).divide(factor);
 	}
 	/**
 	 * @param input A BigDecimal value.
@@ -67,11 +59,7 @@ public class CommonFunctions {
 	 * @return The rounded double value in String format.
 	 */
 	public static String roundString(double input, int decimals) {
-		try {
-			return round(new BigDecimal(String.valueOf(input)), decimals).toPlainString();
-		} catch (Exception e) {
-			return input+"";
-		}
+		return round(new BigDecimal(String.valueOf(input)), decimals).toPlainString();
 	}
 	/**
 	 * @return A time stamp.
@@ -93,137 +81,13 @@ public class CommonFunctions {
 	
 	
 	
-
-	/**
-	 * @param commalist A comma separated value string string.
-	 * @return An ArrayList containing the double values from the CSV string.
-	 */
-	public static ArrayList<Double> doubleToArray(String commalist) {
-		try {
-			ArrayList<Double> array = new ArrayList<Double>();
-			if (commalist.indexOf(",") == 0) {
-				commalist = commalist.substring(1, commalist.length());
-			}
-			if (!commalist.substring(commalist.length() - 1, commalist.length()).equalsIgnoreCase(",")) {
-				commalist = commalist + ",";
-			}
-			while (commalist.contains(",")) {
-				array.add(Double.parseDouble(commalist.substring(0, commalist.indexOf(","))));
-				if (commalist.indexOf(",") == commalist.lastIndexOf(",")) {
-					break;
-				}
-				commalist = commalist.substring(commalist.indexOf(",") + 1, commalist.length());
-			}
-			return array;
-		} catch (Exception e) {
-			ArrayList<Double> array = new ArrayList<Double>();
-			return array;
-		}
-	}
-	/**
-	 * @param commalist A comma separated value string string.
-	 * @return An ArrayList containing the int values from the CSV string.
-	 */
-	public static ArrayList<Integer> intToArray(String commalist) {
-		try {
-			ArrayList<Integer> array = new ArrayList<Integer>();
-			if (commalist.indexOf(",") == 0) {
-				commalist = commalist.substring(1, commalist.length());
-			}
-			if (!commalist.substring(commalist.length() - 1, commalist.length()).equalsIgnoreCase(",")) {
-				commalist = commalist + ",";
-			}
-			while (commalist.contains(",")) {
-				array.add(Integer.parseInt(commalist.substring(0, commalist.indexOf(","))));
-				if (commalist.indexOf(",") == commalist.lastIndexOf(",")) {
-					break;
-				}
-				commalist = commalist.substring(commalist.indexOf(",") + 1, commalist.length());
-			}
-			return array;
-		} catch (Exception e) {
-			ArrayList<Integer> array = new ArrayList<Integer>();
-			return array;
-		}
-	}
-	/**
-	 * @param array An ArrayList of Double values.
-	 * @return A CSV string containing the double values.
-	 */
-	public static String doubleArrayToString(ArrayList<Double> array) {
-		String string = "";
-		int c = 0;
-		while (c < array.size()) {
-			string = string + array.get(c) + ",";
-			c++;
-		}
-		return string;
-	}
-	/**
-	 * @param array An ArrayList of Integer values.
-	 * @return A CSV string containing the Integer values.
-	 */
-	public static String intArrayToString(ArrayList<Integer> array) {
-		String string = "";
-		int c = 0;
-		while (c < array.size()) {
-			string = string + array.get(c) + ",";
-			c++;
-		}
-		return string;
-	}
-	
-	
-	
-	
-	
-	public static ArrayList<String> explode(String string, String delimiter) {
-		ArrayList<String> array = new ArrayList<String>();
-		if (string == null || delimiter == null || string == "") {
-			return array;
-		}
-		if (!string.contains(delimiter)) {
-			array.add(string);
-			return array;
-		}
-		if (string.indexOf(delimiter) == 0) {
-			string = string.substring(1, string.length());
-		}
-		if (!string.substring(string.length() - 1, string.length()).equalsIgnoreCase(delimiter)) {
-			string += delimiter;
-		}
-		while (string.contains(delimiter)) {
-			array.add(string.substring(0, string.indexOf(delimiter)));
-			if (string.indexOf(delimiter) == string.lastIndexOf(delimiter)) {
-				break;
-			}
-			string = string.substring(string.indexOf(delimiter) + 1, string.length());
-		}
-		return array;
-	}
-
-	public static String implode(List<String> array, String delimiter) {
-		if (array == null || delimiter == null) {
-			return "";
-		}
-		String string = "";
-		for (String cs : array) {
-			string += cs + delimiter;
-		}
-		return string;
-	}
-
-	
-	
-	
-	
-	
-	
-	
-	
 	public static ArrayList<String> explode(String string) {
 		ArrayList<String> array = new ArrayList<String>();
 		if (string == null || string.length() == 0) return array;
+		if (string.equals(",")) {
+			array.add("");
+			return array;
+		}
 		if (!string.contains(",")) {
 			array.add(string);
 			return array;
@@ -302,9 +166,7 @@ public class CommonFunctions {
 				bString = "";
 				inBracket = false;
 			}
-			if (inBracket) {
-				bString += c;
-			}
+			if (inBracket) bString += c;
 		}
 		inBracket = false;
 		for (char c:string.toCharArray()) {
@@ -327,37 +189,64 @@ public class CommonFunctions {
 	
 	
 	
-	
-	public static HashMap<String,Integer> explodeIntMap(String string) {
-		HashMap<String,Integer> map = new HashMap<String,Integer>();
-		try {
-			if (string == null || !string.contains(",")) {return map;}
-			if (!string.substring(string.length() - 1, string.length()).equalsIgnoreCase(";")) {string += ";";}
-			while (string.contains(";")) {
-				String mapEntry = string.substring(0, string.indexOf(";"));
-				String mapKey = mapEntry.substring(0, mapEntry.indexOf(","));
-				Integer mapValue = Integer.parseInt(mapEntry.substring(mapEntry.indexOf(",") + 1, mapEntry.length()));
-				map.put(mapKey, mapValue);
-				if (string.indexOf(";") == string.lastIndexOf(";")) {break;}
-				string = string.substring(string.indexOf(";") + 1, string.length());
-			}
-			return map;
-		} catch (Exception e) {
-			return new HashMap<String,Integer>();
+	public static <T> ArrayList<String> convertToStringArrayList(ArrayList<T> arrayList) {
+		ArrayList<String> newArrayList = new ArrayList<String>();
+		for (T t:arrayList) {
+			newArrayList.add(t.toString());
 		}
-		
+		return newArrayList;
+	}
+	public static ArrayList<Integer> convertToIntArrayList(ArrayList<String> arrayList) {
+		ArrayList<Integer> newArrayList = new ArrayList<Integer>();
+		for (String s:arrayList) {
+		    try {
+		    	newArrayList.add(Integer.parseInt(s));
+		    } catch (Exception e) {}
+		}
+		return newArrayList;
+	}
+	public static ArrayList<Double> convertToDoubleArrayList(ArrayList<String> arrayList) {
+		ArrayList<Double> newArrayList = new ArrayList<Double>();
+		for (String s:arrayList) {
+		    try {
+		    	newArrayList.add(Double.parseDouble(s));
+		    } catch (Exception e) {}
+		}
+		return newArrayList;
 	}
 	
-	public static String implodeIntMap(HashMap<String,Integer> map) {
-		if (map == null) {return "";}
-		String string = "";
-		for (Map.Entry<String,Integer> entry : map.entrySet()) {
+	public static <T> HashMap<String,String> convertToStringMap(HashMap<String,T> map) {
+		HashMap<String,String> newMap = new HashMap<String,String>();
+		for (Map.Entry<String,T> entry : map.entrySet()) {
 		    String key = entry.getKey();
-		    Integer value = entry.getValue();
-		    string += (key + "," + value + ";");
+		    T value = entry.getValue();
+		    newMap.put(key, value.toString());
 		}
-		return string;
+		return newMap;
 	}
+	public static HashMap<String,Integer> convertToIntMap(HashMap<String,String> map) {
+		HashMap<String,Integer> newMap = new HashMap<String,Integer>();
+		for (Map.Entry<String,String> entry : map.entrySet()) {
+		    String key = entry.getKey();
+		    try {
+		    	Integer value = Integer.parseInt(entry.getValue());
+		    	newMap.put(key, value);
+		    } catch (Exception e) {}
+		}
+		return newMap;
+	}
+	public static HashMap<String,Double> convertToDoubleMap(HashMap<String,String> map) {
+		HashMap<String,Double> newMap = new HashMap<String,Double>();
+		for (Map.Entry<String,String> entry : map.entrySet()) {
+		    String key = entry.getKey();
+		    try {
+		    	Double value = Double.parseDouble(entry.getValue());
+		    	newMap.put(key, value);
+		    } catch (Exception e) {}
+		}
+		return newMap;
+	}
+	
 	
 	public static Object createObjectFromBase64(String base64String) throws IOException, ClassNotFoundException {
 		byte[] data = Base64Coder.decode(base64String);
