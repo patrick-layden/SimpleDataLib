@@ -190,9 +190,9 @@ public class FileConfiguration {
 	}
 	
 	
-	private Integer convertInteger(Object o) {
+	private int convertInteger(Object o) {
 		if (o == null) {
-			return null;
+			return 0;
 		} else if (o instanceof Byte) {
 			return (int)(Byte)o;
 		} else if (o instanceof Integer) {
@@ -204,13 +204,13 @@ public class FileConfiguration {
 		} else if (o instanceof Long) {
 			return (int)(long)(Long)o;
 		} else {
-			return null;
+			return 0;
 		}
 	}
 
-	private Double convertDouble(Object o) {
+	private double convertDouble(Object o) {
 		if (o == null) {
-			return null;
+			return 0;
 		} else if (o instanceof Float) {
 			return (double)(Float)o;
 		} else if (o instanceof Double) {
@@ -222,13 +222,13 @@ public class FileConfiguration {
 		} else if (o instanceof Long) {
 			return (double)(Long)o;
 		} else {
-			return null;
+			return 0;
 		}
 	}
 	
-	private Long convertLong(Object o) {
+	private long convertLong(Object o) {
 		if (o == null) {
-			return null;
+			return 0;
 		} else if (o instanceof Float) {
 			return (long)(float)(Float)o;
 		} else if (o instanceof Double) {
@@ -240,7 +240,7 @@ public class FileConfiguration {
 		} else if (o instanceof Long) {
 			return (long)(Long)o;
 		} else {
-			return null;
+			return 0;
 		}
 	}
 
