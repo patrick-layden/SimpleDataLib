@@ -81,6 +81,29 @@ public class CommonFunctions {
 	
 	
 	
+	public static ArrayList<String> explode(String string, String delimiter) {
+		ArrayList<String> array = new ArrayList<String>();
+		if (string == null || delimiter == null || !string.contains(delimiter)) return array;
+		if (string.indexOf(delimiter) == 0) string = string.substring(1, string.length());
+		if (!string.substring(string.length() - 1, string.length()).equalsIgnoreCase(delimiter)) string += delimiter;
+		while (string.contains(delimiter)) {
+			array.add(string.substring(0, string.indexOf(delimiter)));
+			if (string.indexOf(delimiter) == string.lastIndexOf(delimiter)) break;
+			string = string.substring(string.indexOf(delimiter) + 1, string.length());
+		}
+		return array;
+	}
+	public static String implode(List<String> array, String delimiter) {
+		if (array == null || delimiter == null) return "";
+		String string = "";
+		for (String cs : array) {
+			string += cs + delimiter;
+		}
+		return string;
+	}
+	
+	
+	
 	public static ArrayList<String> explode(String string) {
 		ArrayList<String> array = new ArrayList<String>();
 		if (string == null || string.length() == 0) return array;
