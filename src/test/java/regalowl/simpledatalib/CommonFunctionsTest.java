@@ -57,8 +57,14 @@ public class CommonFunctionsTest {
 		
 		data = new ArrayList<String>();
 		data.add("");
+		data.add("1");
+		data.add("two");
+		data.add("");
+		data.add("four");
+		data.add("");
 		serialized = CommonFunctions.implode(data);
 		data2 = CommonFunctions.explode(serialized);
+		System.out.println(data2.toString());
 		assertTrue(data.equals(data2));
 	}
 	

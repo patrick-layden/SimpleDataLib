@@ -117,7 +117,10 @@ public class CommonFunctions {
 		}
 		int nestLevel = getNestLevel(string);
 		String comma = "["+nestLevel+"]";
-		if (string.indexOf(",") == 0) {string = string.substring(1, string.length());}
+		if (string.indexOf(",") == 0) {
+			array.add(""); //leading comma means empty string as first entry
+			string = string.substring(1, string.length());
+		}
 		if (!string.substring(string.length() - 1, string.length()).equalsIgnoreCase(",")) {string += ",";}
 		while (string.contains(",")) {
 			array.add(string.substring(0, string.indexOf(",")).replace(comma, ","));
