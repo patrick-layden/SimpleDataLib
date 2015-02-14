@@ -39,6 +39,14 @@ public class FileConfiguration {
     }
     
     
+    /**
+     * For testing only
+     */
+    public FileConfiguration(SimpleDataLib sdl) {
+    	this.sdl = sdl;
+        broken = false;
+    }
+    
 	@SuppressWarnings("unchecked")
 	public void load() {
 		FileInputStream stream = null;
@@ -105,12 +113,12 @@ public class FileConfiguration {
 		if (key.contains(".")) {
 			String[] keys = key.split(Pattern.quote("."));
 			if (!data.containsKey(keys[0])) return null;
-			HashMap<String, Object> nestedData = (HashMap<String, Object>) data.get(keys[0]);
+			HashMap<String, Object> map = (HashMap<String, Object>) data.get(keys[0]);
 			Object o = null;
 			for (int i = 1; i < keys.length; i++) {
-				o = nestedData.get(keys[i]);
+				o = map.get(keys[i]);
 				if (o instanceof HashMap) {
-					nestedData = (HashMap<String, Object>)o;
+					map = (HashMap<String, Object>)o;
 				}
 			}
 			return o;
@@ -124,19 +132,26 @@ public class FileConfiguration {
 		if (key == null || key.equals("")) return;
 		if (key.contains(".")) {
 			String[] keys = key.split(Pattern.quote("."));
-			if (!data.containsKey(keys[0])) return;
-			HashMap<String, Object> nestedData = (HashMap<String, Object>) data.get(keys[0]);
+			if (!data.containsKey(keys[0])) data.put(keys[0], new HashMap<String, Object>());
+			HashMap<String, Object> map = (HashMap<String, Object>) data.get(keys[0]);
+			int depth = keys.length - 1;
+			int cDepth = 1;
 			Object o = null;
-			for (int i = 1; i < keys.length; i++) {
-				o = nestedData.get(keys[i]);
-				if (o instanceof HashMap) {
-					nestedData = (HashMap<String, Object>)o;
+			while (cDepth < depth) {
+				o = map.get(keys[cDepth]);
+				if (o == null) {
+					map.put(keys[cDepth], new HashMap<String, Object>());
+					o = map.get(keys[cDepth]);
 				}
+				if (o instanceof HashMap) {
+					map = (HashMap<String, Object>)o;
+				}
+				cDepth++;
 			}
 			if (value == null) {
-				nestedData.remove(keys[keys.length-1]);
+				map.remove(keys[keys.length-1]);
 			} else {
-				nestedData.put(keys[keys.length-1], value);
+				map.put(keys[keys.length-1], value);
 			}
 		} else {
 			if (value == null) {
@@ -146,7 +161,7 @@ public class FileConfiguration {
 			}
 		}
 	}
-	
+
 	public void setDefault(String key, Object value) {
 		if (!isSet(key)) set(key, value);
 	}
