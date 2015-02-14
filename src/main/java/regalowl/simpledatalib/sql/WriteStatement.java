@@ -60,7 +60,7 @@ public class WriteStatement extends BasicStatement {
 	
 	public void logError(Exception e) {
 		ErrorWriter ew = sdl.getErrorWriter();
-		String writeString = "SQL write failed " + writeFailures + " time(s). The failing SQL statement is in the following brackets: %n[" + statement + "]";
+		String writeString = "SQL write failed " + writeFailures + " time(s). The failing SQL statement is in the following brackets: {{newline}}[" + statement + "]";
 		if (parameters != null && parameters.size() > 0) {
 			String paramList = "[";
 			for (Object p:parameters) {
@@ -68,7 +68,7 @@ public class WriteStatement extends BasicStatement {
 				paramList += "["+p.toString() + "], ";
 			}
 			paramList = paramList.substring(0, paramList.length() - 2) + "]";
-			writeString += "%nParameters: " + paramList;
+			writeString += "{{newline}}Parameters: " + paramList;
 		}
 		ew.writeError(e, writeString, true);
 	}
@@ -103,7 +103,7 @@ public class WriteStatement extends BasicStatement {
 				paramList += "["+p.toString() + "], ";
 			}
 			paramList = paramList.substring(0, paramList.length() - 2) + "]";
-			ew.writeError(null, statement + "%nParameters: "+paramList, true);
+			ew.writeError(null, statement + "{{newline}}Parameters: "+paramList, true);
 		} else {
 			ew.writeError(null, statement, true);
 		}
