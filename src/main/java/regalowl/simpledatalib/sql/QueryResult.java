@@ -33,7 +33,7 @@ public class QueryResult {
 		currentRow = -1;
 	}
 	public int recordCount() {
-		if (colNames.size() == 0 || data.size() == 0) return 0;
+		if (data.isEmpty()) return 0;
 		return data.get(0).size();
 	}
 	public boolean next() {
