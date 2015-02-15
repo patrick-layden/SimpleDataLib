@@ -32,7 +32,10 @@ public class QueryResult {
 	public void reset() {
 		currentRow = -1;
 	}
-
+	public int recordCount() {
+		if (colNames.size() == 0 || data.size() == 0) return 0;
+		return data.get(0).size();
+	}
 	public boolean next() {
 		currentRow++;
 		if (data.isEmpty()) {
