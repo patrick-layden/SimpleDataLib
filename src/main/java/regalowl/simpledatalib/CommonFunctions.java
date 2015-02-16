@@ -160,7 +160,7 @@ public class CommonFunctions {
 		}
 		return map;
 	}
-	public static String implodeMap(HashMap<String,String> map) {
+	public static String implodeMap(Map<String,String> map) {
 		if (map == null) {return "";}
 		int nestLevel = getNestLevel(map.toString()) + 1;
 		String comma = "["+nestLevel+"]";
@@ -215,25 +215,25 @@ public class CommonFunctions {
 	
 	
 	
-	public static <T> ArrayList<String> convertToStringArrayList(ArrayList<T> arrayList) {
+	public static <T> ArrayList<String> convertToStringArrayList(List<T> list) {
 		ArrayList<String> newArrayList = new ArrayList<String>();
-		for (T t:arrayList) {
+		for (T t:list) {
 			newArrayList.add(t.toString());
 		}
 		return newArrayList;
 	}
-	public static ArrayList<Integer> convertToIntArrayList(ArrayList<String> arrayList) {
+	public static ArrayList<Integer> convertToIntArrayList(List<String> list) {
 		ArrayList<Integer> newArrayList = new ArrayList<Integer>();
-		for (String s:arrayList) {
+		for (String s:list) {
 		    try {
 		    	newArrayList.add(Integer.parseInt(s));
 		    } catch (Exception e) {}
 		}
 		return newArrayList;
 	}
-	public static ArrayList<Double> convertToDoubleArrayList(ArrayList<String> arrayList) {
+	public static ArrayList<Double> convertToDoubleArrayList(List<String> list) {
 		ArrayList<Double> newArrayList = new ArrayList<Double>();
-		for (String s:arrayList) {
+		for (String s:list) {
 		    try {
 		    	newArrayList.add(Double.parseDouble(s));
 		    } catch (Exception e) {}
@@ -241,7 +241,7 @@ public class CommonFunctions {
 		return newArrayList;
 	}
 	
-	public static <T> HashMap<String,String> convertToStringMap(HashMap<String,T> map) {
+	public static <T> HashMap<String,String> convertToStringMap(Map<String,T> map) {
 		HashMap<String,String> newMap = new HashMap<String,String>();
 		for (Map.Entry<String,T> entry : map.entrySet()) {
 		    String key = entry.getKey();
@@ -250,7 +250,7 @@ public class CommonFunctions {
 		}
 		return newMap;
 	}
-	public static HashMap<String,Integer> convertToIntMap(HashMap<String,String> map) {
+	public static HashMap<String,Integer> convertToIntMap(Map<String,String> map) {
 		HashMap<String,Integer> newMap = new HashMap<String,Integer>();
 		for (Map.Entry<String,String> entry : map.entrySet()) {
 		    String key = entry.getKey();
@@ -261,7 +261,7 @@ public class CommonFunctions {
 		}
 		return newMap;
 	}
-	public static HashMap<String,Double> convertToDoubleMap(HashMap<String,String> map) {
+	public static HashMap<String,Double> convertToDoubleMap(Map<String,String> map) {
 		HashMap<String,Double> newMap = new HashMap<String,Double>();
 		for (Map.Entry<String,String> entry : map.entrySet()) {
 		    String key = entry.getKey();
