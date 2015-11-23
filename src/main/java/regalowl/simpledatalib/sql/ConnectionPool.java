@@ -1,5 +1,6 @@
 package regalowl.simpledatalib.sql;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.locks.Condition;
@@ -11,12 +12,14 @@ import regalowl.simpledatalib.SimpleDataLib;
 public class ConnectionPool {
 	private SimpleDataLib sdl;
 	
+	private int connectionCount;
     private Queue<DatabaseConnection> connections = new LinkedList<DatabaseConnection>();
     private Queue<DatabaseConnection> activeConnections = new LinkedList<DatabaseConnection>();
     private Lock connectionLock = new ReentrantLock();
     private Condition connectionAvailable = connectionLock.newCondition();
     
     public ConnectionPool(SimpleDataLib sdl, int connectionCount) {
+    	this.connectionCount = connectionCount;
     	this.sdl = sdl;
     	for (int i = 0; i < connectionCount; i++) {
     		returnConnection(new DatabaseConnection(sdl, false));
@@ -27,6 +30,39 @@ public class ConnectionPool {
 		return activeConnections.size();
 	}
     
+	public void blockDatabaseWrites() {
+		new Thread(new Runnable() {
+			public void run() {
+				ArrayList<DatabaseConnection> allConnections = new ArrayList<DatabaseConnection>();
+				while (allConnections.size() < connectionCount) {
+					allConnections.add(getDatabaseConnection());
+				}
+				for (DatabaseConnection dc:allConnections) {
+					dc.setIgnoreWrites(true);
+				}
+				for (DatabaseConnection dc:allConnections) {
+					returnConnection(dc);
+				}
+			}
+		}).start();
+	}
+	
+	public void allowDatabaseWrites() {
+		new Thread(new Runnable() {
+			public void run() {
+				ArrayList<DatabaseConnection> allConnections = new ArrayList<DatabaseConnection>();
+				while (allConnections.size() < connectionCount) {
+					allConnections.add(getDatabaseConnection());
+				}
+				for (DatabaseConnection dc:allConnections) {
+					dc.setIgnoreWrites(false);
+				}
+				for (DatabaseConnection dc:allConnections) {
+					returnConnection(dc);
+				}
+			}
+		}).start();
+	}
     
 	public void returnConnection(DatabaseConnection connection) {
 		connectionLock.lock();

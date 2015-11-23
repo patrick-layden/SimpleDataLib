@@ -26,16 +26,19 @@ public class DatabaseConnection {
 	private Connection connection;
     private AtomicBoolean readOnly = new AtomicBoolean();
     private AtomicBoolean lock = new AtomicBoolean();
+    private AtomicBoolean ignoreWrites = new AtomicBoolean();
     
 	public DatabaseConnection(SimpleDataLib sdl, boolean readOnly) {
 		this.lock.set(false);
 		this.sdl = sdl;
 		this.readOnly.set(readOnly);
+		ignoreWrites.set(false);
 	}
 
 	public synchronized WriteResult write(List<WriteStatement> statements) {
 		if (statements == null || statements.size() == 0) return new WriteResult(WriteResultType.EMPTY);
 		if (lock.get()) return new WriteResult(WriteResultType.DISABLED);
+		if (ignoreWrites.get()) return new WriteResult(WriteResultType.SUCCESS);
 		WriteStatement currentStatement = null;
 		PreparedStatement preparedStatement = null;
 		try {
@@ -85,6 +88,7 @@ public class DatabaseConnection {
 	public synchronized WriteResult writeWithoutTransaction(WriteStatement statement) {
 		if (statement == null) return new WriteResult(WriteResultType.EMPTY);
 		if (lock.get()) return new WriteResult(WriteResultType.DISABLED);
+		if (ignoreWrites.get()) return new WriteResult(WriteResultType.SUCCESS);
 		try {
 			prepareConnection();
 			connection.setAutoCommit(true);
@@ -135,7 +139,9 @@ public class DatabaseConnection {
 		}
 	}
 	
-
+	public void setIgnoreWrites(boolean state) {
+		ignoreWrites.set(state);
+	}
 
 	public void lock() {
 		lock.set(true);
@@ -143,7 +149,7 @@ public class DatabaseConnection {
 	public void unlock() {
 		lock.set(false);
 	}
-	
+
 	public synchronized void prepareConnection() {
 		if (!isValid()) {fixConnection();}
 	}

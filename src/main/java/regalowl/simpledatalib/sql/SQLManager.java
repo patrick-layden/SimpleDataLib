@@ -24,7 +24,8 @@ public class SQLManager {
 	private int port;
 	
 	private boolean useMySql;
-	private SQLWrite sw;	private SQLRead sr;
+	private SQLWrite sw;	
+	private SQLRead sr;
 	private ConnectionPool pool;
 	private int connectionPoolSize = 1;
 	private ArrayList<Table> tables = new ArrayList<Table>();
@@ -206,6 +207,14 @@ public class SQLManager {
 	}
 	public SQLRead getSQLRead() {
 		return sr;
+	}
+	
+	public void setBlockWrites(boolean blockWrites) {
+		if (blockWrites) {
+			pool.blockDatabaseWrites();
+		} else {
+			pool.allowDatabaseWrites();
+		}
 	}
 
 	/**
