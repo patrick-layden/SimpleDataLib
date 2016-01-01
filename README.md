@@ -58,7 +58,7 @@ Also add SimpleDataLib as a dependency with:
 	<dependency>
 		<groupId>regalowl.simpledatalib</groupId>
 		<artifactId>simpledatalib</artifactId>
-		<version>0.1.024-SNAPSHOT</version>
+		<version>0.1.079-SNAPSHOT</version>
 	</dependency>
 </dependencies>
 ```
