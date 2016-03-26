@@ -1,9 +1,9 @@
 package regalowl.simpledatalib.events;
 
-import regalowl.simpledatalib.event.Event;
+import regalowl.simpledatalib.event.SDLEvent;
 
 
-public class LogEvent extends Event {
+public class LogEvent extends SDLEvent {
 	private String message;
 	private Exception e;
 	private LogLevel level;

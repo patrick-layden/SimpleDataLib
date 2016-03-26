@@ -1,6 +1,6 @@
 package regalowl.simpledatalib.events;
 
-import regalowl.simpledatalib.event.Event;
+import regalowl.simpledatalib.event.SDLEvent;
 
 
-public class ShutdownEvent extends Event {}
+public class ShutdownEvent extends SDLEvent {}

@@ -1,10 +1,10 @@
 package regalowl.simpledatalib.event;
 
-public class Event {
+public class SDLEvent {
 	private boolean cancelled;
 	private boolean firedSuccessfully;
 	
-	public Event() {
+	public SDLEvent() {
 		cancelled = false;
 		firedSuccessfully = false;
 	}

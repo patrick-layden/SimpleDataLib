@@ -3,6 +3,7 @@ package regalowl.simpledatalib;
 import java.io.File;
 
 import regalowl.simpledatalib.event.EventPublisher;
+import regalowl.simpledatalib.event.SDLEventListener;
 import regalowl.simpledatalib.file.ErrorWriter;
 import regalowl.simpledatalib.file.FileTools;
 import regalowl.simpledatalib.file.YamlHandler;
@@ -67,7 +68,7 @@ public class SimpleDataLib {
 	}
 
 	
-	public void registerListener(Object l) {
+	public void registerListener(SDLEventListener l) {
 		ep.registerListener(l);
 	}
 	public void setDebug(boolean state) {
