@@ -24,20 +24,21 @@ public class SimpleDataLib {
 	
 	public SimpleDataLib(String name) {
 		this.name = name;
-	}
-	
-	public void initialize() {
 		ft = new FileTools(this);
 		this.storagePath = ft.getJarPath() + File.separator + name;
 		ft.makeFolder(storagePath);
 		ep = new EventPublisher();
 		yh = new YamlHandler(this);
 		ew = new ErrorWriter(getErrorFilePath(), this);
-		sm = new SQLManager(this);
 		shutdown = false;
 		debug = false;
 	}
 	
+	public void initialize() {
+		sm = new SQLManager(this);
+	}
+	
+
 	public void shutDown() {
 		if (!shutdown) {
 			sm.shutDown();
