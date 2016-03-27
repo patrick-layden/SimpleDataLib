@@ -78,7 +78,16 @@ public class CommonFunctions {
 		e.printStackTrace(new PrintWriter(error));
 		return error.toString();
 	}
-	
+	/**
+	 * @param e An exception.
+	 * @return The exception converted to a String.
+	 */
+	public static String getErrorString(Error e) {
+		if (e == null) {return null;}
+		StringWriter error = new StringWriter();
+		e.printStackTrace(new PrintWriter(error));
+		return error.toString();
+	}
 	
 	
 	/**
