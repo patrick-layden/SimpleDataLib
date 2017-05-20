@@ -10,6 +10,7 @@ public class TableLoader {
 	private String name;
 	private SimpleDataLib sdl;
 	private String createString;
+	private boolean tableExists;
 	private String s;
 	private Field f;
 	private String debugMessage = "";
@@ -21,6 +22,8 @@ public class TableLoader {
 	public TableLoader(String name, SimpleDataLib sdl) {
 		this.name = name;
 		this.sdl = sdl;
+		this.tableExists = tableExistsInDB();
+		if (!tableExists) return;
 		this.createString = getCreateStatementFromDB();
 		try {
 			loadTableFromString();
@@ -79,6 +82,18 @@ public class TableLoader {
 			if (qr.next()) return qr.getString(1);
 		}
 		return null;
+	}
+	
+
+	private boolean tableExistsInDB() {
+		if (sdl.getSQLManager().useMySQL()) {
+			QueryResult qr = sdl.getSQLManager().getSQLRead().select("SHOW TABLES LIKE '" + name + "'");
+			if (qr.next()) return true;
+		} else {
+			QueryResult qr = sdl.getSQLManager().getSQLRead().select("SELECT sql FROM sqlite_master WHERE tbl_name = '"+name+"'");
+			if (qr.next()) return true;
+		}
+		return false;
 	}
 	
 	/**
@@ -251,5 +266,9 @@ public class TableLoader {
 	
 	private void appendDebug(String message) {
 		debugMessage += message + "{{newline}}";
+	}
+	
+	public boolean tableExists() {
+		return this.tableExists;
 	}
 }

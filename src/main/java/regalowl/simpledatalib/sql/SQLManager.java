@@ -5,6 +5,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import regalowl.simpledatalib.SimpleDataLib;
 import regalowl.simpledatalib.events.LogEvent;
@@ -196,8 +197,11 @@ public class SQLManager {
 	 * Attempts to load all table data from the database.
 	 */
 	public void loadTables() {
-		for (Table t:tables) {
-			t.loadTable();
+		Iterator<Table> it = tables.iterator();
+		while (it.hasNext()) {
+		    if (!it.next().loadTable()) {
+		        it.remove();
+		    }
 		}
 	}
 	

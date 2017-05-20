@@ -25,10 +25,12 @@ public class Table {
 	/**
 	 * Loads the table structure from the database if it exists.
 	 */
-	public void loadTable() {
+	public boolean loadTable() {
 		TableLoader tl = new TableLoader(name, sdl);
+		if (!tl.tableExists()) return false;
 		setFields(tl.getFields());
 		if (tl.hasCompositeKey()) setCompositeKey(tl.getCompositeKey());
+		return true;
 	}
 	
 	public void loadTableFromString(String createString) {
@@ -170,10 +172,17 @@ public class Table {
 	}
 	
 	/**
+	 * @return A comma separated list of the table's Field names.
+	 */
+	public String getFieldNameString() {
+		return getFieldNameString(fields);
+	}
+	
+	/**
 	 * @param fieldArrayList An ArrayList of Field objects.
 	 * @return A comma separated list of the Field names.
 	 */
-	private String getFieldNameString(ArrayList<Field> fieldArrayList) {
+	public String getFieldNameString(ArrayList<Field> fieldArrayList) {
 		Iterator<Field> it = fieldArrayList.iterator();
 		String fieldNameString = "";
 		while (it.hasNext()) {
