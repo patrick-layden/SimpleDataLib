@@ -13,6 +13,9 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -109,11 +112,9 @@ public class FileTools {
 	}
 
 	public void deleteFile(String path) {
-		try {
+		if (fileExists(path)) {
 			File file = new File(path);
 			file.delete();
-		} catch (Exception e) {
-			e.printStackTrace();
 		}
 	}
 	public void deleteDirectory(String path) {
@@ -153,26 +154,27 @@ public class FileTools {
 			e.printStackTrace();
 		}
 	}
-	// There is a better way in Java 7
+
 	public void copyFile(String sourcePath, String destPath) {
 		try {
-			File sfile = new File(sourcePath);
-			File dfile = new File(destPath);
-			FileInputStream iStream = new FileInputStream(sfile);
-			FileOutputStream oStream = new FileOutputStream(dfile);
-			byte[] buffer = new byte[1024];
-			int length;
-			while ((length = iStream.read(buffer)) > 0) {
-				oStream.write(buffer, 0, length);
-			}
-			iStream.close();
-			oStream.close();
+			Path source = Paths.get(sourcePath);
+			Path destination = Paths.get(destPath);
+			Files.copy(source, destination);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
-
+	public void moveFile(String sourcePath, String destPath) {
+		try {
+			Path source = Paths.get(sourcePath);
+			Path destination = Paths.get(destPath);
+			Files.move(source, destination);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	
 	
 	public boolean fileExists(String path) {
