@@ -84,6 +84,12 @@ public class FileTools {
 		return path;
 	}
 
+	public void copyZippedFileFromJar(String resource, String destinationFolderPath) {
+		copyFileFromJar(resource, destinationFolderPath + File.separator + "temporaryZippedFile4564536.zip");
+		unZipFile(destinationFolderPath + File.separator + "temporaryZippedFile4564536.zip", destinationFolderPath);
+		deleteFile(destinationFolderPath + File.separator + "temporaryZippedFile4564536.zip");
+	}
+	
 	public void copyFileFromJar(String resource, String destination) {
 		InputStream resStreamIn = this.getClass().getClassLoader().getResourceAsStream(resource);
 		if (resStreamIn == null) {

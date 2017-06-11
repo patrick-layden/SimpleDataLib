@@ -39,14 +39,13 @@ public class SQLWrite {
     
 	private AtomicBoolean writeActive = new AtomicBoolean();
     private WriteTask writeTask;
-    private final long writeTaskInterval = 30000L;
-    
+
     private AtomicBoolean writeSync = new AtomicBoolean();
     private SyncSQLWrite ssw;
     
     private Timer t = new Timer();
     
-	public SQLWrite(SimpleDataLib sdl, ConnectionPool pool) {
+	public SQLWrite(SimpleDataLib sdl, ConnectionPool pool, long writeTaskInterval) {
 		this.sdl = sdl;
 		this.pool = pool;
 		ssw = new SyncSQLWrite(pool, this);

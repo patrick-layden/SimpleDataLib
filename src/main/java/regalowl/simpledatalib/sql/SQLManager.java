@@ -29,6 +29,7 @@ public class SQLManager {
 	private SQLRead sr;
 	private ConnectionPool pool;
 	private int connectionPoolSize = 1;
+	private long writeTaskInverval = 30000L;
 	private ArrayList<Table> tables = new ArrayList<Table>();
 	
 	
@@ -73,7 +74,7 @@ public class SQLManager {
 		}
 		if (databaseOk) {
 			pool = new ConnectionPool(sdl, connectionPoolSize);
-			sw = new SQLWrite(sdl, pool);
+			sw = new SQLWrite(sdl, pool, writeTaskInverval);
 			sr = new SQLRead(sdl, pool);
 			dataBaseExists = true;
 		} else {
@@ -221,6 +222,9 @@ public class SQLManager {
 		}
 	}
 
+	public void setWriteTaskInterval(long interval) {
+		this.writeTaskInverval = interval;
+	}
 	/**
 	 * Returns the path to the SQLite database file.
 	 */
