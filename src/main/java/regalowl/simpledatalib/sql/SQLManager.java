@@ -25,6 +25,7 @@ public class SQLManager {
 	private int port;
 	
 	private boolean useMySql;
+	private boolean useSSL;
 	private SQLWrite sw;	
 	private SQLRead sr;
 	private ConnectionPool pool;
@@ -48,12 +49,13 @@ public class SQLManager {
 	/**
 	 * Sets the database type to MySQL and uses the provided connection data.
 	 */
-	public void enableMySQL(String host, String database, String username, String password, int port) {
+	public void enableMySQL(String host, String database, String username, String password, int port, boolean useSSL) {
 		this.host = host;
 		this.database = database;
 		this.username = username;
 		this.password = password;
 		this.port = port;
+		this.useSSL = useSSL;
 		useMySql = true;
 	}
 	/**
@@ -89,7 +91,7 @@ public class SQLManager {
 			Connection connect = DriverManager.getConnection("jdbc:sqlite:" + path);
 			Statement state = connect.createStatement();
 			state.execute("DROP TABLE IF EXISTS dbtest12343432");
-			state.execute("CREATE TABLE IF NOT EXISTS dbtest12343432 (TEST VARCHAR)");
+			state.execute("CREATE TABLE IF NOT EXISTS dbtest12343432 (TEST VARCHAR(255))");
 			state.execute("DROP TABLE IF EXISTS dbtest12343432");
 			state.close();
 			connect.close();
@@ -105,7 +107,9 @@ public class SQLManager {
 	private boolean checkMySQL() {
 		try {
 			Class.forName("com.mysql.jdbc.Driver");
-			Connection connect = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + database, username, password);
+			String jdbcstringformat = createConnectionFormat(host, Integer.toString(port), database, useSSL);
+			// Use a different method since making such a method is easier for when Mysql requires SSL in the future.
+			Connection connect = DriverManager.getConnection(jdbcstringformat, username, password);
 			Statement state = connect.createStatement();
 			state.execute("DROP TABLE IF EXISTS dbtest12343432");
 			state.execute("CREATE TABLE IF NOT EXISTS dbtest12343432 (TEST VARCHAR(255))");
@@ -121,7 +125,24 @@ public class SQLManager {
 			return false;
 		}
 	}
-	
+
+	/**
+	 *
+	 * @param host - Host address
+	 * @param port - Port of the MySQL DB
+	 * @param database - Database Name
+	 * @param useSSL - True or false, to use SSL when connecting, removes obnoxious message when false and not using ssl.
+	 * @return
+	 */
+	private String createConnectionFormat(String host, String port, String database, boolean useSSL) {
+		// jdbc:mysql://[host1][:port1][,[host2][:port2]]...[/[database]]
+		// Example: jdbc:mysql://localhost:3306/sakila?profileSQL=true (taken from dev.mysql.com)
+		String output = "jdbc:mysql://" + host + ":" + port + "/" + database + "?useSSL=" + useSSL;
+		return output;
+
+
+	}
+
 	/**
 	 * Sets the number of database connections to use.  If using SQLite this is capped at 1.
 	 */
